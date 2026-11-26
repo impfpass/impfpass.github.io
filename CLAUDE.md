@@ -29,6 +29,14 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - `src/test/`: Test-Setup (fake-indexeddb, cleanup).
 - `docs/`: Design, Pläne, Entwicklungsnotizen (`docs/dev-log/`).
 
+## Veröffentlichen
+
+- Repo `impfpass/impfpass.github.io` (Organisation `impfpass`), Adresse `https://impfpass.github.io/`.
+- Jeder Push auf `main` startet `.github/workflows/pages.yml` (Node 22): `npm ci`, Lint, Typprüfung, Tests, Build. Nur wenn alles grün ist, veröffentlicht der Job `deploy` auf GitHub Pages. Manuell startbar über „Run workflow“ (`workflow_dispatch`).
+- In den Repo-Einstellungen steht Pages auf „GitHub Actions“ (`build_type=workflow`).
+- Verlauf ansehen: `gh run list`, `gh run watch`.
+- Die Adresse nie ändern: Der Browser-Speicher hängt an der Domain, unter einer neuen Adresse öffnet jede installierte App leer.
+
 ## Regeln
 
 - Zur Laufzeit keine Anfragen an Dritte, keine externen Schriften, keine Analyse-Dienste. Alle Bibliotheken werden mitgeliefert.
