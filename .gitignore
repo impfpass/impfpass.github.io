@@ -1,0 +1,17 @@
+# Abhängigkeiten
+/node_modules
+
+# Build
+/dist
+/dev-dist
+*.tsbuildinfo
+
+# Tests
+/coverage
+
+# Sonstiges
+.DS_Store
+*.local
+.env
+.env.*
+npm-debug.log*
