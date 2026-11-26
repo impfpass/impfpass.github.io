@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DISEASES } from "@/core/catalog/diseases";
 import { formatDate } from "@/core/dates";
 import { useAppData } from "../data/AppData";
+import { InstallHint } from "../InstallHint";
 import { T } from "../texts";
 import { lastByDisease } from "./lastByDisease";
 
@@ -15,6 +16,7 @@ export function OverviewScreen() {
   return (
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{T.overview.title}</h1>
+      <InstallHint />
       {rows.length === 0 ? (
         <div className="flex flex-col items-start gap-4">
           <p>{T.list.empty}</p>

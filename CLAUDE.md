@@ -15,6 +15,7 @@ npm test           # vitest run (jsdom, Zeitzone Europe/Berlin)
 npm run build      # Build nach dist/
 npm run preview    # Build lokal ansehen
 npm run format     # Prettier
+npm run icons      # App-Symbole aus public/icon.svg erzeugen (pwa-assets.config.ts)
 ```
 
 Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
@@ -36,6 +37,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - Handy-App an der Wurzel von `https://impfpass.github.io/`, Repo `impfpass/impfpass.github.io`, Lizenz MIT. Die Adresse darf sich nach der ersten echten Nutzung nicht mehr ändern, weil der Browser-Speicher an der Domain hängt.
 - Voreinstellungen: Vorlauf 6 Monate, Saison-Tag `09-01`.
 - Gut lesbar auch für Ältere: Grundschrift 18 px (`html { font-size: 112.5% }`), Bedienflächen mindestens 44 × 44 px, helles und dunkles Design nach Systemeinstellung.
+- zod läuft mit `jitless: true` (in `src/core/formats/schemas.ts`), sonst meldet die CSP einen eval-Verstoß.
 - Keine nativen Dialoge (`confirm`, `alert`, `prompt`). Bestätigungen laufen über shadcn `AlertDialog`.
 - Kalenderdaten sind Strings `YYYY-MM-DD`. Mit `Date` wird nur in `todayISO` gerechnet, denn `new Date().toISOString()` liefert UTC und damit nachts in Deutschland den Vortag.
 - Bezeichner im Code englisch, Texte der Oberfläche deutsch.

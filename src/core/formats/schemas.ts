@@ -11,6 +11,11 @@ import type {
 
 /** zod-Schemata für die Datensicherung, in Plan 3 auch für den Import. */
 
+// Ohne eval arbeiten: zod 4 probiert sonst beim Anlegen von Objekt-Schemata
+// `new Function("")`, und die strikte CSP meldet das als Verstoß. Muss vor
+// dem ersten z.object stehen.
+z.config({ jitless: true });
+
 export const isoDateSchema = z.string().refine(isValidISODate);
 
 export const diseaseIdSchema = z.enum(DISEASE_IDS);

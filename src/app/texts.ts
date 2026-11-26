@@ -15,6 +15,10 @@ export const T = {
     add: "Neue Impfung",
     settings: "Einstellungen",
   },
+  installHint: {
+    text: "Tipp: Tippe auf Teilen und dann auf ‚Zum Home-Bildschirm‘. Dann startet ImpfPass wie eine App und deine Daten sind besser geschützt.",
+    dismiss: "Hinweis ausblenden",
+  },
   storageError: {
     title: "Speichern nicht möglich",
     text: "ImpfPass kann auf diesem Gerät keine Daten speichern. Das passiert zum Beispiel im privaten Modus des Browsers. Öffne ImpfPass in einem normalen Fenster.",
