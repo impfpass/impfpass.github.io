@@ -35,6 +35,11 @@ export const T = {
   },
   overview: {
     title: "Übersicht",
+    lastVaccinated: (date: string, precision: "day" | "month" | "year") =>
+      precision === "day"
+        ? `zuletzt geimpft am ${date}`
+        : `zuletzt geimpft ${date}`,
+    later: "Empfehlungen und Erinnerungen folgen in einer späteren Version.",
   },
   list: {
     title: "Impfungen",

@@ -6,17 +6,13 @@ import { AppDataProvider, useAppData } from "./data/AppData";
 import { EntryDetail } from "./entry/EntryDetail";
 import { EntryForm } from "./entry/EntryForm";
 import { ListScreen } from "./list/ListScreen";
+import { OverviewScreen } from "./overview/OverviewScreen";
 import { InfoScreen } from "./settings/InfoScreen";
 import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
 import { T } from "./texts";
-
-/** Platzhalter, bis die Bildschirme der folgenden Tasks da sind. */
-function Placeholder({ title }: { title: string }) {
-  return <h1 className="text-2xl font-semibold">{title}</h1>;
-}
 
 function NewEntry() {
   // Neuer Schlüssel = leeres Formular für die nächste Impfung
@@ -48,7 +44,7 @@ function Screens() {
     <Shell>
       <Switch>
         <Route path="/">
-          <Placeholder title={T.overview.title} />
+          <OverviewScreen />
         </Route>
         <Route path="/impfungen">
           <ListScreen />
@@ -69,7 +65,7 @@ function Screens() {
           <InfoScreen />
         </Route>
         <Route>
-          <Placeholder title={T.overview.title} />
+          <OverviewScreen />
         </Route>
       </Switch>
     </Shell>
