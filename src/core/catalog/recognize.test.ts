@@ -27,9 +27,9 @@ it("exakt trotz Schreibweise", () => {
 });
 
 it("exakt über einen Alias", () => {
-  expect(recognizeProduct("Vaxigrip")).toMatchObject({
+  expect(recognizeProduct("Vaxigrip Tetra")).toMatchObject({
     kind: "exact",
-    product: { name: "Vaxigrip Tetra" },
+    product: { name: "Vaxigrip" },
   });
 });
 

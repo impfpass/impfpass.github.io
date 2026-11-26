@@ -106,7 +106,8 @@ it("enthält den Pflichtumfang aus Plan 1", () => {
     "BCG",
     "Pocken-Impfstoff",
   ];
-  const names = PRODUCTS.map((p) => p.name);
+  // Frühere Namen (etwa „Influsplit Tetra“) dürfen auch als Alias stehen.
+  const names = PRODUCTS.flatMap((p) => [p.name, ...p.aliases]);
   for (const n of required) expect(names).toContain(n);
   for (const n of [
     "Tetanol",
@@ -116,6 +117,19 @@ it("enthält den Pflichtumfang aus Plan 1", () => {
   ]) {
     expect(PRODUCTS.find((p) => p.name === n)!.historic).toBe(true);
   }
+});
+
+it("folgt den PEI-Listen (Stand Saison 2025/26)", () => {
+  const byName = (n: string) => PRODUCTS.find((p) => p.name === n);
+  // Grippe: seit 2024/25 dreifach, die Namen ohne „Tetra“ sind im Handel
+  for (const n of ["Influsplit", "Vaxigrip", "Influvac", "Xanaflu"]) {
+    expect(byName(n)?.diseases).toEqual(["influenza"]);
+  }
+  expect(byName("Td-IMMUN")?.diseases).toEqual(["tetanus", "diphtheria"]);
+  expect(byName("Typhoral L")?.diseases).toEqual(["typhoid"]);
+  // Herstellung eingestellt bzw. nur noch Einzelimport
+  expect(byName("Td-pur")?.historic).toBe(true);
+  expect(byName("Act-HIB")?.historic).toBe(true);
 });
 
 it("getProduct findet nach ID", () => {

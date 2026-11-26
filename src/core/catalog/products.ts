@@ -32,7 +32,15 @@ const MMRV: DiseaseId[] = ["measles", "mumps", "rubella", "varicella"];
  */
 export const PRODUCTS: Product[] = [
   // Tetanus, Diphtherie, Keuchhusten, Polio, Hib
-  { id: "td-pur", name: "Td-pur", aliases: [], diseases: TD },
+  {
+    // Herstellung 2025 eingestellt, Nachfolger Td-IMMUN (PEI, 17.09.2025)
+    id: "td-pur",
+    name: "Td-pur",
+    aliases: [],
+    diseases: TD,
+    historic: true,
+  },
+  { id: "td-immun", name: "Td-IMMUN", aliases: [], diseases: TD },
   { id: "td-rix", name: "Td-Rix", aliases: [], diseases: TD },
   {
     id: "tetanol",
@@ -73,7 +81,14 @@ export const PRODUCTS: Product[] = [
     diseases: ["polio"],
     historic: true,
   },
-  { id: "act-hib", name: "Act-HIB", aliases: [], diseases: ["hib"] },
+  {
+    // In Deutschland nicht mehr im Handel, nur Einzelimport (PEI)
+    id: "act-hib",
+    name: "Act-HIB",
+    aliases: [],
+    diseases: ["hib"],
+    historic: true,
+  },
 
   // Masern, Mumps, Röteln, Windpocken
   { id: "m-m-rvaxpro", name: "M-M-RvaxPro", aliases: [], diseases: MMR },
@@ -148,23 +163,24 @@ export const PRODUCTS: Product[] = [
     diseases: ["pneumococcal"],
   },
 
-  // Grippe
+  // Grippe. Seit der Saison 2024/25 dreifach; die früheren Namen mit
+  // „Tetra“ stehen als Alias (PEI-Liste 2025/26).
   {
-    id: "influsplit-tetra",
-    name: "Influsplit Tetra",
-    aliases: ["Influsplit"],
+    id: "influsplit",
+    name: "Influsplit",
+    aliases: ["Influsplit Tetra"],
     diseases: ["influenza"],
   },
   {
-    id: "vaxigrip-tetra",
-    name: "Vaxigrip Tetra",
-    aliases: ["Vaxigrip"],
+    id: "vaxigrip",
+    name: "Vaxigrip",
+    aliases: ["Vaxigrip Tetra"],
     diseases: ["influenza"],
   },
   {
-    id: "influvac-tetra",
-    name: "Influvac Tetra",
-    aliases: ["Influvac"],
+    id: "influvac",
+    name: "Influvac",
+    aliases: ["Influvac Tetra"],
     diseases: ["influenza"],
   },
   {
@@ -185,6 +201,7 @@ export const PRODUCTS: Product[] = [
     aliases: ["Flucelvax Tetra"],
     diseases: ["influenza"],
   },
+  { id: "xanaflu", name: "Xanaflu", aliases: [], diseases: ["influenza"] },
   {
     id: "fluenz",
     name: "Fluenz",
@@ -297,6 +314,12 @@ export const PRODUCTS: Product[] = [
   { id: "stamaril", name: "Stamaril", aliases: [], diseases: ["yellow_fever"] },
   { id: "typhim-vi", name: "Typhim Vi", aliases: [], diseases: ["typhoid"] },
   { id: "vivotif", name: "Vivotif", aliases: [], diseases: ["typhoid"] },
+  {
+    id: "typhoral-l",
+    name: "Typhoral L",
+    aliases: [],
+    diseases: ["typhoid"],
+  },
   { id: "rabipur", name: "Rabipur", aliases: [], diseases: ["rabies"] },
   { id: "verorab", name: "Verorab", aliases: [], diseases: ["rabies"] },
   {
