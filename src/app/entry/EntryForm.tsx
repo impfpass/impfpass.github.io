@@ -83,13 +83,31 @@ export function EntryForm({
 
   if (!person) return null;
 
-  const suggestions = product ? [] : suggestProducts(label);
+  // Auch nach einem genauen Treffer längere Namen anbieten: „Boostrix“ ist
+  // erkannt, „Boostrix Polio“ bleibt wählbar.
+  const suggestions = suggestProducts(label).filter(
+    (p) => p.id !== product?.id,
+  );
 
   function changeLabel(value: string) {
     setLabel(value);
     // Genau erkannter Name wählt den Impfstoff gleich aus.
     const r = recognizeProduct(value);
     setProduct(r.kind === "exact" ? r.product : undefined);
+  }
+
+  /** Datum beim Wechsel der Genauigkeit mitnehmen. */
+  function changePrecision(next: DatePrecision) {
+    const current = dateFromInputs(precision, day, month, year);
+    if (current) {
+      setDay(current);
+      setMonth(current.slice(0, 7));
+      // Ein Jahr wie heute wäre bei „nur Jahr“ fast immer falsch und müsste
+      // erst gelöscht werden. Dann lieber leer lassen.
+      const y = current.slice(0, 4);
+      setYear(y === todayISO().slice(0, 4) ? "" : y);
+    }
+    setPrecision(next);
   }
 
   function choose(p: Product) {
@@ -192,7 +210,7 @@ export function EntryForm({
           variant="outline"
           spacing={1}
           value={precision}
-          onValueChange={(v) => v && setPrecision(v as DatePrecision)}
+          onValueChange={(v) => v && changePrecision(v as DatePrecision)}
           className="grid w-full grid-cols-3"
         >
           {PRECISIONS.map((p) => (

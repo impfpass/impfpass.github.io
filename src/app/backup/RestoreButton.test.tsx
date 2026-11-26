@@ -105,3 +105,41 @@ it("gültige Datei: Abbrechen lässt alles, wie es ist", async () => {
   expect(data().person?.name).toBe("Christa");
   expect(data().vaccinations.map((v) => v.id)).toEqual(["v1"]);
 });
+
+it("Wiederherstellen übernimmt keine Geräte-Einstellungen aus der Sicherung", async () => {
+  await seed({
+    vaccinations: [testVaccination()],
+    settings: { ...DEFAULT_SETTINGS, listSort: "date-asc" },
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<RestoreButton />);
+  const other = createBackup(
+    {
+      persons: [testPerson({ id: "p9", name: "Hans" })],
+      vaccinations: [],
+      decisions: [],
+      settings: {
+        ...DEFAULT_SETTINGS,
+        listSort: "disease",
+        installHintDismissed: true,
+        lastBackupAt: "2020-01-01T08:00:00.000Z",
+      },
+    },
+    new Date("2026-11-20T09:00:00Z"),
+  );
+  await user.upload(
+    fileInput(),
+    new File([serializeBackup(other)], "sicherung.json"),
+  );
+  await screen.findByRole("alertdialog");
+  await user.click(screen.getByRole("button", { name: "Ersetzen" }));
+
+  await waitFor(() => expect(data().person?.name).toBe("Hans"));
+  // Sortierung kommt aus der Sicherung, der Installationshinweis gehört zum Gerät,
+  // und die Daten auf dem Gerät entsprechen jetzt genau dieser Sicherung.
+  expect(data().settings.listSort).toBe("disease");
+  expect(data().settings.installHintDismissed).toBeUndefined();
+  expect(data().settings.lastBackupAt).toBe("2026-11-20T09:00:00.000Z");
+  const repo = await openRepository();
+  expect((await repo.getSettings()).installHintDismissed).toBeUndefined();
+});

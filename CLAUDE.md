@@ -46,6 +46,8 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - Voreinstellungen: Vorlauf 6 Monate, Saison-Tag `09-01`.
 - Gut lesbar auch für Ältere: Grundschrift 18 px (`html { font-size: 112.5% }`), Bedienflächen mindestens 44 × 44 px, helles und dunkles Design nach Systemeinstellung.
 - zod läuft mit `jitless: true` (in `src/core/formats/schemas.ts`), sonst meldet die CSP einen eval-Verstoß.
+- Mindestens iOS 16.4 (Build-Ziel von Vite 8, Radix nutzt `toSorted`). `vite/bootFallback.ts` setzt eine Startmeldung in `#root`, die React ersetzt; bleibt sie stehen, erscheint nach 10 s der Hinweis auf den zu alten Browser.
+- Service Worker mit `skipWaiting` und `clientsClaim` (`vite/pwa.ts`), damit neue Versionen ohne Schließen aller Fenster ankommen.
 - Keine nativen Dialoge (`confirm`, `alert`, `prompt`). Bestätigungen laufen über shadcn `AlertDialog`.
 - Kalenderdaten sind Strings `YYYY-MM-DD`. Mit `Date` wird nur in `todayISO` gerechnet, denn `new Date().toISOString()` liefert UTC und damit nachts in Deutschland den Vortag.
 - Bezeichner im Code englisch, Texte der Oberfläche deutsch.

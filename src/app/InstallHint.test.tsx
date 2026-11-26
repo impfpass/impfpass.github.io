@@ -17,6 +17,8 @@ it("Wegklicken merkt sich die Entscheidung", async () => {
   const { data } = await renderWithData(<InstallHint />);
 
   expect(screen.getByText(/Zum Home-Bildschirm/)).toBeTruthy();
+  // Die App auf dem Home-Bildschirm hat einen eigenen Speicher.
+  expect(screen.getByText(/eigenen Speicher/)).toBeTruthy();
   await user.click(screen.getByRole("button", { name: "Hinweis ausblenden" }));
 
   await waitFor(() => expect(data().settings.installHintDismissed).toBe(true));

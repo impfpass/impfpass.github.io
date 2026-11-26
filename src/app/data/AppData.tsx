@@ -162,11 +162,19 @@ export function AppDataProvider(props: {
   const restore = useCallback(
     async (b: BackupFile) => {
       const r = requireRepo();
+      // Der Installationshinweis gehört zum Gerät, nicht in die Sicherung.
+      // Die Daten auf dem Gerät entsprechen danach genau dieser Sicherung.
+      const device = await r.getSettings();
+      const settings: Settings = { ...b.settings, lastBackupAt: b.createdAt };
+      delete settings.installHintDismissed;
+      if (device.installHintDismissed !== undefined) {
+        settings.installHintDismissed = device.installHintDismissed;
+      }
       await r.replaceAll({
         persons: b.persons,
         vaccinations: b.vaccinations,
         decisions: b.decisions,
-        settings: b.settings,
+        settings,
       });
       const loaded = await loadAll(r);
       setState((s) => ({ ...s, ...loaded }));

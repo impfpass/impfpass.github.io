@@ -103,3 +103,22 @@ it("nach dem Speichern führt „Weitere Impfung eintragen“ zu einem leeren Fo
   window.location.hash = "/impfungen";
   expect(await screen.findByText("Shingrix")).toBeTruthy();
 });
+
+const IPHONE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Mobile/15E148 Safari/604.1";
+
+it("auf dem iPhone im Browser empfiehlt die Ersteinrichtung zuerst den Home-Bildschirm", async () => {
+  const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue(IPHONE_UA);
+  render(<App />);
+  expect(await screen.findByText(/zuerst zum Home-Bildschirm/)).toBeTruthy();
+  expect(
+    screen.getByText(/erscheint in der App auf dem Home-Bildschirm nicht/),
+  ).toBeTruthy();
+  ua.mockRestore();
+});
+
+it("am PC zeigt die Ersteinrichtung keinen iPhone-Hinweis", async () => {
+  render(<App />);
+  await screen.findByLabelText("Name");
+  expect(screen.queryByText(/zuerst zum Home-Bildschirm/)).toBeNull();
+});

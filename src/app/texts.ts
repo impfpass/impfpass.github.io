@@ -4,6 +4,12 @@ export const T = {
     name: "ImpfPass",
     loading: "Wird geladen …",
   },
+  // Steht als statischer Text in index.html, bis React startet (vite/bootFallback.ts)
+  boot: {
+    loading: "ImpfPass wird geladen …",
+    tooOld:
+      "Bleibt diese Meldung stehen, ist der Browser zu alt für ImpfPass. Nötig ist auf dem iPhone mindestens iOS 16.4, sonst ein aktueller Chrome, Edge, Firefox oder Safari.",
+  },
   common: {
     cancel: "Abbrechen",
     saveFailed: "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
@@ -16,7 +22,7 @@ export const T = {
     settings: "Einstellungen",
   },
   installHint: {
-    text: "Tipp: Tippe auf Teilen und dann auf ‚Zum Home-Bildschirm‘. Dann startet ImpfPass wie eine App und deine Daten sind besser geschützt.",
+    text: "Tipp: Tippe auf Teilen und dann auf ‚Zum Home-Bildschirm‘. Dann startet ImpfPass wie eine App und deine Daten sind besser geschützt. Die App auf dem Home-Bildschirm hat einen eigenen Speicher: Speichere hier vorher eine Sicherung und stelle sie dort in den Einstellungen wieder her.",
     dismiss: "Hinweis ausblenden",
   },
   storageError: {
@@ -27,6 +33,8 @@ export const T = {
     title: "Willkommen",
     intro:
       "Trag deinen Namen und dein Geburtsdatum ein. Die Angaben bleiben auf diesem Gerät.",
+    iosHint:
+      "Auf dem iPhone: Füge ImpfPass zuerst zum Home-Bildschirm hinzu (Teilen, dann ‚Zum Home-Bildschirm‘) und starte es von dort. Was du hier in Safari einträgst, erscheint in der App auf dem Home-Bildschirm nicht.",
     name: "Name",
     birthDate: "Geburtsdatum",
     submit: "Weiter",

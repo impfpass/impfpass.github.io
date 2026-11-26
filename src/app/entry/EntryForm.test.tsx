@@ -69,11 +69,9 @@ it("nur das Jahr bekannt: gespeichert wird der 1. Januar", async () => {
   const { data } = await renderWithData(<EntryForm />, "/impfungen/neu");
 
   await user.click(screen.getByRole("radio", { name: "nur Jahr" }));
-  const yearInput = screen.getByLabelText("Jahr");
-  expect((yearInput as HTMLInputElement).value).toBe(
-    new Date().getFullYear().toString(),
-  );
-  await user.clear(yearInput);
+  // Bei „nur Jahr“ geht es fast immer um alte Einträge: Feld leer, direkt tippen
+  const yearInput = screen.getByLabelText("Jahr") as HTMLInputElement;
+  expect(yearInput.value).toBe("");
   await user.type(yearInput, "1975");
   await user.type(screen.getByLabelText("Impfstoff"), "Pocken");
   await user.click(screen.getByRole("button", { name: "Pocken-Impfstoff" }));
@@ -125,4 +123,36 @@ it("Bearbeiten ändert den vorhandenen Eintrag", async () => {
   expect(data().vaccinations[0].id).toBe("v1");
   expect(data().vaccinations[0].createdAt).toBe(existing.createdAt);
   expect(await screen.findByText("Sicherung speichern?")).toBeTruthy();
+});
+
+it("beim Wechsel der Genauigkeit bleiben Jahr und Monat des eingegebenen Datums", async () => {
+  await seed({ persons: [testPerson()] });
+  const user = userEvent.setup();
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+
+  const day = screen.getByLabelText("Datum");
+  await user.clear(day);
+  await user.type(day, "2016-12-05");
+  await user.click(screen.getByRole("radio", { name: "nur Monat" }));
+  expect((screen.getByLabelText("Monat") as HTMLInputElement).value).toBe(
+    "2016-12",
+  );
+  await user.click(screen.getByRole("radio", { name: "nur Jahr" }));
+  expect((screen.getByLabelText("Jahr") as HTMLInputElement).value).toBe(
+    "2016",
+  );
+});
+
+it("ein genau erkannter Name lässt längere Namen weiter zur Auswahl", async () => {
+  await seed({ persons: [testPerson()] });
+  const user = userEvent.setup();
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+
+  await user.type(screen.getByLabelText("Impfstoff"), "Boostrix");
+  expect(screen.getByText("Tetanus, Diphtherie, Keuchhusten")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Boostrix Polio" }));
+  expect(
+    screen.getByText("Tetanus, Diphtherie, Keuchhusten, Kinderlähmung (Polio)"),
+  ).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Boostrix Polio" })).toBeNull();
 });

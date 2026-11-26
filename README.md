@@ -6,6 +6,8 @@ ImpfPass ist ein Impfpass für das Handy. Die Web-App zeigt die eigenen Impfunge
 
 ImpfPass ersetzt keine ärztliche Beratung.
 
+ImpfPass läuft auf dem iPhone ab iOS 16.4 und in aktuellen Versionen von Chrome, Edge, Firefox und Safari. Auf älteren Geräten erscheint ein Hinweis statt einer leeren Seite.
+
 Adresse: https://impfpass.github.io/
 
 ## Entwicklung

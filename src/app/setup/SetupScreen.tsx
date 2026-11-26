@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { todayISO } from "@/core/dates";
 import { useAppData } from "../data/AppData";
+import { isStandalone, shouldShowInstallHint } from "../installHintRules";
 import { T } from "../texts";
 import { PersonFields } from "./PersonFields";
 import { validatePerson, type PersonErrors } from "./validatePerson";
@@ -37,6 +38,10 @@ export function SetupScreen() {
         <h1 className="text-2xl font-semibold">{T.setup.title}</h1>
         <p>{T.setup.intro}</p>
       </div>
+      {/* Safari und die App auf dem Home-Bildschirm haben getrennte Speicher */}
+      {shouldShowInstallHint(navigator.userAgent, isStandalone(), false) && (
+        <p className="rounded-lg border bg-muted p-4">{T.setup.iosHint}</p>
+      )}
       <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
         <PersonFields
           idPrefix="setup"
