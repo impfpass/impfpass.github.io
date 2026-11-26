@@ -1,11 +1,12 @@
+import type { DiseaseId } from "./catalog/diseases";
+
+export type { DiseaseId };
+
 /** Kalenderdatum als String `YYYY-MM-DD`. */
 export type ISODate = string;
 
 /** Wie genau ein Datum bekannt ist. Gespeichert wird der früheste mögliche Tag. */
 export type DatePrecision = "day" | "month" | "year";
-
-/** Wird in Task 3 auf den Typ aus der Krankheitsliste umgestellt. */
-export type DiseaseId = string;
 
 export interface PersonAnswers {
   chronicIllness: boolean;
