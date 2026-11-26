@@ -4,10 +4,12 @@ process.env.TZ = "Europe/Berlin";
 
 import path from "node:path";
 import react from "@vitejs/plugin-react";
+import { appVersionDefine } from "./vite/appVersion.ts";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [react()],
+  define: appVersionDefine(),
   resolve: {
     alias: { "@": path.resolve(import.meta.dirname, "src") },
   },

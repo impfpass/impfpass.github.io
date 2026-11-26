@@ -1,41 +1,30 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { isValidISODate, todayISO } from "@/core/dates";
+import { todayISO } from "@/core/dates";
 import { useAppData } from "../data/AppData";
 import { T } from "../texts";
-
-interface Errors {
-  name?: string;
-  birthDate?: string;
-}
-
-function validateSetup(name: string, birthDate: string, today: string): Errors {
-  const errors: Errors = {};
-  if (!name.trim()) errors.name = T.setup.errors.nameMissing;
-  if (!birthDate) errors.birthDate = T.setup.errors.birthDateMissing;
-  else if (!isValidISODate(birthDate))
-    errors.birthDate = T.setup.errors.birthDateInvalid;
-  else if (birthDate > today) errors.birthDate = T.setup.errors.birthDateFuture;
-  return errors;
-}
+import { PersonFields } from "./PersonFields";
+import { validatePerson, type PersonErrors } from "./validatePerson";
 
 export function SetupScreen() {
   const { actions } = useAppData();
   const [name, setName] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [errors, setErrors] = useState<Errors>({});
+  const [errors, setErrors] = useState<PersonErrors>({});
   const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const found = validateSetup(name, birthDate, todayISO());
+    const found = validatePerson(name, birthDate, todayISO());
     setErrors(found);
     if (found.name || found.birthDate) return;
     setBusy(true);
+    setFailed(false);
     try {
       await actions.createPerson({ name, birthDate });
+    } catch {
+      setFailed(true);
     } finally {
       setBusy(false);
     }
@@ -49,42 +38,19 @@ export function SetupScreen() {
         <p>{T.setup.intro}</p>
       </div>
       <form className="flex flex-col gap-5" onSubmit={submit} noValidate>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="setup-name">{T.setup.name}</Label>
-          <Input
-            id="setup-name"
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            aria-invalid={errors.name ? true : undefined}
-            aria-describedby={errors.name ? "setup-name-error" : undefined}
-          />
-          {errors.name && (
-            <p id="setup-name-error" className="text-destructive">
-              {errors.name}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="setup-birth">{T.setup.birthDate}</Label>
-          <Input
-            id="setup-birth"
-            type="date"
-            autoComplete="bday"
-            max={todayISO()}
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            aria-invalid={errors.birthDate ? true : undefined}
-            aria-describedby={
-              errors.birthDate ? "setup-birth-error" : undefined
-            }
-          />
-          {errors.birthDate && (
-            <p id="setup-birth-error" className="text-destructive">
-              {errors.birthDate}
-            </p>
-          )}
-        </div>
+        <PersonFields
+          idPrefix="setup"
+          name={name}
+          birthDate={birthDate}
+          errors={errors}
+          onName={setName}
+          onBirthDate={setBirthDate}
+        />
+        {failed && (
+          <p role="alert" className="text-destructive">
+            {T.common.saveFailed}
+          </p>
+        )}
         <Button type="submit" size="lg" disabled={busy}>
           {T.setup.submit}
         </Button>

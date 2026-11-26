@@ -4,6 +4,10 @@ export const T = {
     name: "ImpfPass",
     loading: "Wird geladen …",
   },
+  common: {
+    cancel: "Abbrechen",
+    saveFailed: "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
+  },
   nav: {
     label: "Hauptnavigation",
     overview: "Übersicht",
@@ -51,11 +55,34 @@ export const T = {
   },
   settings: {
     title: "Einstellungen",
+    profile: "Profil",
+    saveProfile: "Profil speichern",
+    saved: "Gespeichert.",
+    backup: "Datensicherung",
+    lastBackup: (date: string) => `Letzte Sicherung: ${date}`,
+    noBackup: "Noch keine Sicherung gespeichert.",
   },
   info: {
     title: "Info",
+    notMedicalAdvice:
+      "ImpfPass ersetzt keine ärztliche Beratung. Sprich vor einer Impfung mit deiner Ärztin oder deinem Arzt.",
+    privacy:
+      "Deine Daten bleiben auf diesem Gerät. ImpfPass schickt nichts ins Internet. Daten verlassen das Gerät nur, wenn du es selbst auslöst, zum Beispiel beim Speichern einer Sicherung.",
+    backup: "Die Sicherung enthält deine Impfdaten. Bewahre sie sicher auf.",
+    version: (v: string) => `Version ${v}`,
   },
   backup: {
+    save: "Sicherung speichern",
+    saveFailed:
+      "Die Sicherung konnte nicht erstellt werden. Bitte versuche es noch einmal.",
+    restore: "Sicherung wiederherstellen",
+    confirmTitle: "Alle Daten auf diesem Gerät durch die Sicherung ersetzen?",
+    confirmText: (date: string, count: number) =>
+      `Die Sicherung vom ${date} enthält ${count} ${count === 1 ? "Impfung" : "Impfungen"}. Was jetzt auf diesem Gerät gespeichert ist, wird dabei gelöscht.`,
+    confirmAction: "Ersetzen",
+    restored: "Die Sicherung wurde wiederhergestellt.",
+    restoreFailed:
+      "Die Wiederherstellung hat nicht geklappt. Die bisherigen Daten sind unverändert.",
     errors: {
       notBackup: "Diese Datei ist keine ImpfPass-Sicherung.",
       tooNew:

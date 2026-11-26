@@ -3,6 +3,8 @@ import { useHashLocation } from "wouter/use-hash-location";
 import type { Repository } from "@/core/storage/repository";
 import { AppDataProvider, useAppData } from "./data/AppData";
 import { ListScreen } from "./list/ListScreen";
+import { InfoScreen } from "./settings/InfoScreen";
+import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
@@ -45,10 +47,10 @@ function Screens() {
           <Placeholder title={T.entry.detailTitle} />
         </Route>
         <Route path="/einstellungen">
-          <Placeholder title={T.settings.title} />
+          <SettingsScreen />
         </Route>
         <Route path="/einstellungen/info">
-          <Placeholder title={T.info.title} />
+          <InfoScreen />
         </Route>
         <Route>
           <Placeholder title={T.overview.title} />
