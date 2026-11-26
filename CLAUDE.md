@@ -23,7 +23,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 
 - `src/core/`: reine, getestete Funktionen ohne Oberfläche (Datenmodell, Datumshilfen, Impfstoffliste, Speicher, Sicherungsformat). Kein React hier.
 - `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern. Alle Texte stehen in `src/app/texts.ts`.
-- `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`).
+- `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
 - `src/lib/`: kleine Hilfen für die Oberfläche (`cn`).
 - `src/test/`: Test-Setup (fake-indexeddb, cleanup).
 - `docs/`: Design, Pläne, Entwicklungsnotizen (`docs/dev-log/`).
