@@ -2,6 +2,7 @@ import { Route, Router, Switch } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import type { Repository } from "@/core/storage/repository";
 import { AppDataProvider, useAppData } from "./data/AppData";
+import { ListScreen } from "./list/ListScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
@@ -32,7 +33,7 @@ function Screens() {
           <Placeholder title={T.overview.title} />
         </Route>
         <Route path="/impfungen">
-          <Placeholder title={T.list.title} />
+          <ListScreen />
         </Route>
         <Route path="/impfungen/neu">
           <Placeholder title={T.entry.addTitle} />

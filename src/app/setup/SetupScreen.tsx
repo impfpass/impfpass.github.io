@@ -11,11 +11,7 @@ interface Errors {
   birthDate?: string;
 }
 
-function validateSetup(
-  name: string,
-  birthDate: string,
-  today: string,
-): Errors {
+function validateSetup(name: string, birthDate: string, today: string): Errors {
   const errors: Errors = {};
   if (!name.trim()) errors.name = T.setup.errors.nameMissing;
   if (!birthDate) errors.birthDate = T.setup.errors.birthDateMissing;

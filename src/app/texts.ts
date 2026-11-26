@@ -34,6 +34,15 @@ export const T = {
   },
   list: {
     title: "Impfungen",
+    empty: "Noch keine Impfungen eingetragen.",
+    addFirst: "Impfung eintragen",
+    sort: {
+      label: "Sortierung",
+      dateDesc: "Neueste zuerst",
+      dateAsc: "Älteste zuerst",
+      product: "Impfstoff",
+      disease: "Krankheit",
+    },
   },
   entry: {
     addTitle: "Neue Impfung",
