@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Route, Router, Switch } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import type { Repository } from "@/core/storage/repository";
 import { AppDataProvider, useAppData } from "./data/AppData";
+import { EntryDetail } from "./entry/EntryDetail";
+import { EntryForm } from "./entry/EntryForm";
 import { ListScreen } from "./list/ListScreen";
 import { InfoScreen } from "./settings/InfoScreen";
 import { SettingsScreen } from "./settings/SettingsScreen";
@@ -13,6 +16,19 @@ import { T } from "./texts";
 /** Platzhalter, bis die Bildschirme der folgenden Tasks da sind. */
 function Placeholder({ title }: { title: string }) {
   return <h1 className="text-2xl font-semibold">{title}</h1>;
+}
+
+function NewEntry() {
+  // Neuer Schlüssel = leeres Formular für die nächste Impfung
+  const [round, setRound] = useState(0);
+  return <EntryForm key={round} onAddAnother={() => setRound((n) => n + 1)} />;
+}
+
+function EditEntry({ id }: { id: string }) {
+  const { vaccinations } = useAppData();
+  const existing = vaccinations.find((v) => v.id === id);
+  if (!existing) return <EntryDetail id={id} />;
+  return <EntryForm key={id} existing={existing} />;
 }
 
 function Screens() {
@@ -38,13 +54,13 @@ function Screens() {
           <ListScreen />
         </Route>
         <Route path="/impfungen/neu">
-          <Placeholder title={T.entry.addTitle} />
+          <NewEntry />
         </Route>
         <Route path="/impfungen/:id/bearbeiten">
-          <Placeholder title={T.entry.editTitle} />
+          {(params) => <EditEntry id={params.id} />}
         </Route>
         <Route path="/impfungen/:id">
-          <Placeholder title={T.entry.detailTitle} />
+          {(params) => <EntryDetail key={params.id} id={params.id} />}
         </Route>
         <Route path="/einstellungen">
           <SettingsScreen />

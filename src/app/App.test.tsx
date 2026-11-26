@@ -81,3 +81,25 @@ it("untere Navigation führt zu den Bereichen", async () => {
   ).toBeTruthy();
   expect(window.location.hash).toBe("#/einstellungen");
 });
+
+it("nach dem Speichern führt „Weitere Impfung eintragen“ zu einem leeren Formular", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(await screen.findByLabelText("Name"), "Christa");
+  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await screen.findByRole("heading", { name: "Übersicht" });
+
+  window.location.hash = "/impfungen/neu";
+  await user.type(await screen.findByLabelText("Impfstoff"), "Shingrix");
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Weitere Impfung eintragen" }),
+  );
+
+  const label = (await screen.findByLabelText("Impfstoff")) as HTMLInputElement;
+  expect(label.value).toBe("");
+
+  window.location.hash = "/impfungen";
+  expect(await screen.findByText("Shingrix")).toBeTruthy();
+});
