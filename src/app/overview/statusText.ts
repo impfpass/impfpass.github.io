@@ -16,9 +16,13 @@ export function statusText(
   switch (r.status) {
     case "overdue":
     case "due":
+      // Überfällig heißt bei Folgedosen: „spätestens“ liegt schon zurück.
       if (r.timing === "follow_up")
         return (
-          S.doseDue(n) + (r.latestDate ? S.latest(date(r.latestDate)) : "")
+          S.doseDue(n) +
+          (r.latestDate && r.status === "due"
+            ? S.latest(date(r.latestDate))
+            : "")
         );
       if (r.timing === "season") return S.seasonOpen(label);
       return r.status === "overdue" ? S.overdueSince(due) : S.dueNow;
@@ -30,8 +34,10 @@ export function statusText(
       if (r.timing === "season") return S.seasonDone(label);
       return r.dueDate ? S.protectedUntil(due) : S.protectedNoBooster;
     case "future":
-      if (r.timing === "season") return S.nextSeason(due);
+      // Vor der Saison-Regel: Unter der Altersgrenze zählt der Geburtstag.
       if (r.reason.kind === "age") return S.fromAge(r.reason.age, due);
+      if (r.timing === "season") return S.nextSeason(due);
+      if (r.timing === "follow_up") return S.doseFrom(n, due);
       return S.from(due);
     default:
       return "";

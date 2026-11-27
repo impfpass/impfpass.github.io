@@ -63,6 +63,18 @@ it("ordnet nach Dringlichkeit und färbt die Zeilen", async () => {
   ).toBeTruthy();
 });
 
+it("unter der Altersgrenze nennen Grippe und COVID-19 das Alter, nicht die Saison", async () => {
+  await seed({ persons: [testPerson({ birthDate: "1996-03-10" })] });
+  await renderWithData(<OverviewScreen />, "/", { today: TODAY });
+
+  const flu = screen.getByRole("link", { name: /Grippe/ });
+  expect(flu.getAttribute("data-light")).toBe("grey");
+  expect(flu.textContent).toContain("ab 60 Jahren, also ab 03/2056");
+  expect(flu.textContent).not.toContain("Saison");
+  const covid = screen.getByRole("link", { name: /COVID-19/ });
+  expect(covid.textContent).toContain("ab 75 Jahren, also ab 03/2071");
+});
+
 it("Karte „Mit dem Arzt besprechen“: „Arzt empfiehlt sie mir“ macht daraus eine rote Zeile", async () => {
   await seed({
     persons: [

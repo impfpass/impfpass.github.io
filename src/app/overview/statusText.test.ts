@@ -36,14 +36,24 @@ it.each<[string, Partial<Recommendation>, string]>([
     "2. Dosis fällig",
   ],
   [
-    "overdue follow_up mit spätestens",
+    "due follow_up mit spätestens",
     {
-      status: "overdue",
+      status: "due",
       timing: "follow_up",
       dose: { number: 2, of: 3 },
       latestDate: "2027-05-01",
     },
     "2. Dosis fällig, spätestens 05/2027",
+  ],
+  [
+    "overdue follow_up ohne vergangenes spätestens",
+    {
+      status: "overdue",
+      timing: "follow_up",
+      dose: { number: 3, of: 3 },
+      latestDate: "2021-06-01",
+    },
+    "3. Dosis fällig",
   ],
   [
     "due season",
@@ -103,6 +113,26 @@ it.each<[string, Partial<Recommendation>, string]>([
       dueDate: "2030-01-01",
     },
     "ab 60 Jahren, also ab 01/2030",
+  ],
+  [
+    "future season unter der Altersgrenze",
+    {
+      status: "future",
+      timing: "season",
+      reason: { kind: "age", age: 60 },
+      dueDate: "2056-03-01",
+    },
+    "ab 60 Jahren, also ab 03/2056",
+  ],
+  [
+    "future follow_up",
+    {
+      status: "future",
+      timing: "follow_up",
+      dose: { number: 3, of: 3 },
+      dueDate: "2027-05-01",
+    },
+    "3. Dosis ab 05/2027",
   ],
   ["future sonst", { status: "future", dueDate: "2030-01-01" }, "ab 01/2030"],
 ])("%s", (_name, p, text) => {
