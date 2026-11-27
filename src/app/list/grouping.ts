@@ -52,12 +52,14 @@ export function groupByProduct(vs: Vaccination[]): Group[] {
   );
 }
 
-/** Eine Gruppe je vorkommender Krankheit in der Reihenfolge der Krankheitsliste. */
+/** Eine Gruppe je vorkommender Krankheit, alphabetisch nach deutschem Namen. */
 export function groupByDisease(vs: Vaccination[]): Group[] {
   const sorted = sortByDate(vs, "desc");
   return DISEASE_IDS.map((d) => ({
     key: d,
     title: DISEASES[d].name,
     items: sorted.filter((v) => v.diseases.includes(d)),
-  })).filter((g) => g.items.length > 0);
+  }))
+    .filter((g) => g.items.length > 0)
+    .sort((x, y) => x.title.localeCompare(y.title, "de"));
 }

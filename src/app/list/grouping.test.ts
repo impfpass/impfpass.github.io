@@ -53,20 +53,20 @@ it("bei gleichem Datum entscheidet createdAt, die Eingabe bleibt unverändert", 
   expect(input.map((v) => v.id)).toEqual(["second", "first"]);
 });
 
-it("Kombi-Impfstoff steht unter jeder seiner Krankheiten", () => {
+it("Kombi-Impfstoff steht unter jeder seiner Krankheiten, alphabetisch", () => {
   const boostrixPolio = testVaccination();
   const groups = groupByDisease([boostrixPolio]);
   expect(groups.map((g) => g.key)).toEqual([
-    "tetanus",
     "diphtheria",
     "pertussis",
     "polio",
+    "tetanus",
   ]);
   expect(groups.map((g) => g.title)).toEqual([
-    "Tetanus",
     "Diphtherie",
     "Keuchhusten",
     "Kinderlähmung (Polio)",
+    "Tetanus",
   ]);
   for (const g of groups) expect(g.items).toEqual([boostrixPolio]);
 });
