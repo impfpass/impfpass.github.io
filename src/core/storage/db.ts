@@ -1,15 +1,15 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { Decision, Person, Settings, Vaccination } from "../model";
+import type {
+  Decision,
+  Person,
+  RuleState,
+  Settings,
+  Vaccination,
+} from "../model";
 
 export const DB_NAME = "impfpass";
 export const DB_VERSION = 1;
 export const SETTINGS_KEY = "settings";
-
-/** Stand der Regel-Auswertung je Person (Plan 2). */
-export interface RuleState {
-  personId: string;
-  [key: string]: unknown;
-}
 
 /** Stand der GTD-Übergabe je Person (Plan 4). */
 export interface GtdState {

@@ -112,3 +112,27 @@ export const DEFAULT_SETTINGS: Settings = {
   seasonDay: "09-01",
   listSort: "date-desc",
 };
+
+/** Eintrag im Schnappschuss der zutreffenden Empfehlungen (Plan 2, Spec 7.4). */
+export interface SnapshotEntry {
+  id: string;
+  dueDate: ISODate | null;
+  dose: number | null;
+  season: boolean;
+}
+
+export interface Notice {
+  kind: "new" | "changed" | "dropped";
+  recommendationId: string;
+  /** Text aus der Änderungsliste, null wenn es keinen passenden Eintrag gibt. */
+  text: string | null;
+  validSince: ISODate | null;
+}
+
+/** Stand der Regel-Auswertung je Person. */
+export interface RuleState {
+  personId: string;
+  seenVersion: string;
+  snapshot: SnapshotEntry[];
+  notices: Notice[];
+}

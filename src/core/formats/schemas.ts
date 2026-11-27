@@ -5,6 +5,7 @@ import type {
   Decision,
   Person,
   PersonAnswers,
+  RuleState,
   Settings,
   Vaccination,
 } from "../model";
@@ -80,4 +81,25 @@ export const settingsSchema: z.ZodType<Settings> = z.object({
   gtdUrl: z.string().optional(),
   lastBackupAt: timestampSchema.optional(),
   installHintDismissed: z.boolean().optional(),
+});
+
+export const ruleStateSchema: z.ZodType<RuleState> = z.object({
+  personId: z.string().min(1),
+  seenVersion: z.string().min(1),
+  snapshot: z.array(
+    z.object({
+      id: z.string().min(1),
+      dueDate: isoDateSchema.nullable(),
+      dose: z.number().int().nullable(),
+      season: z.boolean(),
+    }),
+  ),
+  notices: z.array(
+    z.object({
+      kind: z.enum(["new", "changed", "dropped"]),
+      recommendationId: z.string().min(1),
+      text: z.string().nullable(),
+      validSince: isoDateSchema.nullable(),
+    }),
+  ),
 });
