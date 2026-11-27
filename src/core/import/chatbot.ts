@@ -111,8 +111,9 @@ function toRow(raw: unknown): ParsedRow | null {
   const unsure = new Set<RowField>();
   if (Array.isArray(raw.unsure)) {
     for (const u of raw.unsure) {
-      const field = typeof u === "string" ? UNSURE_FIELDS[u.trim()] : undefined;
-      if (field) unsure.add(field);
+      const key = typeof u === "string" ? u.trim() : "";
+      // Nur eigene Schlüssel: "constructor" oder "__proto__" sind keine Felder.
+      if (Object.hasOwn(UNSURE_FIELDS, key)) unsure.add(UNSURE_FIELDS[key]);
     }
   }
   const found = new Set<DiseaseId>();

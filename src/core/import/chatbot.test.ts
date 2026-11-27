@@ -76,6 +76,13 @@ ${CLEAN}
     expect(row?.unsure).toEqual(["label", "date"]);
   });
 
+  it("ignores names of Object.prototype in unsure", () => {
+    const [row] = parseChatbotAnswer(
+      `{"vaccinations":[{"date":"05.12.2016","name":"Boostrix Polio","unsure":["constructor","toString","__proto__","date"]}]}`,
+    );
+    expect(row?.unsure).toEqual(["date"]);
+  });
+
   it("recognizes diseases, dedupes and flags unknown ones", () => {
     const [row] = one({
       ...ROW,
