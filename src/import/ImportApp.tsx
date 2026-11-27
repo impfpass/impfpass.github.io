@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { DraftStore } from "@/core/storage/draftStore";
 import { openDraftStore } from "@/core/storage/draftStore";
 import { T } from "@/texts";
+import { DraftTable } from "./DraftTable";
 import { GuideStep } from "./GuideStep";
 import { useDraft } from "./useDraft";
 
@@ -20,9 +21,14 @@ export function ImportApp({
   openStore?: () => Promise<DraftStore>;
 }) {
   const { status, draft, persistent, update } = useDraft(openStore);
-  // null: noch nicht gewählt, dann entscheidet der geladene Entwurf.
+  // null: noch nicht festgelegt, solange der Entwurf lädt.
   const [chosen, setChosen] = useState<Step | null>(null);
-  const step: Step = chosen ?? (draft.rows.length > 0 ? 2 : 1);
+  // Der Startschritt folgt einmal dem geladenen Entwurf und bleibt dann, auch
+  // wenn in Schritt 2 die letzte Zeile gelöscht wird.
+  if (status === "ready" && chosen === null) {
+    setChosen(draft.rows.length > 0 ? 2 : 1);
+  }
+  const step: Step = chosen ?? 1;
   // Meldung aus Schritt 1, gilt nur, bis der Schritt wechselt.
   const [message, setMessage] = useState<string | null>(null);
 
@@ -87,10 +93,19 @@ export function ImportApp({
                   }}
                 />
               )}
-              {step === 2 && message && (
-                <p role="status" className="mt-4 rounded-md border p-3">
-                  {message}
-                </p>
+              {step === 2 && (
+                <>
+                  {message && (
+                    <p role="status" className="mt-4 rounded-md border p-3">
+                      {message}
+                    </p>
+                  )}
+                  <DraftTable
+                    draft={draft}
+                    update={update}
+                    onNext={() => goTo(3)}
+                  />
+                </>
               )}
             </section>
           </>

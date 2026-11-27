@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { emptyDraft, newRow } from "@/core/import/draft";
+import { emptyDraft, newRow, withLabel } from "@/core/import/draft";
 import { openDraftStore } from "@/core/storage/draftStore";
 import fixture from "@/test/fixtures/chatbot-answer.txt?raw";
 import { T } from "@/texts";
@@ -95,4 +95,33 @@ it("geht ohne Chatbot ohne Meldung zu Schritt 2", async () => {
   );
   expect(current().textContent).toBe("2 Tabelle prüfen");
   expect(screen.queryByRole("status")).toBeNull();
+});
+
+it("bleibt bei Schritt 2, wenn die letzte Zeile gelöscht wird", async () => {
+  const store = await openDraftStore();
+  await store.save({ ...emptyDraft(new Date()), rows: [newRow("r1")] });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Löschen, Zeile 1" }),
+  );
+  expect(current().textContent).toBe("2 Tabelle prüfen");
+  expect(
+    screen.getByText("Die Tabelle ist leer. Füge eine Zeile hinzu."),
+  ).toBeTruthy();
+});
+
+it("„Weiter zum Übertragen“ führt zu Schritt 3", async () => {
+  const store = await openDraftStore();
+  await store.save({
+    ...emptyDraft(new Date()),
+    rows: [withLabel({ ...newRow("r1"), date: "05.12.2016" }, "Repevax")],
+  });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Weiter zum Übertragen" }),
+  );
+  expect(current().textContent).toBe("3 Übertragen");
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Übertragen" }),
+  ).toBeTruthy();
 });

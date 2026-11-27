@@ -37,6 +37,7 @@ export const T = {
   },
   common: {
     cancel: "Abbrechen",
+    close: "Schließen",
     saveFailed: "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
   },
   nav: {
@@ -458,6 +459,47 @@ So füllst du die Felder:
     },
     hints: {
       diseaseUnknown: (name: string) => `Krankheit „${name}“ nicht erkannt.`,
+    },
+    table: {
+      label: "Impfungen zum Prüfen",
+      columns: {
+        number: "Nr.",
+        date: "Datum",
+        label: "Impfstoff",
+        diseases: "Krankheiten",
+        batch: "Charge",
+        doctor: "Arzt oder Praxis",
+        note: "Notiz",
+        issues: "Hinweise",
+        remove: "Löschen",
+      },
+      /** Name eines Felds für Screenreader, etwa „Datum, Zeile 3“. */
+      field: (name: string, row: number) => `${name}, Zeile ${row}`,
+      datePlaceholder: "TT.MM.JJJJ",
+      error: "Fehler:",
+      hint: "Hinweis:",
+      reviewed: "Hinweise geprüft",
+      add: "Zeile hinzufügen",
+      removed: (n: number) => `Zeile ${n} gelöscht.`,
+      undo: "Rückgängig",
+      empty: "Die Tabelle ist leer. Füge eine Zeile hinzu.",
+      summary: (n: number, errors: number, hints: number) =>
+        `${n} ${n === 1 ? "Impfung" : "Impfungen"}, ${errors} mit Fehlern, ${hints} mit Hinweisen.`,
+      birthInvalid:
+        "Das Geburtsdatum ist nicht lesbar. Schreib es als TT.MM.JJJJ.",
+      birthFuture: "Das Geburtsdatum liegt in der Zukunft.",
+      next: "Weiter zum Übertragen",
+      blocked: "Behebe zuerst die rot markierten Zeilen.",
+      confirmHints: (h: number) =>
+        `${h} ${h === 1 ? "Zeile hat" : "Zeilen haben"} noch Hinweise. Trotzdem übertragen?`,
+      back: "Zurück zur Tabelle",
+      transfer: "Übertragen",
+    },
+    diseasePicker: {
+      open: (n: number) => `Krankheiten wählen (${n})`,
+      title: (row: number) => `Krankheiten für Zeile ${row}`,
+      description: "Wähle alle Krankheiten, gegen die diese Impfung schützt.",
+      confirm: "Übernehmen",
     },
   },
   transfer: {
