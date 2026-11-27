@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate, todayISO } from "@/core/dates";
 import type { Person, PersonAnswers } from "@/core/model";
 import { AnswersFields } from "../answers/AnswersFields";
+import { BloodFields } from "./BloodFields";
 import { Label } from "@/components/ui/label";
 import { RestoreButton } from "../backup/RestoreButton";
 import { useSaveBackup } from "../backup/useSaveBackup";
@@ -19,6 +20,9 @@ function ProfileForm({ person }: { person: Person }) {
   const { actions } = useAppData();
   const [name, setName] = useState(person.name);
   const [birthDate, setBirthDate] = useState(person.birthDate);
+  const [bloodGroup, setBloodGroup] = useState(person.bloodGroup);
+  const [rhesus, setRhesus] = useState(person.rhesus);
+  const [formula, setFormula] = useState(person.rhesusFormula ?? "");
   const [errors, setErrors] = useState<PersonErrors>({});
   const [message, setMessage] = useState<string | null>(null);
 
@@ -32,7 +36,14 @@ function ProfileForm({ person }: { person: Person }) {
       return;
     }
     try {
-      await actions.updatePerson({ ...person, name: name.trim(), birthDate });
+      await actions.updatePerson({
+        ...person,
+        name: name.trim(),
+        birthDate,
+        bloodGroup,
+        rhesus,
+        rhesusFormula: formula.trim() || undefined,
+      });
       setMessage(T.settings.saved);
     } catch {
       setMessage(T.common.saveFailed);
@@ -48,6 +59,15 @@ function ProfileForm({ person }: { person: Person }) {
         errors={errors}
         onName={setName}
         onBirthDate={setBirthDate}
+      />
+      <BloodFields
+        idPrefix="profile"
+        group={bloodGroup}
+        rhesus={rhesus}
+        formula={formula}
+        onGroup={setBloodGroup}
+        onRhesus={setRhesus}
+        onFormula={setFormula}
       />
       <Button type="submit" variant="outline">
         {T.settings.saveProfile}

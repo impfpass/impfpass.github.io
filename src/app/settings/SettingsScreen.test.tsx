@@ -226,3 +226,66 @@ it("FSME auf „Ja“ hebt ein früheres „Nein“ zur FSME-Nachfrage auf", asy
   await waitFor(() => expect(data().person?.answers.fsme).toBe("yes"));
   await waitFor(() => expect(data().decisions).toEqual([]));
 });
+
+it("Profil speichert Blutgruppe, Rhesusfaktor und Rhesusformel", async () => {
+  await seed({ persons: [testPerson()] });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+
+  expect(
+    screen.getByText(/Vor einer Bluttransfusion bestimmt die Klinik/),
+  ).toBeTruthy();
+  await user.click(screen.getByRole("radio", { name: "A" }));
+  await user.click(screen.getByRole("radio", { name: "negativ" }));
+  await user.type(screen.getByLabelText("Rhesusformel"), "CcD.ee");
+  await user.click(screen.getByRole("button", { name: "Profil speichern" }));
+
+  await waitFor(() => expect(data().person?.bloodGroup).toBe("A"));
+  expect(data().person?.rhesus).toBe("negative");
+  expect(data().person?.rhesusFormula).toBe("CcD.ee");
+});
+
+it("gespeicherte Blutgruppe ist ausgewählt und lässt sich entfernen", async () => {
+  await seed({
+    persons: [
+      testPerson({
+        bloodGroup: "B",
+        rhesus: "positive",
+        rhesusFormula: "CCD.ee",
+      }),
+    ],
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+
+  const b = screen.getByRole("radio", { name: "B" });
+  expect(b.getAttribute("aria-checked")).toBe("true");
+  expect(
+    screen.getByRole("radio", { name: "positiv" }).getAttribute("aria-checked"),
+  ).toBe("true");
+  const formula = screen.getByLabelText("Rhesusformel");
+  expect((formula as HTMLInputElement).value).toBe("CCD.ee");
+
+  await user.click(b);
+  await user.clear(formula);
+  await user.type(formula, "   ");
+  await user.click(screen.getByRole("button", { name: "Profil speichern" }));
+
+  await waitFor(() => expect(data().person?.bloodGroup).toBeUndefined());
+  expect(data().person?.rhesusFormula).toBeUndefined();
+  expect(data().person?.rhesus).toBe("positive");
+});
+
+it("Name ändern lässt die Blutgruppe unverändert", async () => {
+  await seed({ persons: [testPerson({ bloodGroup: "AB" })] });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+
+  const name = screen.getByLabelText("Name");
+  await user.clear(name);
+  await user.type(name, "Christa M.");
+  await user.click(screen.getByRole("button", { name: "Profil speichern" }));
+
+  await waitFor(() => expect(data().person?.name).toBe("Christa M."));
+  expect(data().person?.bloodGroup).toBe("AB");
+});

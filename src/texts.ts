@@ -363,6 +363,16 @@ export const T = {
     backup: "Datensicherung",
     lastBackup: (date: string) => `Letzte Sicherung: ${date}`,
     noBackup: "Noch keine Sicherung gespeichert.",
+    blood: {
+      group: "Blutgruppe",
+      groups: { "0": "0", A: "A", B: "B", AB: "AB" },
+      rhesus: "Rhesusfaktor",
+      positive: "positiv",
+      negative: "negativ",
+      formula: "Rhesusformel",
+      formulaHelp: "So wie im Impfpass, zum Beispiel CcD.ee.",
+      hint: "Vor einer Bluttransfusion bestimmt die Klinik die Blutgruppe immer selbst. Die Angaben hier sind zum Nachschauen, etwa beim Blutspenden oder in der Schwangerschaft.",
+    },
   },
   info: {
     title: "Info",
