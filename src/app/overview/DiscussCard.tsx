@@ -5,12 +5,26 @@ import type { Recommendation } from "@/core/rules/types";
 import { T } from "@/texts";
 import { useAppData } from "../data/AppData";
 
-export function DiscussCard({ rec }: { rec: Recommendation }) {
-  const { actions } = useAppData();
+/** Begründung einer „Mit dem Arzt besprechen“-Empfehlung, auch im Detail. */
+export function DiscussReason({ rec }: { rec: Recommendation }) {
   const rule = RULEBOOK.rules.find((r) => r.id === rec.id);
   const normalAge = rec.reason.kind === "discuss" ? rec.reason.normalAge : null;
   const serology =
     rec.reason.kind === "discuss" && rec.reason.topic === "serology";
+  const D = T.overview.discuss;
+  return (
+    <>
+      <p>{normalAge === null ? D.noNormal : D.normalAge(normalAge)}</p>
+      {serology && <p>{D.serology}</p>}
+      {rule?.discussTargetGroup && (
+        <p>{D.targetGroup(rule.discussTargetGroup)}</p>
+      )}
+    </>
+  );
+}
+
+export function DiscussCard({ rec }: { rec: Recommendation }) {
+  const { actions } = useAppData();
   const D = T.overview.discuss;
   const [failed, setFailed] = useState(false);
 
@@ -24,11 +38,7 @@ export function DiscussCard({ rec }: { rec: Recommendation }) {
   return (
     <li className="flex flex-col gap-2 rounded-lg border p-4">
       <p className="font-medium">{T.rec.names[rec.id] ?? rec.id}</p>
-      <p>{normalAge === null ? D.noNormal : D.normalAge(normalAge)}</p>
-      {serology && <p>{D.serology}</p>}
-      {rule?.discussTargetGroup && (
-        <p>{D.targetGroup(rule.discussTargetGroup)}</p>
-      )}
+      <DiscussReason rec={rec} />
       {failed && (
         <p role="alert" className="text-destructive">
           {T.common.saveFailed}

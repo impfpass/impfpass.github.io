@@ -7,6 +7,7 @@ import { EntryDetail } from "./entry/EntryDetail";
 import { EntryForm } from "./entry/EntryForm";
 import { ListScreen } from "./list/ListScreen";
 import { OverviewScreen } from "./overview/OverviewScreen";
+import { RecommendationDetail } from "./recommendation/RecommendationDetail";
 import { InfoScreen } from "./settings/InfoScreen";
 import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
@@ -79,6 +80,9 @@ function Screens() {
         </Route>
         <Route path="/impfungen/:id">
           {(params) => <EntryDetail key={params.id} id={params.id} />}
+        </Route>
+        <Route path="/empfehlungen/:id">
+          {(params) => <RecommendationDetail key={params.id} id={params.id} />}
         </Route>
         <Route path="/einstellungen">
           <SettingsScreen />

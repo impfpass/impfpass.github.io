@@ -171,6 +171,60 @@ export const T = {
       fromAge: (age: number, d: string) => `ab ${age} Jahren, also ab ${d}`,
       from: (d: string) => `ab ${d}`,
     },
+    detail: {
+      notFound: "Diese Empfehlung gibt es nicht.",
+      why: "Warum",
+      source: "Fundstelle",
+      sourceLine: (
+        edition: string,
+        date: string,
+        section: string,
+        page: number | null,
+      ) => `${edition} vom ${date}, ${section}${page ? `, S. ${page}` : ""}`,
+      validSince: (d: string) => `Gilt seit ${d}`,
+      earlierWithIllness:
+        "Bei bestimmten Erkrankungen empfiehlt die STIKO diese Impfung früher.",
+      doctorAnswer: "Antwort deiner Ärztin oder deines Arztes",
+      stillOpen: "Noch offen",
+      answeredOn: (d: string) => `Geantwortet am ${d}`,
+      entered: "Eingetragene Impfungen",
+      noneEntered: "Noch keine passende Impfung eingetragen.",
+      decisions: "Deine Entscheidung",
+      wantNot: "Möchte ich nicht",
+      notNeeded: "Nicht nötig",
+      showAgain: "Wieder anzeigen",
+      declinedText: "Du möchtest diese Impfung nicht. Sie ist ausgeblendet.",
+      notNeededReasons: {
+        legend: "Warum ist die Impfung nicht nötig?",
+        illness: "Erkrankung durchgemacht",
+        serology: "Immunität per Bluttest belegt",
+        otherCard: "In einem anderen Impfpass belegt",
+        other: "Anderer Grund",
+      },
+      reasonLabel: "Grund",
+      reasonMissing: "Bitte gib einen Grund ein.",
+      save: "Speichern",
+      cancel: "Abbrechen",
+      reason: {
+        booster: (lastDate: string, years: number) =>
+          `Letzte Impfung am ${lastDate}. Die nächste Auffrischung ist ${years} Jahre danach vorgesehen.`,
+        age: (age: number) =>
+          `Die STIKO empfiehlt diese Impfung allen ab ${age} Jahren.`,
+        withTd:
+          "Die STIKO empfiehlt Erwachsenen, die nächste fällige Impfung gegen Tetanus und Diphtherie einmal mit Keuchhusten-Schutz zu bekommen.",
+        series: (given: number, total: number) =>
+          `Eingetragen sind ${given} von ${total} Impfungen.`,
+        catchUp: (given: number, total: number) =>
+          `Eingetragen sind ${given} von ${total} Impfungen der Grundimmunisierung. Stehen frühere Impfungen in einem anderen Impfpass, wähle „Nicht nötig“.`,
+        season: (label: string) => `Jährliche Impfung, Saison ${label}.`,
+        job: "Empfohlen wegen deiner Tätigkeit.",
+        tbe: "Empfohlen, weil du dich in FSME-Risikogebieten aufhältst.",
+        doctor: "Deine Ärztin oder dein Arzt empfiehlt sie dir.",
+        complete:
+          "Die Impfungen sind vollständig, eine Auffrischung ist nicht vorgesehen.",
+        none: "Die STIKO empfiehlt diese Impfung für dich derzeit nicht.",
+      },
+    },
   },
   list: {
     title: "Impfungen",
