@@ -495,6 +495,31 @@ So füllst du die Felder:
       back: "Zurück zur Tabelle",
       transfer: "Übertragen",
     },
+    send: {
+      codesHeading: "QR-Codes",
+      codeOf: (n: number, total: number) => `Code ${n} von ${total}`,
+      codeLabel: (n: number, total: number) => `QR-Code ${n} von ${total}`,
+      previous: "Vorheriger Code",
+      next: "Nächster Code",
+      codesHelp:
+        "Öffne ImpfPass auf dem Handy, tippe in den Einstellungen auf „Impfungen übernehmen“ und scanne die Codes. Die Reihenfolge ist egal.",
+      codesPrivacy:
+        "Die Codes enthalten deine Impfdaten. Sie gehen vom Bildschirm direkt in die Kamera deines Handys, nicht ins Internet.",
+      fileHeading: "Datei",
+      saveFile: "Datei speichern",
+      fileHelp:
+        "Schick die Datei aufs Handy und öffne sie in ImpfPass unter „Impfungen übernehmen“ mit „Datei öffnen“. Per E-Mail oder über eine Cloud gehen die Daten dabei über deren Anbieter.",
+      textHeading: "Text",
+      copyText: "Text kopieren",
+      textLabel: "Übertragungstext",
+      back: "Zurück zur Tabelle",
+      deleteDraft: "Entwurf löschen",
+      deleteTitle:
+        "Entwurf löschen? Die Tabelle mit allen Einträgen wird auf diesem PC gelöscht.",
+      deleteConfirm: "Löschen",
+      cancel: "Abbrechen",
+      deleted: "Der Entwurf ist gelöscht.",
+    },
     diseasePicker: {
       open: (n: number) => `Krankheiten wählen (${n})`,
       title: (row: number) => `Krankheiten für Zeile ${row}`,

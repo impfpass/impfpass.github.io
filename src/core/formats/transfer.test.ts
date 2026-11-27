@@ -12,6 +12,7 @@ import {
   newTransferId,
   QR_PART_CHARS,
   readTransferText,
+  toTextLine,
   TransferError,
   transferFileName,
   type TransferCollector,
@@ -228,6 +229,28 @@ describe("encodeTransfer und readTransferText", () => {
     const ids = Array.from({ length: 50 }, newTransferId);
     for (const id of ids) expect(id).toMatch(/^[0-9A-Z]{6}$/);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("toTextLine", () => {
+  it("enthält kein Leerzeichen und wird wie die normale Zeile gelesen", () => {
+    const p = typical(50);
+    const [line] = encodeTransfer(p, Infinity);
+    expect(line).toContain(" ");
+    const text = toTextLine(line);
+    expect(text).not.toContain(" ");
+    expect(readTransferText(text)).toEqual({ payload: p });
+    expect(
+      readTransferText(`${text}
+`),
+    ).toEqual({ payload: p });
+  });
+
+  it("lässt die Zeilen für QR-Codes unberührt", () => {
+    const lines = encodeTransfer(typical(50));
+    expect(lines.length).toBeGreaterThan(1);
+    expect(lines.some((l) => l.includes(" "))).toBe(true);
+    expect(lines.every((l) => PART.test(l))).toBe(true);
   });
 });
 

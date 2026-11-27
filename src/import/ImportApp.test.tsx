@@ -125,3 +125,41 @@ it("„Weiter zum Übertragen“ führt zu Schritt 3", async () => {
     screen.getByRole("heading", { level: 2, name: "Übertragen" }),
   ).toBeTruthy();
 });
+
+it("Entwurf löschen leert den Speicher und zeigt Schritt 1 mit Meldung", async () => {
+  const store = await openDraftStore();
+  await store.save({
+    ...emptyDraft(new Date()),
+    rows: [withLabel({ ...newRow("r1"), date: "05.12.2016" }, "Repevax")],
+  });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Weiter zum Übertragen" }),
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: "Entwurf löschen" }),
+  );
+  await userEvent.click(await screen.findByRole("button", { name: "Löschen" }));
+
+  expect(current().textContent).toBe("1 Anleitung");
+  expect((await screen.findByRole("status")).textContent).toBe(
+    "Der Entwurf ist gelöscht.",
+  );
+  expect(await store.load()).toBeNull();
+});
+
+it("Zurück zur Tabelle führt von Schritt 3 zu Schritt 2", async () => {
+  const store = await openDraftStore();
+  await store.save({
+    ...emptyDraft(new Date()),
+    rows: [withLabel({ ...newRow("r1"), date: "05.12.2016" }, "Repevax")],
+  });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Weiter zum Übertragen" }),
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: "Zurück zur Tabelle" }),
+  );
+  expect(current().textContent).toBe("2 Tabelle prüfen");
+});

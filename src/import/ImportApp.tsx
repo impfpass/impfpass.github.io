@@ -4,6 +4,7 @@ import { openDraftStore } from "@/core/storage/draftStore";
 import { T } from "@/texts";
 import { DraftTable } from "./DraftTable";
 import { GuideStep } from "./GuideStep";
+import { TransferStep } from "./TransferStep";
 import { useDraft } from "./useDraft";
 
 type Step = 1 | 2 | 3;
@@ -20,7 +21,7 @@ export function ImportApp({
 }: {
   openStore?: () => Promise<DraftStore>;
 }) {
-  const { status, draft, persistent, update } = useDraft(openStore);
+  const { status, draft, persistent, update, clear } = useDraft(openStore);
   // null: noch nicht festgelegt, solange der Entwurf lädt.
   const [chosen, setChosen] = useState<Step | null>(null);
   // Der Startschritt folgt einmal dem geladenen Entwurf und bleibt dann, auch
@@ -83,6 +84,11 @@ export function ImportApp({
               <h2 className="text-xl font-semibold">
                 {STEPS[step - 1].heading}
               </h2>
+              {step === 1 && message && (
+                <p role="status" className="mt-4 rounded-md border p-3">
+                  {message}
+                </p>
+              )}
               {step === 1 && (
                 <GuideStep
                   draft={draft}
@@ -106,6 +112,17 @@ export function ImportApp({
                     onNext={() => goTo(3)}
                   />
                 </>
+              )}
+              {step === 3 && (
+                <TransferStep
+                  draft={draft}
+                  onBack={() => goTo(2)}
+                  onCleared={() => {
+                    void clear();
+                    setChosen(1);
+                    setMessage(T.pc.send.deleted);
+                  }}
+                />
               )}
             </section>
           </>

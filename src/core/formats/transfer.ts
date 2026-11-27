@@ -231,6 +231,15 @@ export function encodeTransfer(
   );
 }
 
+/**
+ * Für Datei und Text: Base45 enthält Leerzeichen, an denen Mailprogramme lange
+ * Zeilen umbrechen. "_" kommt im Base45-Alphabet nicht vor; `addPart` macht
+ * es beim Lesen wieder zum Leerzeichen.
+ */
+export function toTextLine(line: string): string {
+  return line.replaceAll(" ", "_");
+}
+
 interface Part {
   n: number;
   total: number;
@@ -239,7 +248,9 @@ interface Part {
   crc: string;
 }
 
-function parsePart(line: string): Part {
+function parsePart(rawLine: string): Part {
+  // Die Textform ersetzt Leerzeichen durch "_", siehe toTextLine.
+  const line = rawLine.replaceAll("_", " ");
   // Die Version zuerst: Eine neuere Version darf die Zeile anders aufbauen.
   const version = /^IP:(\d+):/.exec(line);
   if (!version) throw new TransferError("notTransfer");
