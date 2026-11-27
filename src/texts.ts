@@ -96,7 +96,81 @@ export const T = {
       precision === "day"
         ? `zuletzt geimpft am ${date}`
         : `zuletzt geimpft ${date}`,
-    later: "Empfehlungen und Erinnerungen folgen in einer späteren Version.",
+    noVaccinations:
+      "Du hast noch keine Impfungen eingetragen. Bis dahin steht hier fast alles unter „Jetzt fällig“.",
+    addFirst: "Impfung eintragen",
+    under18: "ImpfPass berechnet Empfehlungen ab 18 Jahren.",
+    groups: {
+      red: "Jetzt fällig",
+      yellow: "Bald fällig",
+      green: "Geschützt",
+      grey: "Später",
+    },
+    makeAppointment: "Termin ausmachen",
+    others: "Weitere Impfungen",
+    hidden: "Ausgeblendet",
+    declined: "Möchte ich nicht",
+    notNeeded: (reason: string | undefined) =>
+      reason ? `Nicht nötig: ${reason}` : "Nicht nötig",
+    footerEdition: (edition: string, date: string) =>
+      `STIKO-Stand: ${edition}, Regeln vom ${date}`,
+    footerAdvice: "ImpfPass ersetzt keine ärztliche Beratung.",
+    notice: {
+      new: (text: string) => `Neu: ${text} Betrifft dich.`,
+      changed: (text: string) => `Geändert: ${text}`,
+      dropped: (text: string) => `Entfällt: ${text}`,
+      view: "Ansehen",
+      dismiss: "Verstanden",
+    },
+    tbe: {
+      question:
+        "Du hast FSME-Impfungen eingetragen. Soll ImpfPass an die Auffrischungen erinnern?",
+      yes: "Ja, erinnern",
+      no: "Nein",
+    },
+    discuss: {
+      title: "Mit dem Arzt besprechen",
+      normalAge: (age: number) => `Für alle empfohlen ab ${age} Jahren.`,
+      noNormal: "Ohne besonderen Grund nicht empfohlen.",
+      serology: "Ob du geschützt bist, kann ein Bluttest klären.",
+      targetGroup: (group: string) =>
+        `Die STIKO empfiehlt sie früher oder zusätzlich für: ${group}`,
+      doctorRecommends: "Arzt empfiehlt sie mir",
+      notApplicable: "Trifft nicht zu",
+    },
+  },
+  rec: {
+    names: {
+      td: "Tetanus und Diphtherie",
+      pertussis: "Keuchhusten",
+      polio: "Kinderlähmung (Polio)",
+      mmr: "Masern, Mumps, Röteln",
+      varicella: "Windpocken",
+      hepatitis_b: "Hepatitis B",
+      influenza: "Grippe",
+      covid19: "COVID-19",
+      pneumococcal: "Pneumokokken",
+      zoster: "Gürtelrose",
+      rsv: "RSV",
+      tbe: "FSME",
+    } as Record<string, string>,
+    status: {
+      overdueSince: (d: string) => `überfällig seit ${d}`,
+      dueNow: "jetzt fällig",
+      doseDue: (n: number | string) => `${n}. Dosis fällig`,
+      latest: (d: string) => `, spätestens ${d}`,
+      seasonOpen: (label: string) => `für die Saison ${label} noch offen`,
+      dueFrom: (d: string) => `fällig ab ${d}`,
+      doseFrom: (n: number | string, d: string) => `${n}. Dosis ab ${d}`,
+      seasonFrom: (label: string, d: string) =>
+        `für die Saison ${label} ab ${d}`,
+      seasonDone: (label: string) => `für die Saison ${label} geimpft`,
+      protectedUntil: (d: string) => `geschützt bis ${d}`,
+      protectedNoBooster: "geschützt, keine Auffrischung nötig",
+      nextSeason: (d: string) => `nächste Saison ab ${d}`,
+      fromAge: (age: number, d: string) => `ab ${age} Jahren, also ab ${d}`,
+      from: (d: string) => `ab ${d}`,
+    },
   },
   list: {
     title: "Impfungen",
@@ -202,6 +276,12 @@ export const T = {
       "Deine Daten bleiben auf diesem Gerät. ImpfPass schickt nichts ins Internet. Daten verlassen das Gerät nur, wenn du es selbst auslöst, zum Beispiel beim Speichern einer Sicherung.",
     backup: "Die Sicherung enthält deine Impfdaten. Bewahre sie sicher auf.",
     version: (v: string) => `Version ${v}`,
+    rules: "Empfehlungen",
+    edition: (e: string) => `STIKO-Stand: ${e}`,
+    rulebook: (v: string) => `Regelwerk-Version: ${v}`,
+    sources: "Quellen",
+    derived:
+      "Die Regeln sind selbst aus den Empfehlungen der STIKO abgeleitet. Bei Fragen zu deiner Impfung entscheidet deine Ärztin oder dein Arzt.",
   },
   backup: {
     save: "Sicherung speichern",

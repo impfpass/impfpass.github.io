@@ -89,7 +89,7 @@ it("die Ersteinrichtung bietet das Wiederherstellen einer Sicherung an", async (
   expect(
     await screen.findByRole("heading", { name: "Übersicht" }),
   ).toBeTruthy();
-  expect(screen.getByText("Tetanus")).toBeTruthy();
+  expect(screen.getByText("Tetanus und Diphtherie")).toBeTruthy();
 });
 
 it("„Neue Impfung“ nach dem Speichern öffnet ein leeres Formular", async () => {
