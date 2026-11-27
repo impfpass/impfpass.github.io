@@ -5,9 +5,13 @@ const sources = import.meta.glob<string>(["./**/*.ts", "!./**/*.test.ts"], {
   eager: true,
 });
 
-it("der Kern importiert nichts aus src/app", () => {
+// Erfasst `from "x"` und `import "x"`.
+const FORBIDDEN =
+  /(?:from|import)\s+["'](@\/app\/|@\/components\/|(\.\.\/)+app\/|(\.\.\/)+components\/|react(-dom)?(\/[^"']*)?["'])/;
+
+it("der Kern importiert nichts aus src/app, src/components, react oder react-dom", () => {
   const offenders = Object.entries(sources)
-    .filter(([, code]) => /from\s+["'](@\/app\/|(\.\.\/)+app\/)/.test(code))
+    .filter(([, code]) => FORBIDDEN.test(code))
     .map(([file]) => file);
   expect(Object.keys(sources).length).toBeGreaterThan(5);
   expect(offenders).toEqual([]);
