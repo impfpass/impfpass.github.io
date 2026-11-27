@@ -10,6 +10,8 @@ export function VaccinationRow({
 }: {
   vaccination: Vaccination;
 }) {
+  const name = vaccinationName(v);
+  const diseases = diseaseLabel(v.diseases);
   return (
     <Link
       href={`/impfungen/${v.id}`}
@@ -19,10 +21,11 @@ export function VaccinationRow({
         {formatDate(v.date, v.datePrecision)}
       </span>
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="font-medium break-words">{vaccinationName(v)}</span>
-        <span className="text-muted-foreground">
-          {diseaseLabel(v.diseases)}
-        </span>
+        <span className="font-medium break-words">{name}</span>
+        {/* Ohne Impfstoff ist die Bezeichnung oft schon der Name der Krankheiten. */}
+        {diseases !== name && (
+          <span className="text-muted-foreground">{diseases}</span>
+        )}
       </span>
       <ChevronRight aria-hidden="true" className="size-5 shrink-0" />
     </Link>

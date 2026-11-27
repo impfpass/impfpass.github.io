@@ -43,6 +43,23 @@ it("zeigt Datum, Impfstoff und Krankheiten einer Impfung", async () => {
   expect(link.getAttribute("href")).toBe("#/impfungen/v1");
 });
 
+it("zeigt die Krankheiten nicht doppelt, wenn sie die Bezeichnung sind", async () => {
+  await seed({
+    vaccinations: [
+      testVaccination({
+        date: "1990-01-01",
+        datePrecision: "year",
+        productId: null,
+        label: "Tetanus, Diphtherie",
+        diseases: ["tetanus", "diphtheria"],
+      }),
+    ],
+  });
+  await renderWithData(<ListScreen />, "/impfungen");
+  const link = screen.getByRole("link", { name: /Tetanus, Diphtherie/ });
+  expect(link.textContent?.match(/Tetanus, Diphtherie/g)).toHaveLength(1);
+});
+
 it("erneutes Antippen dreht die Reihenfolge um", async () => {
   await seed({
     vaccinations: [
