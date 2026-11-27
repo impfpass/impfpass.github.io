@@ -6,6 +6,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   addPart,
   decodeCollected,
+  joinWrappedLines,
   MAX_TRANSFER_BYTES,
   missingParts,
   readTransferText,
@@ -144,10 +145,9 @@ export function TransferScreen() {
       showPreview(whole);
       return true;
     }
-    const lines = content
-      .split(/\r\n|\r|\n/)
-      .map((line) => line.trim())
-      .filter((line) => line !== "" && !isForeignLine(line));
+    const lines = joinWrappedLines(content.split(/\r\n|\r|\n/)).filter(
+      (line) => !isForeignLine(line),
+    );
     if (lines.length === 0) {
       setProblem({ message: T.transfer.errors.notTransfer });
       return false;

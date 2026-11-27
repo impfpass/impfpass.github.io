@@ -7,6 +7,7 @@ import {
   addPart,
   decodeCollected,
   encodeTransfer,
+  joinWrappedLines,
   MAX_TRANSFER_BYTES,
   missingParts,
   newTransferId,
@@ -251,6 +252,60 @@ describe("toTextLine", () => {
     expect(lines.length).toBeGreaterThan(1);
     expect(lines.some((l) => l.includes(" "))).toBe(true);
     expect(lines.every((l) => PART.test(l))).toBe(true);
+  });
+});
+
+describe("umgebrochene Textzeilen", () => {
+  const p = typical(50);
+  const text = toTextLine(encodeTransfer(p, Infinity)[0]);
+  const splitAt = (line: string, a: number, b: number) => [
+    line.slice(0, a),
+    line.slice(a, b),
+    line.slice(b),
+  ];
+
+  it.each([
+    [5, 40],
+    [9, 300],
+    [17, text.length - 4],
+    [200, text.length - 9],
+    [text.length - 12, text.length - 1],
+  ])(
+    "eine Textzeile in 3 Stücken (Schnitt bei %i und %i) wird gelesen",
+    (a, b) => {
+      const pieces = splitAt(text, a, b);
+      expect(readTransferText(pieces.join("\n"))).toEqual({ payload: p });
+      expect(readTransferText(pieces.join("\r\n"))).toEqual({ payload: p });
+    },
+  );
+
+  it("verträgt Einrückung, Gruß und Unterschrift um die Stücke", () => {
+    const [a, b, c] = splitAt(text, 76, 152);
+    const mail = ["Hallo,", "", a, `  ${b}`, ` ${c} `, "Viele Grüße", "Anna"];
+    expect(readTransferText(mail.join("\r\n"))).toEqual({ payload: p });
+  });
+
+  it("verbindet mehrere umgebrochene Teilzeilen je für sich", () => {
+    const parts = encodeTransfer(p, 200).map(toTextLine);
+    const lines = parts.flatMap((line, i) => splitAt(line, 30 + i, 120));
+    expect(readTransferText(lines.join("\n"))).toEqual({ payload: p });
+  });
+
+  it("joinWrappedLines lässt vollständige und fremde Zeilen, wie sie sind", () => {
+    const parts = encodeTransfer(p, 200).map(toTextLine);
+    expect(joinWrappedLines(["  Hallo ", "", ...parts, "Gruß"])).toEqual([
+      "Hallo",
+      ...parts,
+      "Gruß",
+    ]);
+  });
+
+  it("joinWrappedLines hört an der nächsten Teilzeile auf", () => {
+    const [first, second] = encodeTransfer(p, 200).map(toTextLine);
+    const [a, b] = splitAt(first, 50, first.length);
+    const broken = first.slice(0, 50);
+    expect(joinWrappedLines([broken, second])).toEqual([broken, second]);
+    expect(joinWrappedLines([a, b, second])).toEqual([first, second]);
   });
 });
 

@@ -358,6 +358,47 @@ it("mehrere Teile auf einmal eingefügt, mit fremden Zeilen dazwischen", async (
   ).toBeTruthy();
 });
 
+it("eine umgebrochene Textzeile (3 Stücke, CRLF) zeigt die Vorschau", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const line = textOf(payload);
+
+  await paste(
+    user,
+    [
+      "Hallo,",
+      line.slice(0, 7),
+      line.slice(7, 90),
+      line.slice(90),
+      "Gruß",
+    ].join("\r\n"),
+  );
+
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+});
+
+it("ein umgebrochener einzelner Teil wird gesammelt", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [, second] = partsOf(payload, 3);
+
+  await paste(
+    user,
+    [second.slice(0, 12), second.slice(12, 40), second.slice(40)].join("\r\n"),
+  );
+
+  expect(
+    await screen.findByText(
+      "1 von 3 Teilen gelesen. Es fehlen noch Teil 1 und 3.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
 it("ein Teil einer anderen Übertragung bietet „Neu beginnen“ an", async () => {
   await seed({});
   const user = userEvent.setup();

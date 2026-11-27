@@ -331,9 +331,41 @@ export function decodeCollected(c: TransferCollector): TransferPayload {
   };
 }
 
+/** Eine vollständige Teilzeile, in QR- oder Textform (siehe toTextLine). */
+function isPartLine(line: string): boolean {
+  return PART_PATTERN.test(line.replaceAll("_", " "));
+}
+
+/**
+ * Mailprogramme brechen lange Zeilen um. Eine Zeile, die mit `IP:` beginnt,
+ * aber keine vollständige Teilzeile ist, wird mit den folgenden verbunden, bis
+ * sie vollständig ist oder die nächste mit `IP:` beginnt. Ergibt die Zeilen
+ * getrimmt und ohne Leerzeilen.
+ */
+export function joinWrappedLines(lines: readonly string[]): string[] {
+  const rest = lines.map((line) => line.trim()).filter((line) => line !== "");
+  const result: string[] = [];
+  for (let i = 0; i < rest.length; i++) {
+    let line = rest[i];
+    if (line.startsWith("IP:")) {
+      while (
+        !isPartLine(line) &&
+        i + 1 < rest.length &&
+        !rest[i + 1].startsWith("IP:")
+      ) {
+        i += 1;
+        line += rest[i];
+      }
+    }
+    result.push(line);
+  }
+  return result;
+}
+
 /**
  * Liest eingefügten Text oder eine Datei mit einer oder mehreren Teilzeilen.
- * Leerzeilen und fremde Zeilen, etwa aus einer E-Mail, werden übersprungen.
+ * Leerzeilen und fremde Zeilen, etwa aus einer E-Mail, werden übersprungen,
+ * umgebrochene Teilzeilen verbunden.
  */
 export function readTransferText(
   text: string,
@@ -341,9 +373,7 @@ export function readTransferText(
   | { payload: TransferPayload }
   | { collector: TransferCollector; missing: number[] } {
   let collector: TransferCollector | null = null;
-  for (const raw of text.split(/\r\n|\r|\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
+  for (const line of joinWrappedLines(text.split(/\r\n|\r|\n/))) {
     try {
       collector = addPart(collector, line).collector;
     } catch (e) {
