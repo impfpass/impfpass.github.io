@@ -33,7 +33,15 @@ liegt an iOS bei Apps vom Home-Bildschirm, nicht an ImpfPass: Die Farben
 hängen nur an `prefers-color-scheme` in `src/index.css`, ohne eigenen
 Zustand in der App.
 
-## Anregung aus dem Test
+## Nachträge aus dem Test
 
-Bei grünen Einträgen (geschützt) sind „Möchte ich nicht“ und „Nicht nötig“
-in der Detailansicht überflüssig, weil gerade nichts ansteht.
+Bei grünen Einträgen (geschützt) waren „Möchte ich nicht“ und „Nicht nötig“
+in der Detailansicht überflüssig, weil gerade nichts ansteht. Dasselbe galt
+für graue Einträge (später). Seit Commit 68dece3 stehen die Knöpfe nur noch
+bei roten und gelben Einträgen und bei den Karten „Mit dem Arzt besprechen“.
+
+Die Fundstelle bei RSV las sich als „Tab. 2, RSV, S, S. 18“. Seit Commit
+ff95f21 schreiben die Fundstellen die STIKO-Kategorie aus, etwa
+„Kategorie S“.
+
+Beides auf dem iPhone geprüft (Stand ff95f21): klappt.
