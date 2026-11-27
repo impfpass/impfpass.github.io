@@ -21,6 +21,7 @@ import {
   openRepository,
   requestPersistence,
   type BackupData,
+  type DatabaseEvents,
   type Repository,
 } from "@/core/storage/repository";
 
@@ -75,29 +76,42 @@ const INITIAL: State = {
 };
 
 export function AppDataProvider(props: {
-  open?: () => Promise<Repository>;
+  open?: (events?: DatabaseEvents) => Promise<Repository>;
+  /** Für Tests; sonst lädt die Seite neu. */
+  reload?: () => void;
   children: ReactNode;
 }) {
   // Nur beim ersten Rendern übernehmen, damit eine neue Funktion pro Rendern
   // die Datenbank nicht erneut öffnet.
   const [open] = useState(() => props.open ?? openRepository);
+  const [reload] = useState(
+    () => props.reload ?? (() => window.location.reload()),
+  );
   const [state, setState] = useState<State>(INITIAL);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    async function connect() {
       try {
-        const repo = await open();
+        const repo = await open({
+          // Eine neuere Version in einem anderen Tab braucht die Datenbank;
+          // neu laden holt die neue Version auch hierher.
+          onVersionChange: reload,
+          onTerminated: () => {
+            if (!cancelled) void connect();
+          },
+        });
         const loaded = await loadAll(repo);
         if (!cancelled) setState({ status: "ready", repo, ...loaded });
       } catch {
         if (!cancelled) setState({ ...INITIAL, status: "unavailable" });
       }
-    })();
+    }
+    void connect();
     return () => {
       cancelled = true;
     };
-  }, [open]);
+  }, [open, reload]);
 
   const { repo } = state;
   const requireRepo = useCallback((): Repository => {

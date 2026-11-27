@@ -41,12 +41,34 @@ export const STORE_NAMES = [
   "settings",
 ] as const;
 
+export interface DatabaseEvents {
+  /**
+   * Eine neuere App-Version (etwa in einem anderen Tab) will die Datenbank
+   * aktualisieren. Die Verbindung ist dann schon geschlossen; die App sollte
+   * neu laden, um die neue Version zu bekommen.
+   */
+  onVersionChange?: () => void;
+  /** Der Browser hat die Verbindung abgebrochen (kommt in WebKit vor). */
+  onTerminated?: () => void;
+}
+
 /**
  * Öffnet die Datenbank. Alle Stores entstehen schon in Version 1, damit
  * Plan 2 und Plan 4 keine Migration brauchen.
  */
-export function openDatabase(): Promise<ImpfPassDatabase> {
-  return openDB<ImpfPassDB>(DB_NAME, DB_VERSION, {
+export async function openDatabase(
+  events: DatabaseEvents = {},
+): Promise<ImpfPassDatabase> {
+  const db = await openDB<ImpfPassDB>(DB_NAME, DB_VERSION, {
+    blocking() {
+      // Ohne Schließen bliebe die neuere Version hängen, bis jeder Tab mit
+      // dieser Version zu ist.
+      db.close();
+      events.onVersionChange?.();
+    },
+    terminated() {
+      events.onTerminated?.();
+    },
     upgrade(db, oldVersion) {
       if (oldVersion < 1) {
         db.createObjectStore("persons", { keyPath: "id" });
@@ -63,4 +85,5 @@ export function openDatabase(): Promise<ImpfPassDatabase> {
       }
     },
   });
+  return db;
 }

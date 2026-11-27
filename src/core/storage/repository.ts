@@ -4,8 +4,11 @@ import {
   openDatabase,
   SETTINGS_KEY,
   STORE_NAMES,
+  type DatabaseEvents,
   type ImpfPassDatabase,
 } from "./db";
+
+export type { DatabaseEvents } from "./db";
 
 /** Der Browser lässt kein Speichern zu, etwa im privaten Modus. */
 export class StorageUnavailableError extends Error {
@@ -36,13 +39,15 @@ export interface Repository {
   replaceAll(data: BackupData): Promise<void>;
 }
 
-export async function openRepository(): Promise<Repository> {
+export async function openRepository(
+  events?: DatabaseEvents,
+): Promise<Repository> {
   if (typeof indexedDB === "undefined" || indexedDB === null) {
     throw new StorageUnavailableError();
   }
   let db: ImpfPassDatabase;
   try {
-    db = await openDatabase();
+    db = await openDatabase(events);
   } catch (cause) {
     throw new StorageUnavailableError({ cause });
   }
