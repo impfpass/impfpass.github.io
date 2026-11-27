@@ -536,6 +536,10 @@ So füllst du die Felder:
       deleteConfirm: "Löschen",
       cancel: "Abbrechen",
       deleted: "Der Entwurf ist gelöscht.",
+      tooManyRows:
+        "Der Entwurf hat zu viele Zeilen für eine Übertragung (höchstens 2000).",
+      tooManyCodes:
+        "Zu viele Einträge für QR-Codes. Nimm die Datei oder den Text.",
     },
     diseasePicker: {
       open: (n: number) => `Krankheiten wählen (${n})`,

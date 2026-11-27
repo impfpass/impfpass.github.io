@@ -4,11 +4,13 @@ import { QrCode } from "@/components/QrCode";
 import { todayISO } from "@/core/dates";
 import {
   encodeTransfer,
+  MAX_TRANSFER_ENTRIES,
   newTransferId,
   toTextLine,
   transferFileName,
 } from "@/core/formats/transfer";
 import { draftToEntries, type Draft } from "@/core/import/draft";
+import type { TransferEntry } from "@/core/model";
 import { saveFile } from "@/lib/saveFile";
 import { T } from "@/texts";
 import { copyText } from "./copyText";
@@ -22,28 +24,56 @@ interface TransferStepProps {
   onCleared(): void;
 }
 
+type Prepared =
+  | { problem: string }
+  | {
+      /** `null`: zu viele Teile für QR-Codes, Datei und Text gehen trotzdem. */
+      parts: string[] | null;
+      textLine: string;
+    };
+
+function prepare(draft: Draft): Prepared {
+  let entries: TransferEntry[];
+  try {
+    entries = draftToEntries(draft, todayISO());
+  } catch {
+    return {
+      problem:
+        draft.rows.length > MAX_TRANSFER_ENTRIES
+          ? t.tooManyRows
+          : T.pc.table.blocked,
+    };
+  }
+  const payload = {
+    id: newTransferId(),
+    createdAt: new Date().toISOString(),
+    entries,
+  };
+  let parts: string[] | null;
+  try {
+    parts = encodeTransfer(payload);
+  } catch (e) {
+    if (!(e instanceof RangeError)) throw e;
+    parts = null;
+  }
+  // Datei und Text sind ein einziger Teil ohne Längengrenze.
+  return { parts, textLine: toTextLine(encodeTransfer(payload, Infinity)[0]) };
+}
+
 /** Schritt 3: Die geprüfte Tabelle als QR-Codes, Datei oder Text. */
 export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
   // Einmal beim Öffnen; eine neue ID gibt es erst, wenn der Schritt neu öffnet.
-  const [transfer] = useState(() => {
-    const payload = {
-      id: newTransferId(),
-      createdAt: new Date().toISOString(),
-      entries: draftToEntries(draft, todayISO()),
-    };
-    return {
-      parts: encodeTransfer(payload),
-      textLine: toTextLine(encodeTransfer(payload, Infinity)[0]),
-    };
-  });
-  const { parts, textLine } = transfer;
-  const total = parts.length;
+  const [transfer] = useState(() => prepare(draft));
+  const parts = "parts" in transfer ? transfer.parts : null;
+  const textLine = "textLine" in transfer ? transfer.textLine : "";
+  const total = parts?.length ?? 0;
 
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState<boolean | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (total === 0) return;
     function onKeyDown(e: KeyboardEvent) {
       if (
         e.target instanceof HTMLElement &&
@@ -69,20 +99,39 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
     setCopied(await copyText(textLine, textRef.current));
   }
 
+  if ("problem" in transfer) {
+    return (
+      <div className="mt-4 space-y-4">
+        <p role="alert" className="text-destructive">
+          {transfer.problem}
+        </p>
+        <Button type="button" variant="outline" onClick={onBack}>
+          {t.back}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-4 space-y-8">
       <section aria-labelledby="send-codes" className="space-y-3">
         <h3 id="send-codes" className="text-lg font-semibold">
           {t.codesHeading}
         </h3>
-        <p aria-live="polite" className="font-semibold">
-          {t.codeOf(index + 1, total)}
-        </p>
-        <QrCode
-          text={parts[index]}
-          label={T.pc.send.codeLabel(index + 1, total)}
-          className="aspect-square h-auto w-[min(80vh,640px)] max-w-full"
-        />
+        {parts === null ? (
+          <p>{t.tooManyCodes}</p>
+        ) : (
+          <>
+            <p aria-live="polite" className="font-semibold">
+              {t.codeOf(index + 1, total)}
+            </p>
+            <QrCode
+              text={parts[index]}
+              label={T.pc.send.codeLabel(index + 1, total)}
+              className="aspect-square h-auto w-[min(80vh,640px)] max-w-full"
+            />
+          </>
+        )}
         {total > 1 && (
           <div className="flex gap-3">
             <Button

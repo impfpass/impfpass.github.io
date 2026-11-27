@@ -177,6 +177,89 @@ it("berechnet die Übertragung nur einmal", async () => {
   ).toBe(before);
 });
 
+describe("zu große Entwürfe", () => {
+  /** Zeilen mit langen, kaum zu packenden Notizen: zu viel für 99 QR-Codes. */
+  function noisyDraft(n: number): Draft {
+    // xorshift32: feste Folge, aber ohne Muster, das deflate packen könnte.
+    let x = 2463534242;
+    const noise = (length: number) =>
+      Array.from({ length }, () => {
+        x ^= x << 13;
+        x ^= x >>> 17;
+        x ^= x << 5;
+        return ((x >>> 0) % 36).toString(36);
+      }).join("");
+    const rows = Array.from({ length: n }, (_, i) => ({
+      ...withProduct(newRow(`r${i}`), "boostrix-polio"),
+      date: "05.12.2016",
+      note: noise(400),
+    }));
+    return { ...emptyDraft(new Date()), rows };
+  }
+
+  it("mehr als 2000 Zeilen: Meldung und „Zurück zur Tabelle“ statt Absturz", async () => {
+    const onBack = vi.fn();
+    render(
+      <TransferStep draft={draftWith(2001)} onBack={onBack} onCleared={noop} />,
+    );
+    expect(
+      screen.getByText(
+        "Der Entwurf hat zu viele Zeilen für eine Übertragung (höchstens 2000).",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Datei speichern" }),
+    ).toBeNull();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Zurück zur Tabelle" }),
+    );
+    expect(onBack).toHaveBeenCalledTimes(1);
+  });
+
+  it("ein Entwurf mit Fehlern zeigt die Meldung der Tabelle statt Absturz", () => {
+    const draft = draftWith(1);
+    draft.rows[0] = { ...draft.rows[0], date: "" };
+    render(<TransferStep draft={draft} onBack={noop} onCleared={noop} />);
+    expect(
+      screen.getByText("Behebe zuerst die rot markierten Zeilen."),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Zurück zur Tabelle" }),
+    ).toBeTruthy();
+  });
+
+  it("zu viel für QR-Codes: Hinweis dort, Datei und Text gehen weiter", async () => {
+    const draft = noisyDraft(300);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    setClipboard({ writeText });
+    render(<TransferStep draft={draft} onBack={noop} onCleared={noop} />);
+
+    const codes = screen.getByRole("region", { name: "QR-Codes" });
+    expect(
+      within(codes).getByText(
+        "Zu viele Einträge für QR-Codes. Nimm die Datei oder den Text.",
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByRole("img")).toBeNull();
+    expect(screen.queryByText(/^Code 1 von/)).toBeNull();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Datei speichern" }),
+    );
+    const [file] = vi.mocked(saveFile).mock.calls[0];
+    const result = readTransferText(await file.text());
+    expect("payload" in result && result.payload.entries).toEqual(
+      draftToEntries(draft, todayISO()),
+    );
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Text kopieren" }),
+    );
+    expect(writeText.mock.calls[0][0]).toBe((await file.text()).trim());
+  });
+});
+
 it("Zurück zur Tabelle ruft onBack", async () => {
   const onBack = vi.fn();
   render(
