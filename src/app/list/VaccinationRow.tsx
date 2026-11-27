@@ -1,8 +1,9 @@
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
+import { diseaseLabel } from "@/core/catalog/diseases";
 import { formatDate } from "@/core/dates";
 import type { Vaccination } from "@/core/model";
-import { diseaseNames, vaccinationName } from "../format";
+import { vaccinationName } from "../format";
 
 export function VaccinationRow({
   vaccination: v,
@@ -20,7 +21,7 @@ export function VaccinationRow({
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="font-medium break-words">{vaccinationName(v)}</span>
         <span className="text-muted-foreground">
-          {diseaseNames(v.diseases)}
+          {diseaseLabel(v.diseases)}
         </span>
       </span>
       <ChevronRight aria-hidden="true" className="size-5 shrink-0" />

@@ -45,6 +45,27 @@ export interface Vaccination {
   updatedAt: string;
 }
 
+/** Eine Impfung in der Übertragung vom PC aufs Handy (Spec 8.2). */
+export interface TransferEntry {
+  date: ISODate;
+  datePrecision: DatePrecision;
+  productId: string | null;
+  /** Nie leer: sonst der Name des Impfstoffs oder die Namen der Krankheiten. */
+  label: string;
+  /** Immer gefüllt. */
+  diseases: DiseaseId[];
+  batch?: string;
+  doctor?: string;
+  note?: string;
+}
+
+export interface TransferPayload {
+  /** Sechs Zeichen aus 0-9 und A-Z, steht auch in jeder Teilzeile. */
+  id: string;
+  createdAt: string;
+  entries: TransferEntry[];
+}
+
 export interface Decision {
   personId: string;
   recommendationId: string;

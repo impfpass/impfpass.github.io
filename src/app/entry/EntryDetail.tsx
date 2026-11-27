@@ -13,9 +13,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { diseaseLabel } from "@/core/catalog/diseases";
 import { formatDate } from "@/core/dates";
 import { useAppData } from "../data/AppData";
-import { diseaseNames, vaccinationName } from "../format";
+import { vaccinationName } from "../format";
 import { T } from "@/texts";
 
 function BackLink() {
@@ -77,7 +78,7 @@ export function EntryDetail({ id }: { id: string }) {
         />
         <Field
           label={T.entry.protectsAgainst}
-          value={diseaseNames(v.diseases)}
+          value={diseaseLabel(v.diseases)}
         />
         {v.label !== name && (
           <Field label={T.entry.labelInPass} value={v.label} />

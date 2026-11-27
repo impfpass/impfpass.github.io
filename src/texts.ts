@@ -400,4 +400,13 @@ So füllst du die Felder:
       diseaseUnknown: (name: string) => `Krankheit „${name}“ nicht erkannt.`,
     },
   },
+  transfer: {
+    errors: {
+      notTransfer: "Das ist kein Code von ImpfPass.",
+      otherTransfer: "Dieser Code gehört zu einer anderen Übertragung.",
+      tooNew:
+        "Die Übertragung stammt aus einer neueren Version von ImpfPass. Schließe ImpfPass ganz und öffne es wieder, dann lädt die neue Version.",
+      corrupt: "Die Übertragung ist beschädigt. Erzeuge sie am PC neu.",
+    },
+  },
 } as const;

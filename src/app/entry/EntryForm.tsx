@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { DISEASE_IDS, DISEASES, type DiseaseId } from "@/core/catalog/diseases";
+import {
+  DISEASE_IDS,
+  DISEASES,
+  diseaseLabel,
+  type DiseaseId,
+} from "@/core/catalog/diseases";
 import { getProduct, type Product } from "@/core/catalog/products";
 import { recognizeProduct, suggestProducts } from "@/core/catalog/recognize";
 import { normalizeToPrecision, todayISO } from "@/core/dates";
 import type { DatePrecision, Vaccination } from "@/core/model";
 import { validateEntry, type EntryErrors } from "@/core/validation";
 import { useAppData } from "../data/AppData";
-import { diseaseNames } from "../format";
 import { T } from "@/texts";
 import { BackupHint } from "./BackupHint";
 
@@ -156,7 +160,7 @@ export function EntryForm({
       date: normalizeToPrecision(date, precision),
       datePrecision: precision,
       productId: input.productId,
-      label: input.label || diseaseNames(chosenDiseases),
+      label: input.label || diseaseLabel(chosenDiseases),
       diseases: chosenDiseases,
       source: existing?.source ?? "manual",
       createdAt: existing?.createdAt ?? now,
@@ -322,7 +326,7 @@ export function EntryForm({
         {product && (
           <p>
             {T.entry.protectsAgainst}:{" "}
-            <span>{diseaseNames(product.diseases)}</span>
+            <span>{diseaseLabel(product.diseases)}</span>
           </p>
         )}
       </div>

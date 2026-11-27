@@ -74,3 +74,10 @@ export const DISEASES: Record<DiseaseId, { name: string; aliases: string[] }> =
     tuberculosis: { name: "Tuberkulose", aliases: ["TBC", "TB"] },
     smallpox: { name: "Pocken", aliases: ["Variola"] },
   };
+
+/** Deutsche Krankheitsnamen in der Reihenfolge der Krankheitsliste, mit Komma getrennt. */
+export function diseaseLabel(ids: readonly DiseaseId[]): string {
+  return DISEASE_IDS.filter((d) => ids.includes(d))
+    .map((d) => DISEASES[d].name)
+    .join(", ");
+}

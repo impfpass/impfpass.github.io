@@ -1,4 +1,4 @@
-import { DISEASE_IDS, DISEASES } from "./diseases";
+import { DISEASE_IDS, DISEASES, diseaseLabel } from "./diseases";
 import { getProduct, PRODUCTS } from "./products";
 
 it("Produkt-IDs sind eindeutig, alle Krankheiten existieren", () => {
@@ -136,4 +136,12 @@ it("getProduct findet nach ID", () => {
   const p = PRODUCTS[0];
   expect(getProduct(p.id)).toBe(p);
   expect(getProduct("gibt-es-nicht")).toBeUndefined();
+});
+
+it("diseaseLabel nennt die Krankheiten in der Reihenfolge der Krankheitsliste", () => {
+  expect(diseaseLabel(["pertussis", "tetanus", "diphtheria"])).toBe(
+    "Tetanus, Diphtherie, Keuchhusten",
+  );
+  expect(diseaseLabel(["smallpox"])).toBe("Pocken");
+  expect(diseaseLabel([])).toBe("");
 });
