@@ -1,6 +1,15 @@
 import { IDBFactory } from "fake-indexeddb";
-import type { ListSort, Person, Settings, Vaccination } from "../model";
+import { openDB } from "idb";
+import type {
+  Decision,
+  ListSort,
+  Person,
+  RuleState,
+  Settings,
+  Vaccination,
+} from "../model";
 import { DEFAULT_ANSWERS } from "../model";
+import { DB_NAME, DB_VERSION } from "./db";
 import {
   openRepository,
   requestPersistence,
@@ -173,4 +182,76 @@ it("replaceAll lässt die alten Daten stehen, wenn ein Eintrag nicht gespeichert
 
   await expect(repo.replaceAll(broken)).rejects.toThrow();
   expect((await repo.getPersons()).map((p) => p.id)).toEqual(["alt"]);
+});
+
+const decision = (
+  personId: string,
+  recommendationId: string,
+  kind: Decision["kind"] = "declined",
+): Decision => ({
+  personId,
+  recommendationId,
+  kind,
+  at: "2026-11-27T10:00:00.000Z",
+});
+
+it("speichert, liest und löscht Entscheidungen je Person", async () => {
+  await repo.saveDecision(decision("p1", "zoster"));
+  await repo.saveDecision(decision("p1", "td", "not_needed"));
+  await repo.saveDecision(decision("p2", "td"));
+  // Gleicher Schlüssel überschreibt.
+  await repo.saveDecision({
+    ...decision("p1", "td", "not_needed"),
+    reason: "In einem anderen Impfpass belegt",
+  });
+
+  const byId = (a: Decision, b: Decision) =>
+    a.recommendationId.localeCompare(b.recommendationId);
+  expect((await repo.getDecisions("p1")).sort(byId)).toEqual([
+    {
+      ...decision("p1", "td", "not_needed"),
+      reason: "In einem anderen Impfpass belegt",
+    },
+    decision("p1", "zoster"),
+  ]);
+
+  await repo.deleteDecision("p1", "td");
+  expect(await repo.getDecisions("p1")).toEqual([decision("p1", "zoster")]);
+  expect(await repo.getDecisions("p2")).toEqual([decision("p2", "td")]);
+});
+
+it("Regel-Stand: Hin- und Rückweg", async () => {
+  const state: RuleState = {
+    personId: "p1",
+    seenVersion: "2026-11-27.1",
+    snapshot: [
+      { id: "td", dueDate: "2030-05-04", dose: null, season: false },
+      { id: "influenza", dueDate: "2027-09-01", dose: null, season: true },
+      { id: "zoster", dueDate: null, dose: 1, season: false },
+    ],
+    notices: [
+      {
+        kind: "new",
+        recommendationId: "zoster",
+        text: "Die STIKO empfiehlt …",
+        validSince: "2026-11-27",
+      },
+      {
+        kind: "dropped",
+        recommendationId: "mmr",
+        text: null,
+        validSince: null,
+      },
+    ],
+  };
+  await repo.saveRuleState(state);
+  expect(await repo.getRuleState("p1")).toEqual(state);
+  expect(await repo.getRuleState("p2")).toBeNull();
+});
+
+it("unlesbarer Regel-Stand ergibt null", async () => {
+  const raw = await openDB(DB_NAME, DB_VERSION);
+  await raw.put("ruleStates", { personId: "p1", foo: 1 });
+  raw.close();
+  expect(await repo.getRuleState("p1")).toBeNull();
 });

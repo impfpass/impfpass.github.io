@@ -6,10 +6,14 @@ import { AppDataProvider, useAppData, type AppData } from "@/app/data/AppData";
 import {
   DEFAULT_ANSWERS,
   DEFAULT_SETTINGS,
+  type Decision,
+  type ISODate,
   type Person,
+  type RuleState,
   type Settings,
   type Vaccination,
 } from "@/core/model";
+import type { Rulebook } from "@/core/rules/types";
 import { openRepository } from "@/core/storage/repository";
 
 export function testPerson(overrides: Partial<Person> = {}): Person {
@@ -46,10 +50,14 @@ export async function seed(data: {
   persons?: Person[];
   vaccinations?: Vaccination[];
   settings?: Settings;
+  decisions?: Decision[];
+  ruleStates?: RuleState[];
 }) {
   const repo = await openRepository();
   for (const p of data.persons ?? [testPerson()]) await repo.savePerson(p);
   for (const v of data.vaccinations ?? []) await repo.saveVaccination(v);
+  for (const d of data.decisions ?? []) await repo.saveDecision(d);
+  for (const s of data.ruleStates ?? []) await repo.saveRuleState(s);
   await repo.saveSettings(data.settings ?? DEFAULT_SETTINGS);
   return repo;
 }
@@ -57,8 +65,13 @@ export async function seed(data: {
 /**
  * Rendert einen Bildschirm mit echter Datenanbindung und Hash-Routing.
  * `data()` liefert den jeweils aktuellen Stand von useAppData.
+ * `options` geht an den Provider (Test-Regelwerk, fester Tag).
  */
-export async function renderWithData(ui: ReactNode, route = "/") {
+export async function renderWithData(
+  ui: ReactNode,
+  route = "/",
+  options: { rulebook?: Rulebook; today?: ISODate } = {},
+) {
   window.location.hash = route;
   let latest: AppData | null = null;
   function Probe() {
@@ -66,7 +79,7 @@ export async function renderWithData(ui: ReactNode, route = "/") {
     return null;
   }
   const result = render(
-    <AppDataProvider>
+    <AppDataProvider rulebook={options.rulebook} today={options.today}>
       <Router hook={useHashLocation}>
         {ui}
         <Probe />

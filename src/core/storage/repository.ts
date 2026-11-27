@@ -1,4 +1,11 @@
-import type { Decision, Person, Settings, Vaccination } from "../model";
+import { ruleStateSchema } from "../formats/schemas";
+import type {
+  Decision,
+  Person,
+  RuleState,
+  Settings,
+  Vaccination,
+} from "../model";
 import { DEFAULT_SETTINGS, normalizeListSort } from "../model";
 import {
   openDatabase,
@@ -31,6 +38,13 @@ export interface Repository {
   getVaccinations(personId: string): Promise<Vaccination[]>;
   saveVaccination(v: Vaccination): Promise<void>;
   deleteVaccination(id: string): Promise<void>;
+  getDecisions(personId: string): Promise<Decision[]>;
+  /** Eine Entscheidung je Person und Empfehlung; eine neue ersetzt die alte. */
+  saveDecision(d: Decision): Promise<void>;
+  deleteDecision(personId: string, recommendationId: string): Promise<void>;
+  /** null, wenn nichts gespeichert ist oder der Eintrag nicht lesbar ist. */
+  getRuleState(personId: string): Promise<RuleState | null>;
+  saveRuleState(s: RuleState): Promise<void>;
   /** Voreinstellungen, wenn nichts gespeichert ist. */
   getSettings(): Promise<Settings>;
   saveSettings(s: Settings): Promise<void>;
@@ -72,6 +86,24 @@ function createRepository(db: ImpfPassDatabase): Repository {
       await db.put("vaccinations", v);
     },
     deleteVaccination: (id) => db.delete("vaccinations", id),
+    // Wenige Einträge je Gerät, ein Index lohnt sich nicht.
+    getDecisions: async (personId) =>
+      (await db.getAll("decisions")).filter((d) => d.personId === personId),
+    saveDecision: async (d) => {
+      await db.put("decisions", d);
+    },
+    deleteDecision: (personId, recommendationId) =>
+      db.delete("decisions", [personId, recommendationId]),
+    getRuleState: async (personId) => {
+      const stored: unknown = await db.get("ruleStates", personId);
+      if (stored === undefined) return null;
+      // Ein unlesbarer Stand wird verworfen und neu berechnet.
+      const parsed = ruleStateSchema.safeParse(stored);
+      return parsed.success ? parsed.data : null;
+    },
+    saveRuleState: async (s) => {
+      await db.put("ruleStates", s);
+    },
     getSettings,
     saveSettings: async (s) => {
       await db.put("settings", s, SETTINGS_KEY);
