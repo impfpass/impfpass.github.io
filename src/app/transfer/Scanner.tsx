@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { T } from "@/texts";
-import { scanFrame } from "./scanFrame";
+import { fitWithin, isRepeat, scanFrame } from "./scanFrame";
 
 const SCAN_INTERVAL_MS = 250;
 const MAX_EDGE = 960;
 const DEDUP_MS = 2000;
+const MAX_FAILURES = 10;
 
 function errorMessage(e: unknown): string {
   const name = e instanceof Error ? e.name : "";
@@ -44,6 +45,7 @@ export function Scanner({
     let unmounted = false;
     let canvas: HTMLCanvasElement | null = null;
     let last = { text: "", at: 0 };
+    let failures = 0;
 
     function stop() {
       clearInterval(timer);
@@ -53,15 +55,14 @@ export function Scanner({
       if (video.current) video.current.srcObject = null;
     }
 
-    function tick() {
+    function scanOnce() {
       const el = video.current;
       if (!el || el.readyState < 2 || !el.videoWidth || !el.videoHeight) return;
-      const scale = Math.min(
-        1,
-        MAX_EDGE / Math.max(el.videoWidth, el.videoHeight),
+      const { width, height } = fitWithin(
+        el.videoWidth,
+        el.videoHeight,
+        MAX_EDGE,
       );
-      const width = Math.round(el.videoWidth * scale);
-      const height = Math.round(el.videoHeight * scale);
       canvas ??= document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
@@ -71,9 +72,23 @@ export function Scanner({
       const text = scanFrame(ctx.getImageData(0, 0, width, height));
       if (text === null) return;
       const now = Date.now();
-      if (text === last.text && now - last.at < DEDUP_MS) return;
+      if (isRepeat(last, text, now, DEDUP_MS)) return;
       last = { text, at: now };
       onCodeRef.current(text);
+    }
+
+    function tick() {
+      try {
+        scanOnce();
+        failures = 0;
+      } catch {
+        // Ein einzelnes Bild darf scheitern; bleibt es dabei, geben wir auf.
+        failures += 1;
+        if (failures >= MAX_FAILURES) {
+          stop();
+          setError(T.transfer.scanner.failed);
+        }
+      }
     }
 
     async function start() {

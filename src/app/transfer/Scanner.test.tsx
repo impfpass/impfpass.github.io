@@ -1,6 +1,12 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Scanner } from "./Scanner";
+import { scanFrame } from "./scanFrame";
+
+vi.mock("./scanFrame", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./scanFrame")>()),
+  scanFrame: vi.fn(),
+}));
 
 const DENIED =
   "ImpfPass darf die Kamera nicht benutzen. Erlaube den Zugriff in den Einstellungen des Handys, oder übertrag die Impfungen als Datei oder Text.";
@@ -139,4 +145,121 @@ it("stoppt einen Stream, der erst nach dem Verlassen ankommt", async () => {
   await act(async () => resolve(stream));
 
   expect(stops[0]).toHaveBeenCalledOnce();
+});
+
+describe("Scan-Schleife", () => {
+  const drawImage = vi.fn();
+  const getImageData = vi.fn();
+
+  async function startLoop(onCode = vi.fn(), readyState = 4) {
+    const { stream, stops } = fakeStream();
+    stubCamera(vi.fn().mockResolvedValue(stream));
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      drawImage,
+      getImageData,
+    } as never);
+    const view = render(<Scanner onCode={onCode} onFallback={vi.fn()} />);
+    await act(async () => {});
+    const video = screen.getByLabelText("Kamerabild");
+    Object.defineProperty(video, "readyState", {
+      value: readyState,
+      configurable: true,
+    });
+    Object.defineProperty(video, "videoWidth", { value: 1920 });
+    Object.defineProperty(video, "videoHeight", { value: 1080 });
+    return { ...view, stops, video, onCode };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "Date"] });
+    drawImage.mockReset();
+    getImageData
+      .mockReset()
+      .mockReturnValue({ data: [], width: 960, height: 540 });
+    vi.mocked(scanFrame).mockReset().mockReturnValue(null);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("liest alle 250 ms ein auf 960 px verkleinertes Bild", async () => {
+    const { onCode } = await startLoop();
+    vi.mocked(scanFrame).mockReturnValue("code");
+
+    act(() => vi.advanceTimersByTime(250));
+
+    expect(drawImage.mock.calls[0].slice(1)).toEqual([0, 0, 960, 540]);
+    expect(getImageData).toHaveBeenCalledWith(0, 0, 960, 540);
+    expect(onCode).toHaveBeenCalledWith("code");
+  });
+
+  it("überspringt Bilder, solange das Video nicht bereit ist", async () => {
+    const { onCode } = await startLoop(vi.fn(), 1);
+    vi.mocked(scanFrame).mockReturnValue("code");
+
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(drawImage).not.toHaveBeenCalled();
+    expect(onCode).not.toHaveBeenCalled();
+  });
+
+  it("meldet denselben Text innerhalb von 2 Sekunden nur einmal", async () => {
+    const { onCode } = await startLoop();
+    vi.mocked(scanFrame).mockReturnValue("code");
+
+    act(() => vi.advanceTimersByTime(1750));
+    expect(onCode).toHaveBeenCalledTimes(1);
+
+    act(() => vi.advanceTimersByTime(500));
+    expect(onCode).toHaveBeenCalledTimes(2);
+  });
+
+  it("liest nach „hidden“ und nach dem Verlassen nicht mehr", async () => {
+    const { unmount } = await startLoop();
+    act(() => setVisibility("hidden"));
+    act(() => vi.advanceTimersByTime(1000));
+    expect(drawImage).not.toHaveBeenCalled();
+
+    unmount();
+    act(() => vi.advanceTimersByTime(1000));
+    expect(drawImage).not.toHaveBeenCalled();
+  });
+
+  it("ohne 2D-Kontext wird das Bild übersprungen", async () => {
+    const { onCode } = await startLoop();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    act(() => vi.advanceTimersByTime(500));
+    expect(onCode).not.toHaveBeenCalled();
+  });
+
+  it("ein einzelnes fehlerhaftes Bild wird ignoriert", async () => {
+    const { onCode } = await startLoop();
+    getImageData.mockImplementationOnce(() => {
+      throw new Error("kaputt");
+    });
+    vi.mocked(scanFrame).mockReturnValue("code");
+
+    act(() => vi.advanceTimersByTime(500));
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(onCode).toHaveBeenCalledTimes(1);
+  });
+
+  it("nach 10 Fehlern in Folge stoppt die Kamera und die Meldung erscheint", async () => {
+    const { stops } = await startLoop();
+    getImageData.mockImplementation(() => {
+      throw new Error("kaputt");
+    });
+
+    act(() => vi.advanceTimersByTime(250 * 9));
+    expect(screen.queryByRole("alert")).toBeNull();
+    act(() => vi.advanceTimersByTime(250));
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Die Kamera lässt sich nicht starten.",
+    );
+    expect(stops[0]).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeTruthy();
+    const calls = getImageData.mock.calls.length;
+    act(() => vi.advanceTimersByTime(1000));
+    expect(getImageData.mock.calls.length).toBe(calls);
+  });
 });
