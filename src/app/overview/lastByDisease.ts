@@ -1,8 +1,8 @@
-import { DISEASE_IDS, type DiseaseId } from "@/core/catalog/diseases";
+import { DISEASE_IDS, DISEASES, type DiseaseId } from "@/core/catalog/diseases";
 import type { Vaccination } from "@/core/model";
 import { sortByDate } from "../list/grouping";
 
-/** Neueste Impfung je Krankheit, in der Reihenfolge der Krankheitsliste. */
+/** Neueste Impfung je Krankheit, alphabetisch nach deutschem Namen. */
 export function lastByDisease(
   vs: Vaccination[],
 ): { disease: DiseaseId; last: Vaccination }[] {
@@ -12,5 +12,7 @@ export function lastByDisease(
     const last = newestFirst.find((v) => v.diseases.includes(disease));
     if (last) result.push({ disease, last });
   }
-  return result;
+  return result.sort((x, y) =>
+    DISEASES[x.disease].name.localeCompare(DISEASES[y.disease].name, "de"),
+  );
 }

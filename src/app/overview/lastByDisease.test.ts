@@ -1,7 +1,7 @@
 import { testVaccination } from "@/test/helpers";
 import { lastByDisease } from "./lastByDisease";
 
-it("neueste Impfung je Krankheit, Kombi-Impfstoff zählt für jede", () => {
+it("neueste Impfung je Krankheit, Kombi-Impfstoff zählt für jede, alphabetisch", () => {
   const tdPur = testVaccination({
     id: "td",
     date: "2010-06-01",
@@ -14,10 +14,10 @@ it("neueste Impfung je Krankheit, Kombi-Impfstoff zählt für jede", () => {
   const result = lastByDisease([tdPur, boostrixPolio]);
 
   expect(result.map((r) => [r.disease, r.last.id])).toEqual([
-    ["tetanus", "bp"],
     ["diphtheria", "bp"],
     ["pertussis", "bp"],
     ["polio", "bp"],
+    ["tetanus", "bp"],
   ]);
 });
 
@@ -40,10 +40,10 @@ it("ältere Impfung bleibt für Krankheiten, die die neuere nicht abdeckt", () =
   expect(
     lastByDisease([shingrix, priorix]).map((r) => [r.disease, r.last.id]),
   ).toEqual([
+    ["zoster", "zoster"],
     ["measles", "mmr"],
     ["mumps", "mmr"],
     ["rubella", "mmr"],
-    ["zoster", "zoster"],
   ]);
 });
 
