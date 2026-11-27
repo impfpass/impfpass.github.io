@@ -1,3 +1,4 @@
+import { DISEASE_IDS, DISEASES, type DiseaseId } from "./diseases";
 import { PRODUCTS, type Product } from "./products";
 
 export type Recognition =
@@ -92,4 +93,19 @@ export function suggestProducts(query: string, limit = 8): Product[] {
     0,
     limit,
   );
+}
+
+const DISEASE_ENTRIES: { key: string; id: DiseaseId }[] = DISEASE_IDS.flatMap(
+  (id) =>
+    [id, DISEASES[id].name, ...DISEASES[id].aliases].map((n) => ({
+      key: normalizeLabel(n),
+      id,
+    })),
+);
+
+/** Krankheit aus ID, Name oder Alias; nur exakt (nach `normalizeLabel`), ohne Unschärfe. */
+export function recognizeDisease(label: string): DiseaseId | null {
+  const key = normalizeLabel(label);
+  if (!key) return null;
+  return DISEASE_ENTRIES.find((e) => e.key === key)?.id ?? null;
 }

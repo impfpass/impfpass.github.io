@@ -1,5 +1,10 @@
 import { PRODUCTS } from "./products";
-import { normalizeLabel, recognizeProduct, suggestProducts } from "./recognize";
+import {
+  normalizeLabel,
+  recognizeDisease,
+  recognizeProduct,
+  suggestProducts,
+} from "./recognize";
 
 it("normalizeLabel vereinheitlicht Schreibweisen", () => {
   expect(normalizeLabel("Boostrix-Polio")).toBe("boostrixpolio");
@@ -76,4 +81,23 @@ it("Vorschläge: Anfang vor Enthalten, alphabetisch, höchstens 8, ohne Doppelte
   expect(new Set(names).size).toBe(names.length);
   expect(suggestProducts("a").length).toBeLessThanOrEqual(8);
   expect(suggestProducts("a", 3).length).toBe(3);
+});
+
+describe("recognizeDisease", () => {
+  it.each([
+    ["Tetanus", "tetanus"],
+    ["wundstarrkrampf", "tetanus"],
+    ["tetanus", "tetanus"],
+    ["Polio", "polio"],
+    ["Grippe", "influenza"],
+    ["FSME", "tbe"],
+    ["Gürtelrose", "zoster"],
+  ])("erkennt %j als %s", (label, id) => {
+    expect(recognizeDisease(label)).toBe(id);
+  });
+
+  it("erkennt nur exakt", () => {
+    expect(recognizeDisease("Tine-Test")).toBeNull();
+    expect(recognizeDisease("")).toBeNull();
+  });
 });
