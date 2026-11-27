@@ -81,7 +81,7 @@ it("übergibt die gewählten Einträge in der Reihenfolge der Übertragung", asy
   expect(importButton().textContent).toBe("2 Impfungen übernehmen");
   await user.click(importButton());
 
-  expect(onImport).toHaveBeenCalledWith([boostrix.entry, pocken.entry]);
+  expect(onImport).toHaveBeenCalledWith([boostrix, pocken]);
 });
 
 it("ohne gewählten Eintrag ist der Knopf gesperrt", async () => {
@@ -156,5 +156,104 @@ it("Daten vor dem Geburtsdatum oder in der Zukunft sind markiert und abgewählt"
 
   await user.click(checkbox(/Pocken/));
   await user.click(importButton());
-  expect(onImport).toHaveBeenCalledWith([early.entry, fsme.entry]);
+  expect(onImport).toHaveBeenCalledWith([early, fsme]);
+});
+
+it("erklärt das Ersetzen, wenn es schon eingetragene Impfungen gibt", () => {
+  render(
+    <ImportPreview
+      items={[boostrix, fsme]}
+      onImport={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+  expect(
+    screen.getByText(
+      "Hakst du eine schon eingetragene Impfung an, ersetzen die Angaben vom PC den vorhandenen Eintrag.",
+    ),
+  ).toBeTruthy();
+});
+
+it("ohne schon eingetragene Impfungen fehlt der Hinweis zum Ersetzen", () => {
+  render(
+    <ImportPreview items={[fsme]} onImport={vi.fn()} onCancel={vi.fn()} />,
+  );
+  expect(screen.queryByText(/ersetzen die Angaben vom PC/)).toBeNull();
+});
+
+it("eine angehakte Dublette zeigt, welchen Eintrag sie ersetzt", async () => {
+  const user = userEvent.setup();
+  render(
+    <ImportPreview
+      items={[boostrix, fsme]}
+      onImport={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+
+  await user.click(checkbox(/Boostrix Polio/));
+
+  expect(
+    screen.getByText(
+      "Ersetzt den vorhandenen Eintrag: Boostrix Polio, 04.05.2020.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByText(/^Schon eingetragen:/)).toBeNull();
+  expect(importButton().textContent).toBe("2 Impfungen übernehmen");
+});
+
+it("eine zweite angehakte Dublette derselben Impfung kommt neu dazu", async () => {
+  const user = userEvent.setup();
+  const again: ImportItem = {
+    ...boostrix,
+    entry: { ...boostrix.entry, date: "2020-05-20", datePrecision: "day" },
+  };
+  render(
+    <ImportPreview
+      items={[boostrix, again]}
+      onImport={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+  const first = () => checkbox(/05\/2020 Boostrix Polio/);
+  const second = () => checkbox(/20\.05\.2020 Boostrix Polio/);
+  const details = (box: HTMLInputElement) =>
+    document.getElementById(box.getAttribute("aria-describedby") ?? "")
+      ?.textContent ?? "";
+
+  // Auch in umgekehrter Reihenfolge angehakt ersetzt der erste der Übertragung.
+  await user.click(second());
+  expect(details(second())).toContain("Ersetzt den vorhandenen Eintrag");
+  await user.click(first());
+  expect(details(first())).toContain("Ersetzt den vorhandenen Eintrag");
+  expect(details(second())).toContain(
+    "Kommt neu dazu, weil ein anderer Eintrag Boostrix Polio, 04.05.2020 schon ersetzt.",
+  );
+
+  // Abgewählt gibt der erste das Ersetzen an den zweiten ab.
+  await user.click(first());
+  expect(details(first())).toContain("Schon eingetragen");
+  expect(details(second())).toContain("Ersetzt den vorhandenen Eintrag");
+});
+
+it("zeigt die Krankheiten nicht doppelt, wenn sie die Bezeichnung sind", () => {
+  const onlyDiseases: ImportItem = {
+    entry: {
+      date: "1990-01-01",
+      datePrecision: "year",
+      productId: null,
+      label: "Tetanus, Diphtherie",
+      diseases: ["tetanus", "diphtheria"],
+    },
+    duplicateOf: null,
+    dateIssue: null,
+  };
+  render(
+    <ImportPreview
+      items={[onlyDiseases]}
+      onImport={vi.fn()}
+      onCancel={vi.fn()}
+    />,
+  );
+  expect(screen.getAllByText("Tetanus, Diphtherie")).toHaveLength(1);
 });

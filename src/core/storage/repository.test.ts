@@ -264,6 +264,19 @@ it("addVaccinations speichert alle Einträge", async () => {
   ]);
 });
 
+it("addVaccinations ersetzt eine Impfung mit vorhandener ID", async () => {
+  await repo.saveVaccination({ ...vaccination("a", "p1"), label: "alt" });
+  await repo.addVaccinations([
+    { ...vaccination("a", "p1"), label: "neu" },
+    vaccination("b", "p1"),
+  ]);
+  const stored = await repo.getVaccinations("p1");
+  expect(stored.map((v) => [v.id, v.label]).sort()).toEqual([
+    ["a", "neu"],
+    ["b", vaccination("b", "p1").label],
+  ]);
+});
+
 it("addVaccinations mit leerer Liste ändert nichts", async () => {
   await repo.addVaccinations([]);
   expect(await repo.getVaccinations("p1")).toEqual([]);

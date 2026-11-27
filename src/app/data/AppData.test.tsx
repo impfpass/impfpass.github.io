@@ -472,6 +472,39 @@ describe("importVaccinations", () => {
     );
   });
 
+  it("ersetzt Impfungen mit gleicher ID, statt sie zu verdoppeln", async () => {
+    await seed({
+      vaccinations: [
+        testVaccination({ id: "v1", date: "2016-12-05", doctor: "Dr. Mustr" }),
+      ],
+    });
+    const { data } = await renderWithData(null, "/", {
+      rulebook: V1,
+      today: TODAY,
+    });
+    await waitFor(() => expect(data().vaccinations).toHaveLength(1));
+
+    await act(() =>
+      data().actions.importVaccinations([
+        testVaccination({
+          id: "v1",
+          date: "2016-12-05",
+          doctor: "Praxis Dr. Muster",
+          source: "import",
+        }),
+        testVaccination({ id: "i2", date: "2021-01-02", source: "import" }),
+      ]),
+    );
+
+    expect(data().vaccinations.map((v) => [v.id, v.doctor])).toEqual([
+      ["v1", "Praxis Dr. Muster"],
+      ["i2", undefined],
+    ]);
+    expect(await (await openRepository()).getVaccinations("p1")).toHaveLength(
+      2,
+    );
+  });
+
   it("lässt den Stand unverändert, wenn das Speichern scheitert", async () => {
     await seed({});
     const { data } = await renderWithData(null, "/", {

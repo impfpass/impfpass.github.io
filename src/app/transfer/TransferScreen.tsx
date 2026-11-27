@@ -16,10 +16,10 @@ import {
 } from "@/core/formats/transfer";
 import {
   planImport,
-  toVaccinations,
+  resolveImport,
   type ImportItem,
 } from "@/core/import/merge";
-import type { TransferEntry, TransferPayload } from "@/core/model";
+import type { TransferPayload } from "@/core/model";
 import { useAppData } from "../data/AppData";
 import { BackupHint } from "../entry/BackupHint";
 import { T } from "@/texts";
@@ -29,7 +29,7 @@ import { Scanner } from "./Scanner";
 type View =
   | { kind: "collect" }
   | { kind: "preview"; payload: TransferPayload; items: ImportItem[] }
-  | { kind: "done"; count: number };
+  | { kind: "done"; count: number; replaced: number };
 
 type Way = "scan" | "file" | "text";
 
@@ -212,16 +212,27 @@ export function TransferScreen() {
     readText(content);
   }
 
-  async function importEntries(entries: TransferEntry[]) {
+  async function importEntries(chosen: ImportItem[]) {
     if (view.kind !== "preview" || !person) throw new Error("Keine Vorschau");
-    const vs = toVaccinations(entries, {
+    // Die Vorschau kennt den Stand von damals. Ersetzt wird der heutige
+    // Eintrag; ist er inzwischen gelöscht, kommt der Eintrag neu dazu.
+    const current = chosen.map((item) => ({
+      ...item,
+      duplicateOf:
+        vaccinations.find((v) => v.id === item.duplicateOf?.id) ?? null,
+    }));
+    const result = resolveImport(current, {
       personId: person.id,
       importId: view.payload.id,
       now: new Date(),
       newId: () => crypto.randomUUID(),
     });
-    await actions.importVaccinations(vs);
-    setView({ kind: "done", count: vs.length });
+    await actions.importVaccinations(result.vaccinations);
+    setView({
+      kind: "done",
+      count: result.vaccinations.length,
+      replaced: result.replaced,
+    });
   }
 
   function cancel() {
@@ -251,7 +262,7 @@ export function TransferScreen() {
     return (
       <div className="flex flex-col gap-5">
         {heading}
-        <p role="status">{T.transfer.done(view.count)}</p>
+        <p role="status">{T.transfer.done(view.count, view.replaced)}</p>
         <BackupHint />
         <Button asChild variant="outline">
           <Link href="/impfungen">{T.transfer.toList}</Link>

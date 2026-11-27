@@ -313,7 +313,19 @@ export function AppDataProvider(props: {
   const importVaccinations = useCallback(
     async (vs: Vaccination[]) => {
       await requireRepo().addVaccinations(vs);
-      setState((s) => ({ ...s, vaccinations: [...s.vaccinations, ...vs] }));
+      // Eine Impfung mit vorhandener ID ersetzt die alte an ihrer Stelle
+      // (Import mit Ersetzen), die übrigen kommen hinten dazu.
+      const byId = new Map(vs.map((v) => [v.id, v]));
+      setState((s) => {
+        const known = new Set(s.vaccinations.map((x) => x.id));
+        return {
+          ...s,
+          vaccinations: [
+            ...s.vaccinations.map((x) => byId.get(x.id) ?? x),
+            ...vs.filter((v) => !known.has(v.id)),
+          ],
+        };
+      });
     },
     [requireRepo],
   );

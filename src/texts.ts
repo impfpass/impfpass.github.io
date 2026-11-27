@@ -610,11 +610,20 @@ So füllst du die Felder:
         `${vaccinationCount(n)} gefunden, davon ${duplicates} schon eingetragen.`,
       duplicate: (label: string, date: string) =>
         `Schon eingetragen: ${label}, ${date}.`,
+      replaceHint:
+        "Hakst du eine schon eingetragene Impfung an, ersetzen die Angaben vom PC den vorhandenen Eintrag.",
+      replaces: (label: string, date: string) =>
+        `Ersetzt den vorhandenen Eintrag: ${label}, ${date}.`,
+      addedAgain: (label: string, date: string) =>
+        `Kommt neu dazu, weil ein anderer Eintrag ${label}, ${date} schon ersetzt.`,
       dateBeforeBirth: "Das Datum liegt vor deinem Geburtsdatum.",
       dateFuture: "Das Datum liegt in der Zukunft.",
       import: (k: number) => `${vaccinationCount(k)} übernehmen`,
     },
-    done: (k: number) => `${vaccinationCount(k)} übernommen.`,
+    done: (k: number, replaced: number) =>
+      replaced === 0
+        ? `${vaccinationCount(k)} übernommen.`
+        : `${vaccinationCount(k)} übernommen, davon ${replaced} ersetzt.`,
     toList: "Zu den Impfungen",
     errors: {
       notTransfer: "Das ist kein Code von ImpfPass.",

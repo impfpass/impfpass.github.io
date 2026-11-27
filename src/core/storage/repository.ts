@@ -38,7 +38,10 @@ export interface Repository {
   getVaccinations(personId: string): Promise<Vaccination[]>;
   saveVaccination(v: Vaccination): Promise<void>;
   deleteVaccination(id: string): Promise<void>;
-  /** Speichert alle oder keine in einer einzigen Transaktion. */
+  /**
+   * Speichert alle oder keine in einer einzigen Transaktion. Eine Impfung
+   * mit vorhandener ID ersetzt die gespeicherte.
+   */
   addVaccinations(vs: Vaccination[]): Promise<void>;
   getDecisions(personId: string): Promise<Decision[]>;
   /** Eine Entscheidung je Person und Empfehlung; eine neue ersetzt die alte. */

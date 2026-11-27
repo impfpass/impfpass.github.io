@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
@@ -268,6 +268,63 @@ it("eine vorhandene Impfung erscheint als „Schon eingetragen“ und ist abgew�
     "import",
     "import",
   ]);
+});
+
+it("eine angehakte vorhandene Impfung wird durch die Angaben vom PC ersetzt", async () => {
+  await seed({
+    vaccinations: [testVaccination({ doctor: "Dr. Mustr", note: "links" })],
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<TransferScreen />, "/uebernehmen");
+
+  await paste(user, textOf(payload));
+  await screen.findByText("3 Impfungen gefunden, davon 1 schon eingetragen.");
+  await user.click(checkbox(/Boostrix Polio/));
+  expect(
+    screen.getByText(
+      "Ersetzt den vorhandenen Eintrag: Boostrix Polio, 04.05.2020.",
+    ),
+  ).toBeTruthy();
+  await user.click(
+    screen.getByRole("button", { name: "3 Impfungen übernehmen" }),
+  );
+
+  expect(
+    await screen.findByText("3 Impfungen übernommen, davon 1 ersetzt."),
+  ).toBeTruthy();
+  expect(data().vaccinations).toHaveLength(3);
+  const stored = await (await openRepository()).getVaccinations("p1");
+  expect(stored).toHaveLength(3);
+  // Das Datum vom Handy ist genauer als „05/2020“ vom PC und bleibt.
+  expect(stored.find((v) => v.id === "v1")).toMatchObject({
+    date: "2020-05-04",
+    datePrecision: "day",
+    batch: "AC52B123AB",
+    doctor: "Praxis Dr. Muster, Hamburg",
+    note: "links",
+    source: "import",
+    importId: "K7Q2M9",
+    createdAt: "2026-11-26T10:00:00.000Z",
+  });
+});
+
+it("wurde die vorhandene Impfung inzwischen gelöscht, kommt der Eintrag neu dazu", async () => {
+  await seed({ vaccinations: [testVaccination()] });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<TransferScreen />, "/uebernehmen");
+
+  await paste(user, textOf(payload));
+  await screen.findByText("3 Impfungen gefunden, davon 1 schon eingetragen.");
+  await user.click(checkbox(/Boostrix Polio/));
+  await act(() => data().actions.deleteVaccination("v1"));
+  await user.click(
+    screen.getByRole("button", { name: "3 Impfungen übernehmen" }),
+  );
+
+  expect(await screen.findByText("3 Impfungen übernommen.")).toBeTruthy();
+  const stored = await (await openRepository()).getVaccinations("p1");
+  expect(stored).toHaveLength(3);
+  expect(stored.some((v) => v.id === "v1")).toBe(false);
 });
 
 it("eine Datei über „Datei öffnen“ zeigt ebenso die Vorschau", async () => {

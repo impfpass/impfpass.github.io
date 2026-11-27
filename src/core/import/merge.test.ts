@@ -1,5 +1,11 @@
 import type { TransferEntry, Vaccination } from "../model";
-import { planImport, toVaccinations } from "./merge";
+import {
+  type ImportItem,
+  planImport,
+  replacementTargets,
+  resolveImport,
+  toVaccinations,
+} from "./merge";
 
 const existing = (overrides: Partial<Vaccination> = {}): Vaccination => ({
   id: "v1",
@@ -145,5 +151,130 @@ describe("toVaccinations", () => {
     expect(Object.keys(v)).not.toContain("batch");
     expect(Object.keys(v)).not.toContain("doctor");
     expect(Object.keys(v)).not.toContain("note");
+  });
+});
+
+describe("resolveImport", () => {
+  const now = new Date("2026-11-28T08:00:00.000Z");
+  let n = 0;
+  const ctx = () => ({
+    personId: "p1",
+    importId: "K7Q2M9",
+    now,
+    newId: () => `id${++n}`,
+  });
+  const item = (
+    e: TransferEntry,
+    duplicateOf: Vaccination | null = null,
+  ): ImportItem => ({ entry: e, duplicateOf, dateIssue: null });
+
+  beforeEach(() => {
+    n = 0;
+  });
+
+  it("legt Einträge ohne Dublette neu an", () => {
+    const { vaccinations, replaced } = resolveImport([item(entry())], ctx());
+    expect(replaced).toBe(0);
+    expect(vaccinations).toHaveLength(1);
+    expect(vaccinations[0]).toMatchObject({
+      id: "id1",
+      label: "Td-pur",
+      source: "import",
+      createdAt: "2026-11-28T08:00:00.000Z",
+    });
+  });
+
+  it("ersetzt eine gewählte Dublette mit den Angaben vom PC", () => {
+    const old = existing({ batch: "ALT1", doctor: "Dr. Mustr" });
+    const fromPc = entry({
+      productId: "td-pur",
+      label: "Td-pur",
+      batch: "NEU2",
+      doctor: "Praxis Dr. Muster, Hamburg",
+    });
+    const { vaccinations, replaced } = resolveImport(
+      [item(fromPc, old)],
+      ctx(),
+    );
+    expect(replaced).toBe(1);
+    expect(vaccinations).toEqual([
+      {
+        id: "v1",
+        personId: "p1",
+        date: "2016-12-05",
+        datePrecision: "day",
+        productId: "td-pur",
+        label: "Td-pur",
+        diseases: ["tetanus"],
+        batch: "NEU2",
+        doctor: "Praxis Dr. Muster, Hamburg",
+        source: "import",
+        importId: "K7Q2M9",
+        createdAt: "2026-11-26T10:00:00.000Z",
+        updatedAt: "2026-11-28T08:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("behält Charge, Praxis und Notiz, die der PC-Eintrag nicht hat", () => {
+    const old = existing({
+      batch: "ALT1",
+      doctor: "Dr. Muster",
+      note: "links",
+    });
+    const [v] = resolveImport([item(entry(), old)], ctx()).vaccinations;
+    expect(v.batch).toBe("ALT1");
+    expect(v.doctor).toBe("Dr. Muster");
+    expect(v.note).toBe("links");
+  });
+
+  it("behält das genauere Datum der vorhandenen Impfung", () => {
+    const old = existing({ date: "2016-12-05", datePrecision: "day" });
+    const [v] = resolveImport(
+      [item(entry({ date: "2016", datePrecision: "year" }), old)],
+      ctx(),
+    ).vaccinations;
+    expect([v.date, v.datePrecision]).toEqual(["2016-12-05", "day"]);
+  });
+
+  it("nimmt das Datum vom PC, wenn es genauer ist", () => {
+    const old = existing({ date: "2016", datePrecision: "year" });
+    const [v] = resolveImport(
+      [item(entry({ date: "2016-12-05", datePrecision: "day" }), old)],
+      ctx(),
+    ).vaccinations;
+    expect([v.date, v.datePrecision]).toEqual(["2016-12-05", "day"]);
+  });
+
+  it("ersetzt jede vorhandene Impfung nur einmal, weitere kommen neu dazu", () => {
+    const old = existing({ date: "2016", datePrecision: "year" });
+    const first = entry({ date: "2016-03-01" });
+    const second = entry({ date: "2016-09-01" });
+    const { vaccinations, replaced } = resolveImport(
+      [item(first, old), item(second, old)],
+      ctx(),
+    );
+    expect(replaced).toBe(1);
+    expect(vaccinations.map((v) => [v.id, v.date])).toEqual([
+      ["v1", "2016-03-01"],
+      ["id2", "2016-09-01"],
+    ]);
+  });
+});
+
+describe("replacementTargets", () => {
+  it("ordnet je vorhandener Impfung den ersten gewählten Eintrag zu", () => {
+    const old = existing();
+    const a: ImportItem = { entry: entry(), duplicateOf: old, dateIssue: null };
+    const b: ImportItem = { entry: entry(), duplicateOf: old, dateIssue: null };
+    const c: ImportItem = {
+      entry: entry(),
+      duplicateOf: null,
+      dateIssue: null,
+    };
+    const targets = replacementTargets([a, b, c]);
+    expect(targets.get(a)).toBe(old);
+    expect(targets.has(b)).toBe(false);
+    expect(targets.has(c)).toBe(false);
   });
 });
