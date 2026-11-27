@@ -47,6 +47,8 @@ function ReasonSentence({ rec }: { rec: Recommendation }) {
       return <p>{R.series(r.given, r.total)}</p>;
     case "catch_up":
       return <p>{R.catchUp(r.given, r.total)}</p>;
+    case "started":
+      return <p>{R.started(r.given, r.total)}</p>;
     case "season":
       return <p>{R.season(r.label)}</p>;
     case "indication":

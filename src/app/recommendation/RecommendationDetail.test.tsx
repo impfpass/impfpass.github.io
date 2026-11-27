@@ -245,6 +245,27 @@ it("Hepatitis B nennt keine frühere Empfehlung bei Erkrankungen", async () => {
   ).toBeNull();
 });
 
+it("eine angefangene Hepatitis-B-Serie ohne Beruf erklärt das Nachholen", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1990-05-10" })],
+    vaccinations: [
+      testVaccination({
+        id: "hb",
+        date: "2026-10-27",
+        productId: "engerix-b",
+        label: "Engerix-B",
+        diseases: ["hepatitis_b"],
+      }),
+    ],
+  });
+  await open("hepatitis_b");
+  expect(
+    screen.getByText(
+      /^Eingetragen sind 1 von 3 Impfungen\..*ohne neu anzufangen\.$/,
+    ),
+  ).toBeTruthy();
+});
+
 it("ohne Statuszeile steht unter der Überschrift kein leerer Absatz", async () => {
   await seed({
     persons: [

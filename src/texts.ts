@@ -236,6 +236,8 @@ export const T = {
           `Eingetragen sind ${given} von ${vaccinationCount(total)}.`,
         catchUp: (given: number, total: number) =>
           `Eingetragen sind ${given} von ${vaccinationCount(total)} der Grundimmunisierung. Stehen frühere Impfungen in einem anderen Impfpass, trag sie hier ein, auch wenn nur das Jahr bekannt ist. Dann rechnet ImpfPass mit den Auffrischungen weiter.`,
+        started: (given: number, total: number) =>
+          `Eingetragen sind ${given} von ${vaccinationCount(total)}. Eine angefangene Serie wird zu Ende geführt, fehlende Impfungen werden nachgeholt, ohne neu anzufangen.`,
         season: (label: string) => `Jährliche Impfung, Saison ${label}.`,
         job: "Empfohlen wegen deiner Tätigkeit.",
         tbe: "Empfohlen, weil du dich in FSME-Risikogebieten aufhältst.",

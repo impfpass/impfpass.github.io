@@ -127,4 +127,74 @@ describe("hepatitisBRule", () => {
       }).status,
     ).toBe("not_applicable");
   });
+
+  it("Hepatitis B: angefangene Serie ohne Beruf wird fortgesetzt (Epid Bull 4/2026, S. 40)", () => {
+    const p = person("1985-05-05");
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: [shot("2026-10-27", "engerix-b")],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "due",
+      dueDate: "2026-11-27",
+      dose: { number: 2, of: 3 },
+      reason: { kind: "started", given: 1, total: 3 },
+      source: { page: 40, section: "Kap. 4.5 Impfabstände" },
+    });
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: [
+          shot("2020-01-01", "engerix-b"),
+          shot("2020-02-01", "engerix-b"),
+          shot("2020-07-01", "engerix-b"),
+        ],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "protected",
+      dueDate: null,
+      reason: { kind: "complete" },
+    });
+  });
+
+  it("Hepatitis B: angefangene Serie geht der Karte bei chronischer Erkrankung vor (Epid Bull 4/2026, S. 40)", () => {
+    expect(
+      run(hepatitisBRule, {
+        person: person("1985-05-05", { chronicIllness: true }),
+        vaccinations: [shot("2026-10-27", "engerix-b")],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({ status: "due", reason: { kind: "started" } });
+  });
+
+  it("Hepatitis B: Schnellschema braucht eine 4. Dosis nach 12 Monaten (Epid Bull 27/2026, S. 66, Tab. 7)", () => {
+    const p = person("1985-05-05", { job: { bloodContact: true } });
+    const rapid = [
+      shot("2026-01-01", "engerix-b"),
+      shot("2026-02-01", "engerix-b"),
+      shot("2026-03-01", "engerix-b"),
+    ];
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: rapid,
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "soon",
+      dueDate: "2027-01-01",
+      dose: { number: 4, of: 4 },
+      reason: { kind: "indication", indication: "job" },
+    });
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: [...rapid, shot("2027-01-05", "engerix-b")],
+        today: "2027-02-01",
+      }).status,
+    ).toBe("protected");
+  });
 });

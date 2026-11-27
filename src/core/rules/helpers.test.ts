@@ -5,6 +5,7 @@ import {
   dosesOf,
   nextDoseStatus,
   nextInSeries,
+  rapidFourthDose,
   startStatus,
 } from "./helpers";
 
@@ -82,5 +83,35 @@ describe("compareVersions", () => {
     expect(compareVersions("2026-12-01.2", "2026-12-01.10")).toBeLessThan(0);
     expect(compareVersions("2027-01-01.1", "2026-12-31.9")).toBeGreaterThan(0);
     expect(compareVersions("2026-12-01.1", "2026-12-01.1")).toBe(0);
+  });
+});
+
+describe("rapidFourthDose", () => {
+  it("Schnellschema: 3. Dosis höchstens 2 Monate nach der 1. ergibt 4. Dosis nach 12 Monaten (Epid Bull 27/2026, S. 62, Tab. 6)", () => {
+    const twinrix = [
+      shot("2026-01-01", "twinrix"),
+      shot("2026-01-08", "twinrix"),
+      shot("2026-01-22", "twinrix"),
+    ];
+    expect(rapidFourthDose(twinrix, "2026-11-27", 6)).toEqual({
+      status: "soon",
+      dueDate: "2027-01-01",
+      latestDate: null,
+      dose: { number: 4, of: 4 },
+      timing: "follow_up",
+    });
+    const engerix = [
+      shot("2026-01-01", "engerix-b"),
+      shot("2026-02-01", "engerix-b"),
+      shot("2026-03-01", "engerix-b"),
+    ];
+    expect(rapidFourthDose(engerix, "2027-01-02", 6)?.status).toBe("due");
+    const standard = [
+      shot("2026-01-01", "twinrix"),
+      shot("2026-02-01", "twinrix"),
+      shot("2026-07-01", "twinrix"),
+    ];
+    expect(rapidFourthDose(standard, "2026-11-27", 6)).toBeNull();
+    expect(rapidFourthDose(twinrix.slice(0, 2), "2026-11-27", 6)).toBeNull();
   });
 });

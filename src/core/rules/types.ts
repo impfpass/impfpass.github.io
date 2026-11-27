@@ -40,6 +40,8 @@ export type Reason =
   | { kind: "age"; age: number }
   | { kind: "series"; given: number; total: number }
   | { kind: "catch_up"; given: number; total: number }
+  // Angefangene Serie ohne Indikation, wird zu Ende geführt (Hepatitis A und B)
+  | { kind: "started"; given: number; total: number }
   | { kind: "with_td" } // Keuchhusten mit der nächsten Td-Impfung
   | { kind: "season"; label: string } // label etwa '2026/27'
   | { kind: "indication"; indication: "job" | "tbe" | "doctor" }

@@ -95,6 +95,32 @@ export function nextInSeries(
   };
 }
 
+/**
+ * Schnellschema: Liegt die 3. Dosis höchstens 2 Monate nach der 1., folgt die
+ * 4. Dosis 12 Monate nach der 1. (Twinrix 0, 7, 21 Tage; Hepatitis B 0, 1, 2
+ * Monate). Sonst `null`.
+ */
+export function rapidFourthDose(
+  doses: Vaccination[],
+  today: ISODate,
+  leadMonths: number,
+): Pick<
+  RuleResult,
+  "status" | "dueDate" | "latestDate" | "dose" | "timing"
+> | null {
+  if (doses.length !== 3) return null;
+  const first = doses[0].date;
+  if (doses[2].date > addMonths(first, 2)) return null;
+  const due = addMonths(first, 12);
+  return {
+    status: nextDoseStatus(due, null, today, leadMonths),
+    dueDate: due,
+    latestDate: null,
+    dose: { number: 4, of: 4 },
+    timing: "follow_up",
+  };
+}
+
 /** Erst das Datum, dann die laufende Nummer als Zahl. */
 export function compareVersions(a: string, b: string): number {
   const [dateA, numA = "0"] = a.split(".");
