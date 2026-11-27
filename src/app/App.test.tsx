@@ -9,24 +9,88 @@ import {
 import { seed, testPerson, testVaccination } from "@/test/helpers";
 import { App } from "./App";
 
+/** Ersteinrichtung mit Name, Geburtsdatum und Angaben bis zur Wahl in Schritt 3. */
+async function setupUntilStart(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(await screen.findByLabelText("Name"), "Christa");
+  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Weiter" }));
+  await screen.findByRole("heading", { name: "Wie möchtest du anfangen?" });
+}
+
 it("zeigt den App-Namen", async () => {
   render(<App />);
   expect(await screen.findByText("ImpfPass")).toBeTruthy();
 });
 
-it("ohne Person erscheint die Ersteinrichtung, danach die Übersicht", async () => {
+it("ohne Person erscheint die Ersteinrichtung, „Einträge selbst eingeben“ legt die Person an und öffnet das Formular", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await setupUntilStart(user);
+  // Angelegt wird erst mit der Wahl in Schritt 3.
+  expect(await (await openRepository()).getPersons()).toEqual([]);
+
+  await user.click(
+    screen.getByRole("button", { name: "Einträge selbst eingeben" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Neue Impfung" }),
+  ).toBeTruthy();
+  expect(window.location.hash).toBe("#/impfungen/neu");
+  const [person] = await (await openRepository()).getPersons();
+  expect(person).toMatchObject({ name: "Christa", birthDate: "1967-03-01" });
+});
+
+it("„Alte Impfungen vom PC übernehmen“ legt die Person an und öffnet „Impfungen übernehmen“", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await setupUntilStart(user);
+  expect(
+    screen.getByText(
+      "Am PC kann ein Chatbot die Fotos deines Impfpasses lesen, und du prüfst alles in einer großen Tabelle. Öffne dazu am PC impfpass.github.io/import/. Danach überträgst du die Impfungen mit QR-Codes hierher.",
+    ),
+  ).toBeTruthy();
+
+  await user.click(
+    screen.getByRole("button", { name: "Alte Impfungen vom PC übernehmen" }),
+  );
+
+  expect(
+    await screen.findByRole("heading", { name: "Impfungen übernehmen" }),
+  ).toBeTruthy();
+  expect(window.location.hash).toBe("#/uebernehmen");
+  const [person] = await (await openRepository()).getPersons();
+  expect(person?.name).toBe("Christa");
+});
+
+it("„Zurück“ im dritten Schritt führt zu den Angaben und behält sie", async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
   await user.click(screen.getByRole("button", { name: "Weiter" }));
-  await user.click(await screen.findByRole("button", { name: "Weiter" }));
+  await user.click(
+    await screen.findByRole("switch", {
+      name: "Ich habe eine chronische Erkrankung",
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await screen.findByRole("heading", { name: "Wie möchtest du anfangen?" });
+
+  await user.click(screen.getByRole("button", { name: "Zurück" }));
+
   expect(
-    await screen.findByRole("heading", { name: "Übersicht" }),
+    await screen.findByRole("heading", { name: "Angaben für Empfehlungen" }),
   ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("switch", { name: "Ich habe eine chronische Erkrankung" })
+      .getAttribute("aria-checked"),
+  ).toBe("true");
 });
 
-it("Ersteinrichtung in zwei Schritten speichert die Angaben", async () => {
+it("Ersteinrichtung speichert die Angaben aus dem zweiten Schritt", async () => {
   const user = userEvent.setup();
   render(<App />);
   await user.type(await screen.findByLabelText("Name"), "Christa");
@@ -40,8 +104,11 @@ it("Ersteinrichtung in zwei Schritten speichert die Angaben", async () => {
   );
   await user.click(screen.getByRole("radio", { name: "Ja" }));
   await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Einträge selbst eingeben" }),
+  );
   expect(
-    await screen.findByRole("heading", { name: "Übersicht" }),
+    await screen.findByRole("heading", { name: "Neue Impfung" }),
   ).toBeTruthy();
   const [person] = await (await openRepository()).getPersons();
   expect(person?.answers.chronicIllness).toBe(true);
@@ -126,13 +193,15 @@ it("„Neue Impfung“ während der Eingabe lässt die Eingabe stehen", async ()
 it("die angelegte Person bleibt nach einem Neustart erhalten", async () => {
   const user = userEvent.setup();
   const { unmount } = render(<App />);
-  await user.type(await screen.findByLabelText("Name"), "Christa");
-  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
-  await user.click(screen.getByRole("button", { name: "Weiter" }));
-  await user.click(await screen.findByRole("button", { name: "Weiter" }));
-  await screen.findByRole("heading", { name: "Übersicht" });
+  await setupUntilStart(user);
+  await user.click(
+    screen.getByRole("button", { name: "Einträge selbst eingeben" }),
+  );
+  await screen.findByRole("heading", { name: "Neue Impfung" });
   unmount();
 
+  // Die installierte App startet auf der Startseite.
+  window.history.replaceState(null, "", "/");
   render(<App />);
   expect(
     await screen.findByRole("heading", { name: "Übersicht" }),
@@ -182,11 +251,11 @@ it("ohne Speicher erscheint eine verständliche Meldung", async () => {
 it("untere Navigation führt zu den Bereichen", async () => {
   const user = userEvent.setup();
   render(<App />);
-  await user.type(await screen.findByLabelText("Name"), "Christa");
-  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
-  await user.click(screen.getByRole("button", { name: "Weiter" }));
-  await user.click(await screen.findByRole("button", { name: "Weiter" }));
-  await screen.findByRole("heading", { name: "Übersicht" });
+  await setupUntilStart(user);
+  await user.click(
+    screen.getByRole("button", { name: "Einträge selbst eingeben" }),
+  );
+  await screen.findByRole("heading", { name: "Neue Impfung" });
 
   const nav = screen.getByRole("navigation");
   await user.click(
@@ -203,13 +272,11 @@ it("untere Navigation führt zu den Bereichen", async () => {
 it("nach dem Speichern führt „Weitere Impfung eintragen“ zu einem leeren Formular", async () => {
   const user = userEvent.setup();
   render(<App />);
-  await user.type(await screen.findByLabelText("Name"), "Christa");
-  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
-  await user.click(screen.getByRole("button", { name: "Weiter" }));
-  await user.click(await screen.findByRole("button", { name: "Weiter" }));
-  await screen.findByRole("heading", { name: "Übersicht" });
+  await setupUntilStart(user);
+  await user.click(
+    screen.getByRole("button", { name: "Einträge selbst eingeben" }),
+  );
 
-  window.location.hash = "/impfungen/neu";
   await user.type(await screen.findByLabelText("Impfstoff"), "Shingrix");
   await user.click(screen.getByRole("button", { name: "Speichern" }));
   await user.click(

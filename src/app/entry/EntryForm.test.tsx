@@ -200,6 +200,15 @@ it("„Arzt oder Praxis“ ohne Autokorrektur und Rechtschreibprüfung", async (
   expect(doctor.getAttribute("spellcheck")).toBe("false");
 });
 
+it("„Charge“ ohne Autokorrektur und Rechtschreibprüfung", async () => {
+  // Chargen wie AC52B123AB sind keine Wörter.
+  await seed({ persons: [testPerson()] });
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+  const batch = screen.getByLabelText("Charge");
+  expect(batch.getAttribute("autocorrect")).toBe("off");
+  expect(batch.getAttribute("spellcheck")).toBe("false");
+});
+
 it("„Arzt oder Praxis“ schlägt bisher eingetragene Ärzte vor", async () => {
   await seed({
     persons: [testPerson()],

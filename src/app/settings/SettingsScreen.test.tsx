@@ -93,6 +93,24 @@ it("verlinkt die Info-Seite", async () => {
   );
 });
 
+it("verlinkt „Impfungen übernehmen“", async () => {
+  await seed({});
+  await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(
+    screen.getByRole("heading", { name: "Impfungen übernehmen" }),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      "Alte Impfungen vom PC holen, per QR-Code, Datei oder Text.",
+    ),
+  ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("link", { name: "Impfungen übernehmen" })
+      .getAttribute("href"),
+  ).toBe("#/uebernehmen");
+});
+
 it("Info nennt Hinweis, Datenschutz und Version", async () => {
   await seed({});
   await renderWithData(<InfoScreen />, "/einstellungen/info");

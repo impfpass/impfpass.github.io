@@ -361,6 +361,9 @@ export function EntryForm({
         <Label htmlFor="entry-batch">{T.entry.batch}</Label>
         <Input
           id="entry-batch"
+          // Chargen wie AC52B123AB nicht umkorrigieren (iPhone)
+          autoCorrect="off"
+          spellCheck={false}
           autoComplete="off"
           value={batch}
           onChange={(e) => setBatch(e.target.value)}

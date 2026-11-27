@@ -194,6 +194,9 @@ function BackupSection() {
   );
 }
 
+const LINK_CLASS =
+  "flex min-h-12 items-center justify-between rounded-md border px-4";
+
 export function SettingsScreen() {
   const { person } = useAppData();
   return (
@@ -228,6 +231,19 @@ export function SettingsScreen() {
         <RemindersSection />
       </section>
       <section
+        aria-labelledby="settings-transfer"
+        className="flex flex-col gap-4"
+      >
+        <h2 id="settings-transfer" className="text-lg font-semibold">
+          {T.settings.transfer}
+        </h2>
+        <p>{T.settings.transferText}</p>
+        <Link href="/uebernehmen" className={LINK_CLASS}>
+          {T.settings.transfer}
+          <ChevronRight aria-hidden="true" className="size-5" />
+        </Link>
+      </section>
+      <section
         aria-labelledby="settings-backup"
         className="flex flex-col gap-4"
       >
@@ -236,10 +252,7 @@ export function SettingsScreen() {
         </h2>
         <BackupSection />
       </section>
-      <Link
-        href="/einstellungen/info"
-        className="flex min-h-12 items-center justify-between rounded-md border px-4"
-      >
+      <Link href="/einstellungen/info" className={LINK_CLASS}>
         {T.info.title}
         <ChevronRight aria-hidden="true" className="size-5" />
       </Link>

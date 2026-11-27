@@ -13,6 +13,7 @@ import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
+import { TransferScreen } from "./transfer/TransferScreen";
 import { T } from "@/texts";
 
 /**
@@ -89,6 +90,9 @@ function Screens() {
         </Route>
         <Route path="/einstellungen/info">
           <InfoScreen />
+        </Route>
+        <Route path="/uebernehmen">
+          <TransferScreen />
         </Route>
         <Route>
           <OverviewScreen />

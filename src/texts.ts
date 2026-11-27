@@ -64,6 +64,11 @@ export const T = {
     name: "Name",
     birthDate: "Geburtsdatum",
     submit: "Weiter",
+    startTitle: "Wie möchtest du anfangen?",
+    startImport: "Alte Impfungen vom PC übernehmen",
+    startImportHelp:
+      "Am PC kann ein Chatbot die Fotos deines Impfpasses lesen, und du prüfst alles in einer großen Tabelle. Öffne dazu am PC impfpass.github.io/import/. Danach überträgst du die Impfungen mit QR-Codes hierher.",
+    startManual: "Einträge selbst eingeben",
     restoreHint: "Du hast schon eine Sicherung von ImpfPass?",
     errors: {
       nameMissing: "Bitte gib einen Namen ein.",
@@ -335,6 +340,8 @@ export const T = {
     },
     seasonDayHelp:
       "Ab diesem Tag werden die jährlichen Impfungen im Herbst gelb, etwa gegen Grippe.",
+    transfer: "Impfungen übernehmen",
+    transferText: "Alte Impfungen vom PC holen, per QR-Code, Datei oder Text.",
     backup: "Datensicherung",
     lastBackup: (date: string) => `Letzte Sicherung: ${date}`,
     noBackup: "Noch keine Sicherung gespeichert.",
@@ -528,6 +535,27 @@ So füllst du die Felder:
     },
   },
   transfer: {
+    title: "Impfungen übernehmen",
+    intro:
+      "Öffne am PC impfpass.github.io/import/, prüf dort deine Impfungen und übertrag sie dann hierher.",
+    openFile: "Datei öffnen",
+    fileTooLarge: "Die Datei ist zu groß für eine Übertragung.",
+    pasteText: "Text einfügen",
+    read: "Einlesen",
+    /** „2 von 3 Teilen gelesen. Es fehlt noch Teil 3.“ */
+    progress: (read: number, total: number, missing: readonly number[]) =>
+      `${read} von ${total} Teilen gelesen. ${missing.length === 1 ? "Es fehlt" : "Es fehlen"} noch Teil ${joinNames(missing.map(String))}.`,
+    restart: "Neu beginnen",
+    preview: {
+      label: "Gefundene Impfungen",
+      summary: (n: number, duplicates: number) =>
+        `${vaccinationCount(n)} gefunden, davon ${duplicates} schon eingetragen.`,
+      duplicate: (label: string, date: string) =>
+        `Schon eingetragen: ${label}, ${date}.`,
+      import: (k: number) => `${vaccinationCount(k)} übernehmen`,
+    },
+    done: (k: number) => `${vaccinationCount(k)} übernommen.`,
+    toList: "Zu den Impfungen",
     errors: {
       notTransfer: "Das ist kein Code von ImpfPass.",
       otherTransfer: "Dieser Code gehört zu einer anderen Übertragung.",
