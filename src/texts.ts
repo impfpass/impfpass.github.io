@@ -435,6 +435,13 @@ So füllst du die Felder:
       skip: "Ohne Chatbot weiter",
       imported: (n: number) =>
         `${n} ${n === 1 ? "Impfung" : "Impfungen"} eingelesen. Prüfe sie in der Tabelle.`,
+      draftHas: (n: number) =>
+        `Der Entwurf enthält schon ${vaccinationCount(n)}.`,
+      appendQuestion: (n: number) =>
+        `Der Entwurf enthält schon ${vaccinationCount(n)}. Sollen die neuen angehängt werden, oder willst du vorher alles löschen?`,
+      append: "Anhängen",
+      replace: "Vorher löschen",
+      cancel: "Abbrechen",
     },
     chatbotErrors: {
       noJson:

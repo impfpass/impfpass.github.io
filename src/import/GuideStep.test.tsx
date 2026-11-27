@@ -18,27 +18,55 @@ afterEach(() => setClipboard(undefined));
 function Harness({
   initial = emptyDraft(new Date()),
   onDone,
+  onClear,
   onDraft,
 }: {
   initial?: Draft;
   onDone: (message?: string) => void;
+  onClear: () => void;
   onDraft: (d: Draft) => void;
 }) {
   const [draft, setDraft] = useState(initial);
   onDraft(draft);
   return (
-    <GuideStep draft={draft} update={(fn) => setDraft(fn)} onDone={onDone} />
+    <GuideStep
+      draft={draft}
+      update={(fn) => setDraft(fn)}
+      onDone={onDone}
+      onClear={onClear}
+    />
   );
 }
 
 function setup(initial?: Draft) {
   const onDone = vi.fn();
+  const onClear = vi.fn();
   let latest = initial ?? emptyDraft(new Date());
   render(
-    <Harness initial={initial} onDone={onDone} onDraft={(d) => (latest = d)} />,
+    <Harness
+      initial={initial}
+      onDone={onDone}
+      onClear={onClear}
+      onDraft={(d) => (latest = d)}
+    />,
   );
-  return { onDone, draft: () => latest };
+  return { onDone, onClear, draft: () => latest };
 }
+
+const draftWithRows = (n: number, birthDate = "15.03.1967"): Draft => ({
+  ...emptyDraft(new Date()),
+  birthDate,
+  rows: Array.from({ length: n }, (_, i) => newRow(`old${i}`)),
+});
+
+async function pasteAndRead() {
+  await userEvent.click(screen.getByLabelText(T.pc.guide.answerLabel));
+  await userEvent.paste(fixture);
+  await userEvent.click(screen.getByRole("button", { name: "Einlesen" }));
+}
+
+const APPEND_TITLE = (n: string) =>
+  `Der Entwurf enthält schon ${n}. Sollen die neuen angehängt werden, oder willst du vorher alles löschen?`;
 
 it("zeigt die drei Schritte und den Hinweis zu den Gesundheitsdaten", () => {
   setup();
@@ -139,4 +167,103 @@ it("lässt vorhandene Zeilen ohne Chatbot unverändert", async () => {
   );
   expect(draft().rows).toHaveLength(1);
   expect(onDone).toHaveBeenCalledWith();
+});
+
+describe("vorhandener Entwurf", () => {
+  it("nennt die Zahl der Impfungen und bietet „Entwurf löschen“ an", async () => {
+    const { onClear } = setup(draftWithRows(2));
+    expect(
+      screen.getByText("Der Entwurf enthält schon 2 Impfungen."),
+    ).toBeTruthy();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Entwurf löschen" }),
+    );
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Entwurf löschen? Die Tabelle mit allen Einträgen wird auf diesem PC gelöscht.",
+      }),
+    ).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(onClear).not.toHaveBeenCalled();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Entwurf löschen" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Löschen" }));
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it("sagt „1 Impfung“ in der Einzahl", () => {
+    setup(draftWithRows(1));
+    expect(
+      screen.getByText("Der Entwurf enthält schon 1 Impfung."),
+    ).toBeTruthy();
+  });
+
+  it("zeigt ohne Zeilen weder Hinweis noch „Entwurf löschen“", () => {
+    setup();
+    expect(screen.queryByText(/Der Entwurf enthält schon/)).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Entwurf löschen" }),
+    ).toBeNull();
+  });
+
+  it("„Einlesen“ fragt nach, „Abbrechen“ lässt alles, wie es ist", async () => {
+    const { onDone, draft } = setup(draftWithRows(2));
+    await pasteAndRead();
+    expect(
+      screen.getByRole("alertdialog", { name: APPEND_TITLE("2 Impfungen") }),
+    ).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(draft().rows).toHaveLength(2);
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
+  it("„Anhängen“ hängt die neuen Zeilen an", async () => {
+    const { onDone, draft } = setup(draftWithRows(1));
+    await pasteAndRead();
+    expect(
+      screen.getByRole("alertdialog", { name: APPEND_TITLE("1 Impfung") }),
+    ).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Anhängen" }));
+
+    expect(draft().rows).toHaveLength(13);
+    expect(draft().rows[0].id).toBe("old0");
+    expect(draft().birthDate).toBe("15.03.1967");
+    expect(onDone).toHaveBeenCalledWith(
+      "12 Impfungen eingelesen. Prüfe sie in der Tabelle.",
+    );
+  });
+
+  it("„Vorher löschen“ beginnt mit leerem Entwurf, auch ohne Geburtsdatum", async () => {
+    const { onDone, draft } = setup(draftWithRows(2));
+    await pasteAndRead();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Vorher löschen" }),
+    );
+
+    expect(draft().rows).toHaveLength(12);
+    expect(draft().rows.some((r) => r.id.startsWith("old"))).toBe(false);
+    expect(draft().birthDate).toBe("");
+    expect(onDone).toHaveBeenCalledWith(
+      "12 Impfungen eingelesen. Prüfe sie in der Tabelle.",
+    );
+  });
+
+  it("eine unlesbare Antwort zeigt den Fehler, ohne zu fragen", async () => {
+    const { draft } = setup(draftWithRows(2));
+    await userEvent.type(
+      screen.getByLabelText(T.pc.guide.answerLabel),
+      "Das ist keine Liste",
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Einlesen" }));
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      T.pc.chatbotErrors.noJson,
+    );
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(draft().rows).toHaveLength(2);
+  });
 });

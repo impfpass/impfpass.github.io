@@ -1,13 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { QrCode } from "@/components/QrCode";
 import { todayISO } from "@/core/dates";
@@ -21,6 +12,7 @@ import { draftToEntries, type Draft } from "@/core/import/draft";
 import { saveFile } from "@/lib/saveFile";
 import { T } from "@/texts";
 import { copyText } from "./copyText";
+import { DeleteDraftButton } from "./DeleteDraftButton";
 
 const t = T.pc.send;
 
@@ -49,7 +41,6 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
 
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState<boolean | null>(null);
-  const [confirming, setConfirming] = useState(false);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -153,28 +144,8 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
         <Button type="button" variant="outline" onClick={onBack}>
           {t.back}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setConfirming(true)}
-        >
-          {t.deleteDraft}
-        </Button>
+        <DeleteDraftButton onConfirm={onCleared} />
       </div>
-
-      <AlertDialog open={confirming} onOpenChange={setConfirming}>
-        <AlertDialogContent aria-describedby={undefined}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t.deleteTitle}</AlertDialogTitle>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onCleared()}>
-              {t.deleteConfirm}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

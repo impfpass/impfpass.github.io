@@ -148,6 +148,50 @@ it("Entwurf löschen leert den Speicher und zeigt Schritt 1 mit Meldung", async 
   expect(await store.load()).toBeNull();
 });
 
+it("Entwurf löschen in Schritt 2 leert den Speicher und zeigt Schritt 1 mit Meldung", async () => {
+  const store = await openDraftStore();
+  await store.save({
+    ...emptyDraft(new Date()),
+    birthDate: "15.03.1967",
+    rows: [newRow("r1"), newRow("r2")],
+  });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "Entwurf löschen" }),
+  );
+  await userEvent.click(await screen.findByRole("button", { name: "Löschen" }));
+
+  expect(current().textContent).toBe("1 Anleitung");
+  expect((await screen.findByRole("status")).textContent).toBe(
+    "Der Entwurf ist gelöscht.",
+  );
+  expect(
+    (screen.getByLabelText(T.pc.guide.birthDate) as HTMLInputElement).value,
+  ).toBe("");
+  expect(await store.load()).toBeNull();
+});
+
+it("Entwurf löschen in Schritt 1 leert den Speicher und meldet es", async () => {
+  const store = await openDraftStore();
+  await store.save({ ...emptyDraft(new Date()), rows: [newRow("r1")] });
+  render(<ImportApp />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "1 Anleitung" }),
+  );
+  expect(screen.getByText("Der Entwurf enthält schon 1 Impfung.")).toBeTruthy();
+  await userEvent.click(
+    screen.getByRole("button", { name: "Entwurf löschen" }),
+  );
+  await userEvent.click(await screen.findByRole("button", { name: "Löschen" }));
+
+  expect(current().textContent).toBe("1 Anleitung");
+  expect((await screen.findByRole("status")).textContent).toBe(
+    "Der Entwurf ist gelöscht.",
+  );
+  expect(screen.queryByText(/Der Entwurf enthält schon/)).toBeNull();
+  expect(await store.load()).toBeNull();
+});
+
 it("Zurück zur Tabelle führt von Schritt 3 zu Schritt 2", async () => {
   const store = await openDraftStore();
   await store.save({

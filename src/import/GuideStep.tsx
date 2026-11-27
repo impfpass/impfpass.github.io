@@ -1,11 +1,27 @@
 import { useId, useRef, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ChatbotAnswerError, parseChatbotAnswer } from "@/core/import/chatbot";
-import { newRow, rowFromParsed, type Draft } from "@/core/import/draft";
+import {
+  emptyDraft,
+  newRow,
+  rowFromParsed,
+  type Draft,
+  type DraftRow,
+} from "@/core/import/draft";
 import { T } from "@/texts";
 import { copyText } from "./copyText";
+import { DeleteDraftButton } from "./DeleteDraftButton";
 
 const TEXTAREA_CLASS =
   "w-full rounded-md border border-input bg-transparent p-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
@@ -15,16 +31,21 @@ export function GuideStep({
   draft,
   update,
   onDone,
+  onClear,
 }: {
   draft: Draft;
   update(fn: (d: Draft) => Draft): void;
   onDone(message?: string): void;
+  /** „Entwurf löschen“ ist bestätigt. */
+  onClear(): void;
 }) {
   const ids = useId();
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState<boolean | null>(null);
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Gelesene Zeilen, solange die Frage „Anhängen oder vorher löschen?“ offen ist.
+  const [pending, setPending] = useState<DraftRow[] | null>(null);
   const g = T.pc.guide;
 
   async function copy() {
@@ -32,16 +53,28 @@ export function GuideStep({
   }
 
   function read() {
+    let rows: DraftRow[];
     try {
       const parsed = parseChatbotAnswer(answer);
-      const rows = parsed.map((p) => rowFromParsed(p, crypto.randomUUID()));
-      update((d) => ({ ...d, rows: [...d.rows, ...rows] }));
-      setError(null);
-      onDone(g.imported(rows.length));
+      rows = parsed.map((p) => rowFromParsed(p, crypto.randomUUID()));
     } catch (e) {
       if (!(e instanceof ChatbotAnswerError)) throw e;
       setError(e.message);
+      return;
     }
+    setError(null);
+    // Nicht still anhängen: Der Entwurf kann von einer anderen Person sein.
+    if (draft.rows.length > 0) setPending(rows);
+    else take(rows, "append");
+  }
+
+  function take(rows: DraftRow[], mode: "append" | "replace") {
+    update((d) =>
+      mode === "replace"
+        ? { ...emptyDraft(new Date()), rows }
+        : { ...d, rows: [...d.rows, ...rows] },
+    );
+    onDone(g.imported(rows.length));
   }
 
   function skip() {
@@ -53,6 +86,12 @@ export function GuideStep({
 
   return (
     <div className="space-y-6">
+      {draft.rows.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 rounded-md border p-3">
+          <p>{g.draftHas(draft.rows.length)}</p>
+          <DeleteDraftButton onConfirm={onClear} />
+        </div>
+      )}
       <h3 className="text-lg font-semibold">{g.heading}</h3>
       <ol className="list-none space-y-2">
         {g.steps.map((s) => (
@@ -125,6 +164,35 @@ export function GuideStep({
           </Button>
         </div>
       </div>
+
+      <AlertDialog
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) setPending(null);
+        }}
+      >
+        <AlertDialogContent aria-describedby={undefined}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {g.appendQuestion(draft.rows.length)}
+            </AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{g.cancel}</AlertDialogCancel>
+            <AlertDialogAction
+              variant="outline"
+              onClick={() => pending && take(pending, "replace")}
+            >
+              {g.replace}
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => pending && take(pending, "append")}
+            >
+              {g.append}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

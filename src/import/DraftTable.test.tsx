@@ -26,6 +26,7 @@ const reviewedRow = (date: string, label: string): DraftRow => ({
 /** Rendert die Tabelle mit eigenem Zustand; `state.draft` ist der aktuelle Entwurf. */
 function setup(rows: DraftRow[], birthDate = "") {
   const onNext = vi.fn();
+  const onClear = vi.fn();
   const state: { draft: Draft } = {
     draft: { ...emptyDraft(new Date()), birthDate, rows },
   };
@@ -34,10 +35,17 @@ function setup(rows: DraftRow[], birthDate = "") {
     useEffect(() => {
       state.draft = draft;
     });
-    return <DraftTable draft={draft} update={setDraft} onNext={onNext} />;
+    return (
+      <DraftTable
+        draft={draft}
+        update={setDraft}
+        onNext={onNext}
+        onClear={onClear}
+      />
+    );
   }
   render(<Harness />);
-  return { onNext, state };
+  return { onNext, onClear, state };
 }
 
 /** Zeile n der Tabelle (1-basiert, ohne Kopfzeile). */
@@ -391,6 +399,27 @@ describe("Zeilen hinzufügen und löschen", () => {
     expect(input("Datum, Zeile 1").value).toBe("05.12.2016");
     expect(input("Datum, Zeile 2").value).toBe("03.04.2018");
     expect(screen.queryByRole("button", { name: "Rückgängig" })).toBeNull();
+  });
+
+  it("„Entwurf löschen“ fragt nach und ruft erst nach Bestätigung onClear", async () => {
+    const { onClear } = setup([row(), row("03.04.2018")]);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Entwurf löschen" }),
+    );
+    expect(
+      screen.getByRole("alertdialog", {
+        name: "Entwurf löschen? Die Tabelle mit allen Einträgen wird auf diesem PC gelöscht.",
+      }),
+    ).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+    expect(onClear).not.toHaveBeenCalled();
+    expect(bodyRows()).toHaveLength(2);
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Entwurf löschen" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Löschen" }));
+    expect(onClear).toHaveBeenCalledTimes(1);
   });
 
   it("zeigt nach dem Löschen der letzten Zeile eine leere Tabelle", async () => {

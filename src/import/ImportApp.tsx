@@ -38,6 +38,13 @@ export function ImportApp({
     setMessage(null);
   }
 
+  // „Entwurf löschen“ in Schritt 1, 2 und 3.
+  function deleteDraft() {
+    void clear();
+    setChosen(1);
+    setMessage(T.pc.send.deleted);
+  }
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-6">
       <header>
@@ -97,6 +104,7 @@ export function ImportApp({
                     setChosen(2);
                     setMessage(msg ?? null);
                   }}
+                  onClear={deleteDraft}
                 />
               )}
               {step === 2 && (
@@ -110,6 +118,7 @@ export function ImportApp({
                     draft={draft}
                     update={update}
                     onNext={() => goTo(3)}
+                    onClear={deleteDraft}
                   />
                 </>
               )}
@@ -117,11 +126,7 @@ export function ImportApp({
                 <TransferStep
                   draft={draft}
                   onBack={() => goTo(2)}
-                  onCleared={() => {
-                    void clear();
-                    setChosen(1);
-                    setMessage(T.pc.send.deleted);
-                  }}
+                  onCleared={deleteDraft}
                 />
               )}
             </section>

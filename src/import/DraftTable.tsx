@@ -31,6 +31,7 @@ import {
 } from "@/core/import/draft";
 import { cn } from "@/lib/utils";
 import { T } from "@/texts";
+import { DeleteDraftButton } from "./DeleteDraftButton";
 import { DiseasePicker } from "./DiseasePicker";
 
 const PRODUCT_NAMES = PRODUCTS.map((p) => p.name).sort((a, b) =>
@@ -77,10 +78,13 @@ export function DraftTable({
   draft,
   update,
   onNext,
+  onClear,
 }: {
   draft: Draft;
   update(fn: (d: Draft) => Draft): void;
   onNext(): void;
+  /** „Entwurf löschen“ ist bestätigt. */
+  onClear(): void;
 }) {
   const ids = useId();
   const t = T.pc.table;
@@ -220,10 +224,13 @@ export function DraftTable({
         </>
       )}
 
-      <Button type="button" variant="outline" onClick={addRow}>
-        <Plus aria-hidden="true" />
-        {t.add}
-      </Button>
+      <div className="flex flex-wrap gap-3">
+        <Button type="button" variant="outline" onClick={addRow}>
+          <Plus aria-hidden="true" />
+          {t.add}
+        </Button>
+        <DeleteDraftButton onConfirm={onClear} />
+      </div>
 
       {removed && (
         <p
