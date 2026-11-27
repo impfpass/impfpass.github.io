@@ -363,6 +363,9 @@ export function EntryForm({
         <Label htmlFor="entry-doctor">{T.entry.doctor}</Label>
         <Input
           id="entry-doctor"
+          // Arztnamen nicht in andere Wörter umkorrigieren (iPhone)
+          autoCorrect="off"
+          spellCheck={false}
           value={doctor}
           onChange={(e) => setDoctor(e.target.value)}
         />

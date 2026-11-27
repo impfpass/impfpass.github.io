@@ -190,3 +190,12 @@ it("Monatsfeld nennt das Format für Browser ohne Monatsauswahl", async () => {
     "JJJJ-MM",
   );
 });
+
+it("„Arzt oder Praxis“ ohne Autokorrektur und Rechtschreibprüfung", async () => {
+  // Arztnamen korrigiert das iPhone sonst in andere Wörter um.
+  await seed({ persons: [testPerson()] });
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+  const doctor = screen.getByLabelText("Arzt oder Praxis");
+  expect(doctor.getAttribute("autocorrect")).toBe("off");
+  expect(doctor.getAttribute("spellcheck")).toBe("false");
+});
