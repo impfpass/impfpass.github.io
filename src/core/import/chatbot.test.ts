@@ -57,6 +57,14 @@ describe("parseChatbotAnswer", () => {
     );
   });
 
+  it("skips bare arrays without entries before the real block", () => {
+    const text = `Beispiel ["date"] [1] und [] dazu.
+\`\`\`json
+${CLEAN}
+\`\`\``;
+    expect(parseChatbotAnswer(text)).toEqual([EXPECTED]);
+  });
+
   it("ignores braces inside strings", () => {
     const row = { ...ROW, doctor: "Praxis } {[ Muster" };
     const text = `Antwort: ${JSON.stringify({ vaccinations: [row] })} Ende`;

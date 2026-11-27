@@ -50,7 +50,7 @@ function text(v: unknown): string {
 
 /** Die Liste der Einträge, wenn der Wert eine enthält. */
 function entriesOf(value: unknown): unknown[] | null {
-  if (Array.isArray(value)) return value;
+  if (Array.isArray(value)) return value.some(isRecord) ? value : null;
   if (isRecord(value) && Array.isArray(value.vaccinations)) {
     return value.vaccinations;
   }
