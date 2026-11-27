@@ -13,6 +13,7 @@ const boostrix: ImportItem = {
     diseases: ["tetanus", "diphtheria", "pertussis", "polio"],
   },
   duplicateOf: testVaccination({ label: "Boostrix Polio", date: "2020-05-04" }),
+  dateIssue: null,
 };
 const fsme: ImportItem = {
   entry: {
@@ -23,6 +24,7 @@ const fsme: ImportItem = {
     diseases: ["tbe"],
   },
   duplicateOf: null,
+  dateIssue: null,
 };
 const pocken: ImportItem = {
   entry: {
@@ -33,6 +35,7 @@ const pocken: ImportItem = {
     diseases: ["smallpox"],
   },
   duplicateOf: null,
+  dateIssue: null,
 };
 
 const checkbox = (name: RegExp) =>
@@ -124,4 +127,34 @@ it("„Abbrechen“ meldet sich beim Aufrufer", async () => {
   await user.click(screen.getByRole("button", { name: "Abbrechen" }));
 
   expect(onCancel).toHaveBeenCalledOnce();
+});
+
+it("Daten vor dem Geburtsdatum oder in der Zukunft sind markiert und abgewählt", async () => {
+  const onImport = vi.fn().mockResolvedValue(undefined);
+  const user = userEvent.setup();
+  const early: ImportItem = { ...pocken, dateIssue: "beforeBirth" };
+  const later: ImportItem = {
+    entry: { ...fsme.entry, date: "2030-01-01" },
+    duplicateOf: null,
+    dateIssue: "future",
+  };
+  render(
+    <ImportPreview
+      items={[early, later, fsme]}
+      onImport={onImport}
+      onCancel={vi.fn()}
+    />,
+  );
+
+  expect(
+    screen.getByText("Das Datum liegt vor deinem Geburtsdatum."),
+  ).toBeTruthy();
+  expect(screen.getByText("Das Datum liegt in der Zukunft.")).toBeTruthy();
+  expect(checkbox(/Pocken/).checked).toBe(false);
+  expect(checkbox(/01\.01\.2030/).checked).toBe(false);
+  expect(importButton().textContent).toBe("1 Impfung übernehmen");
+
+  await user.click(checkbox(/Pocken/));
+  await user.click(importButton());
+  expect(onImport).toHaveBeenCalledWith([early.entry, fsme.entry]);
 });

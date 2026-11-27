@@ -7,8 +7,9 @@ import type { TransferEntry } from "@/core/model";
 import { T } from "@/texts";
 
 /**
- * Vorschau einer Übertragung. Mögliche Dubletten sind abgewählt und lassen
- * sich wieder anwählen (Spec 8.2). Scheitert `onImport`, bleibt die Auswahl.
+ * Vorschau einer Übertragung. Mögliche Dubletten und Daten vor dem
+ * Geburtsdatum oder in der Zukunft sind abgewählt und lassen sich wieder
+ * anwählen (Spec 8.2). Scheitert `onImport`, bleibt die Auswahl.
  */
 export function ImportPreview({
   items,
@@ -21,7 +22,7 @@ export function ImportPreview({
 }) {
   const id = useId();
   const [chosen, setChosen] = useState(() =>
-    items.map((item) => item.duplicateOf === null),
+    items.map((item) => item.duplicateOf === null && item.dateIssue === null),
   );
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -50,7 +51,7 @@ export function ImportPreview({
     <div className="flex flex-col gap-5">
       <p>{T.transfer.preview.summary(items.length, duplicates)}</p>
       <ul aria-label={T.transfer.preview.label} className="flex flex-col gap-3">
-        {items.map(({ entry, duplicateOf }, i) => (
+        {items.map(({ entry, duplicateOf, dateIssue }, i) => (
           <li key={i}>
             <label className="flex min-h-11 items-start gap-3 rounded-lg border p-3">
               <input
@@ -72,6 +73,13 @@ export function ImportPreview({
                   <span className="text-muted-foreground">
                     {diseaseLabel(entry.diseases)}
                   </span>
+                  {dateIssue && (
+                    <span>
+                      {dateIssue === "future"
+                        ? T.transfer.preview.dateFuture
+                        : T.transfer.preview.dateBeforeBirth}
+                    </span>
+                  )}
                   {duplicateOf && (
                     <span>
                       {T.transfer.preview.duplicate(

@@ -24,38 +24,65 @@ const entry = (overrides: Partial<TransferEntry> = {}): TransferEntry => ({
   ...overrides,
 });
 
+const birth = "1967-03-15";
+const today = "2026-11-27";
+const plan = (existingOnes: Vaccination[], entries: TransferEntry[]) =>
+  planImport(existingOnes, entries, birth, today);
+
 describe("planImport", () => {
   it("markiert gleiches Datum mit überlappender Krankheit", () => {
     const v = existing();
-    expect(planImport([v], [entry()])).toEqual([
-      { entry: entry(), duplicateOf: v },
+    expect(planImport([v], [entry()], birth, today)).toEqual([
+      { entry: entry(), duplicateOf: v, dateIssue: null },
     ]);
   });
 
   it("markiert auch Monat gegen Tag", () => {
     const v = existing();
     const e = entry({ date: "2016-12-01", datePrecision: "month" });
-    expect(planImport([v], [e])[0].duplicateOf).toBe(v);
+    expect(plan([v], [e])[0].duplicateOf).toBe(v);
   });
 
   it("markiert nicht bei anderer Krankheit", () => {
     const e = entry({ diseases: ["polio"] });
-    expect(planImport([existing()], [e])[0].duplicateOf).toBeNull();
+    expect(plan([existing()], [e])[0].duplicateOf).toBeNull();
   });
 
   it("nimmt die erste passende vorhandene Impfung und behält die Reihenfolge", () => {
     const first = existing({ id: "a" });
     const second = existing({ id: "b" });
     const other = entry({ date: "2020-01-01", label: "x" });
-    const plan = planImport([first, second], [other, entry()]);
-    expect(plan.map((i) => i.entry)).toEqual([other, entry()]);
-    expect(plan[0].duplicateOf).toBeNull();
-    expect(plan[1].duplicateOf).toBe(first);
+    const items = plan([first, second], [other, entry()]);
+    expect(items.map((i) => i.entry)).toEqual([other, entry()]);
+    expect(items[0].duplicateOf).toBeNull();
+    expect(items[1].duplicateOf).toBe(first);
   });
 
   it("vergleicht Einträge nicht untereinander", () => {
-    const plan = planImport([], [entry(), entry()]);
-    expect(plan.map((i) => i.duplicateOf)).toEqual([null, null]);
+    const items = plan([], [entry(), entry()]);
+    expect(items.map((i) => i.duplicateOf)).toEqual([null, null]);
+  });
+
+  it("markiert Daten vor dem Geburtsdatum und in der Zukunft, in ihrer Genauigkeit", () => {
+    const items = plan(
+      [],
+      [
+        entry({ date: "1967-03-14" }),
+        entry({ date: "1967-01-01", datePrecision: "year" }),
+        entry({ date: "1966-12-01", datePrecision: "month" }),
+        entry({ date: "2026-11-28" }),
+        entry({ date: "2026-11-01", datePrecision: "month" }),
+        entry({ date: "2027-01-01", datePrecision: "year" }),
+      ],
+    );
+    expect(items.map((i) => i.dateIssue)).toEqual([
+      "beforeBirth",
+      null,
+      "beforeBirth",
+      "future",
+      null,
+      "future",
+    ]);
   });
 });
 

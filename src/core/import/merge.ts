@@ -1,20 +1,34 @@
-import type { TransferEntry, Vaccination } from "../model";
+import type { ISODate, TransferEntry, Vaccination } from "../model";
+import { dateRangeIssue } from "../validation";
 import { isPossibleDuplicate } from "./duplicates";
 
 export interface ImportItem {
   entry: TransferEntry;
   /** Die erste vorhandene Impfung, die dieselbe sein könnte. */
   duplicateOf: Vaccination | null;
+  /** Datum vor dem Geburtsdatum oder in der Zukunft, wie bei `validateEntry`. */
+  dateIssue: "future" | "beforeBirth" | null;
 }
 
-/** Ordnet jedem Eintrag eine mögliche Dublette zu; die Reihenfolge bleibt. */
+/**
+ * Ordnet jedem Eintrag eine mögliche Dublette zu und prüft das Datum gegen
+ * Geburtsdatum und heute; die Reihenfolge bleibt.
+ */
 export function planImport(
   existing: Vaccination[],
   entries: TransferEntry[],
+  birthDate: ISODate | null,
+  today: ISODate,
 ): ImportItem[] {
   return entries.map((entry) => ({
     entry,
     duplicateOf: existing.find((v) => isPossibleDuplicate(v, entry)) ?? null,
+    dateIssue: dateRangeIssue(
+      entry.date,
+      entry.datePrecision,
+      birthDate,
+      today,
+    ),
   }));
 }
 

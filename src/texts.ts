@@ -578,6 +578,8 @@ So füllst du die Felder:
         `${vaccinationCount(n)} gefunden, davon ${duplicates} schon eingetragen.`,
       duplicate: (label: string, date: string) =>
         `Schon eingetragen: ${label}, ${date}.`,
+      dateBeforeBirth: "Das Datum liegt vor deinem Geburtsdatum.",
+      dateFuture: "Das Datum liegt in der Zukunft.",
       import: (k: number) => `${vaccinationCount(k)} übernehmen`,
     },
     done: (k: number) => `${vaccinationCount(k)} übernommen.`,

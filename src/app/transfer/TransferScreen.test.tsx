@@ -612,6 +612,34 @@ it("Text ohne Teilzeile meldet „kein Code von ImpfPass“", async () => {
   ).toBe("Hallo, hier sind meine Impfungen.");
 });
 
+it("ein Datum vor dem Geburtsdatum des Profils ist markiert und abgewählt", async () => {
+  // Das Profil aus seed hat den 15.03.1967 als Geburtsdatum.
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const early: TransferPayload = {
+    ...payload,
+    entries: [
+      ...payload.entries,
+      {
+        date: "1967-03-14",
+        datePrecision: "day",
+        productId: null,
+        label: "Pocken",
+        diseases: ["smallpox"],
+      },
+    ],
+  };
+
+  await paste(user, textOf(early));
+
+  expect(
+    await screen.findByText("Das Datum liegt vor deinem Geburtsdatum."),
+  ).toBeTruthy();
+  expect(checkbox(/14\.03\.1967 Pocken/).checked).toBe(false);
+  expect(checkbox(/1975 Pocken/).checked).toBe(true);
+});
+
 it("„Abbrechen“ in der Vorschau führt leer zurück zum Sammeln", async () => {
   await seed({});
   const user = userEvent.setup();

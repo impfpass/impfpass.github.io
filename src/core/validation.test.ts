@@ -1,4 +1,4 @@
-import { validateEntry, type EntryInput } from "./validation";
+import { dateRangeIssue, validateEntry, type EntryInput } from "./validation";
 
 const birth = "1967-03-15",
   today = "2026-11-26";
@@ -101,4 +101,24 @@ it("Freitext mit Krankheit ist erlaubt", () => {
       today,
     ),
   ).toEqual({});
+});
+
+describe("dateRangeIssue", () => {
+  it("vergleicht in der bekannten Genauigkeit", () => {
+    expect(dateRangeIssue("2020-05-04", "day", birth, today)).toBeNull();
+    expect(dateRangeIssue("2026-11-27", "day", birth, today)).toBe("future");
+    expect(dateRangeIssue("2026-11-01", "month", birth, today)).toBeNull();
+    expect(dateRangeIssue("1967-03-14", "day", birth, today)).toBe(
+      "beforeBirth",
+    );
+    expect(dateRangeIssue("1967-01-01", "year", birth, today)).toBeNull();
+    expect(dateRangeIssue("1966-01-01", "year", birth, today)).toBe(
+      "beforeBirth",
+    );
+  });
+
+  it("ohne Geburtsdatum nur die Zukunft", () => {
+    expect(dateRangeIssue("1900-01-01", "day", null, today)).toBeNull();
+    expect(dateRangeIssue("2027-01-01", "year", null, today)).toBe("future");
+  });
 });
