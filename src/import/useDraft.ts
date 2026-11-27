@@ -33,7 +33,11 @@ export function useDraft(
     }
     if (!dirtyRef.current || !storeRef.current) return;
     dirtyRef.current = false;
-    storeRef.current.save(draftRef.current).catch(() => setPersistent(false));
+    // Klappt ein späteres Speichern wieder, verschwindet die Warnung.
+    storeRef.current.save(draftRef.current).then(
+      () => setPersistent(true),
+      () => setPersistent(false),
+    );
   }, []);
 
   useEffect(() => {

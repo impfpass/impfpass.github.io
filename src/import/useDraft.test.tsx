@@ -108,6 +108,47 @@ it("arbeitet im Speicher weiter, wenn load scheitert", async () => {
   expect(result.current.persistent).toBe(false);
 });
 
+it("meldet nach einem gescheiterten Speichern wieder Erfolg, wenn das nächste klappt", async () => {
+  const save = vi
+    .fn<DraftStore["save"]>()
+    .mockRejectedValueOnce(new Error("voll"))
+    .mockResolvedValue(undefined);
+  const store: DraftStore = {
+    load: () => Promise.resolve(null),
+    save,
+    clear: () => Promise.resolve(),
+  };
+  const { result } = renderHook(() => useDraft(async () => store));
+  await waitFor(() => expect(result.current.status).toBe("ready"));
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+
+  act(() => result.current.update((d) => ({ ...d, birthDate: "a" })));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(500);
+  });
+  expect(result.current.persistent).toBe(false);
+
+  act(() => result.current.update((d) => ({ ...d, birthDate: "b" })));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(500);
+  });
+  expect(save).toHaveBeenCalledTimes(2);
+  expect(result.current.persistent).toBe(true);
+});
+
+it("bleibt ohne Speicher bei der Warnung, auch nach Änderungen", async () => {
+  const { result } = renderHook(() =>
+    useDraft(() => Promise.reject(new Error("kein Speicher"))),
+  );
+  await waitFor(() => expect(result.current.status).toBe("ready"));
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  act(() => result.current.update((d) => ({ ...d, birthDate: "z" })));
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(500);
+  });
+  expect(result.current.persistent).toBe(false);
+});
+
 it("clear leert Entwurf und Speicher", async () => {
   const store = await openDraftStore();
   await store.save(stored());
