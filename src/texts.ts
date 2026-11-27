@@ -278,6 +278,7 @@ export const T = {
       "Kein passender Impfstoff in der Liste? Dann wähle die Krankheiten aus, gegen die geimpft wurde.",
     batch: "Charge",
     doctor: "Arzt oder Praxis",
+    doctorSuggestions: "Bisher eingetragen",
     note: "Notiz",
     save: "Speichern",
     cancel: "Abbrechen",

@@ -14,6 +14,7 @@ import {
 import { getProduct, type Product } from "@/core/catalog/products";
 import { recognizeProduct, suggestProducts } from "@/core/catalog/recognize";
 import { normalizeToPrecision, todayISO } from "@/core/dates";
+import { suggestDoctors } from "@/core/doctors";
 import type { DatePrecision, Vaccination } from "@/core/model";
 import { validateEntry, type EntryErrors } from "@/core/validation";
 import { useAppData } from "../data/AppData";
@@ -65,7 +66,7 @@ export function EntryForm({
   /** Nach erfolgreichem Speichern, wenn die Bestätigung erscheint. */
   onSaved?: () => void;
 }) {
-  const { person, actions } = useAppData();
+  const { person, vaccinations, actions } = useAppData();
   const initialDate = existing?.date ?? todayISO();
 
   const [precision, setPrecision] = useState<DatePrecision>(
@@ -96,6 +97,8 @@ export function EntryForm({
   const suggestions = suggestProducts(label).filter(
     (p) => p.id !== product?.id,
   );
+  // Meist impft dieselbe Praxis: bisherige Einträge mit einem Tipp übernehmen.
+  const doctorSuggestions = suggestDoctors(vaccinations, doctor);
 
   function changeLabel(value: string) {
     setLabel(value);
@@ -370,9 +373,35 @@ export function EntryForm({
           // Arztnamen nicht in andere Wörter umkorrigieren (iPhone)
           autoCorrect="off"
           spellCheck={false}
+          // Eigene Vorschläge statt Kontakten oder Adressen vom Browser
+          autoComplete="off"
           value={doctor}
           onChange={(e) => setDoctor(e.target.value)}
         />
+        {doctorSuggestions.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p id="entry-doctor-known" className="font-medium">
+              {T.entry.doctorSuggestions}
+            </p>
+            <ul
+              aria-labelledby="entry-doctor-known"
+              className="flex flex-col gap-1"
+            >
+              {doctorSuggestions.map((name) => (
+                <li key={name}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-auto min-h-11 w-full justify-start whitespace-normal text-left"
+                    onClick={() => setDoctor(name)}
+                  >
+                    {name}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="entry-note">{T.entry.note}</Label>

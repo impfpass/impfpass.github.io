@@ -199,3 +199,52 @@ it("„Arzt oder Praxis“ ohne Autokorrektur und Rechtschreibprüfung", async (
   expect(doctor.getAttribute("autocorrect")).toBe("off");
   expect(doctor.getAttribute("spellcheck")).toBe("false");
 });
+
+it("„Arzt oder Praxis“ schlägt bisher eingetragene Ärzte vor", async () => {
+  await seed({
+    persons: [testPerson()],
+    vaccinations: [
+      testVaccination({
+        id: "a",
+        date: "2019-03-01",
+        doctor: "Praxis Dr. Muster",
+      }),
+      testVaccination({
+        id: "b",
+        date: "2024-10-12",
+        doctor: "Hausarztpraxis Nord",
+      }),
+    ],
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<EntryForm />, "/impfungen/neu");
+  const doctor = screen.getByLabelText("Arzt oder Praxis") as HTMLInputElement;
+
+  // Ohne Eingabe: zuletzt besuchte zuerst
+  const offered = screen
+    .getAllByRole("button")
+    .map((b) => b.textContent)
+    .filter((t) => t === "Praxis Dr. Muster" || t === "Hausarztpraxis Nord");
+  expect(offered).toEqual(["Hausarztpraxis Nord", "Praxis Dr. Muster"]);
+
+  await user.type(doctor, "must");
+  expect(
+    screen.queryByRole("button", { name: "Hausarztpraxis Nord" }),
+  ).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Praxis Dr. Muster" }));
+  expect(doctor.value).toBe("Praxis Dr. Muster");
+  expect(
+    screen.queryByRole("button", { name: "Praxis Dr. Muster" }),
+  ).toBeNull();
+
+  await user.type(screen.getByLabelText("Impfstoff"), "Boostrix Polio");
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+  await waitFor(() => expect(data().vaccinations).toHaveLength(3));
+  expect(data().vaccinations.at(-1)?.doctor).toBe("Praxis Dr. Muster");
+});
+
+it("„Arzt oder Praxis“ ohne bisherige Ärzte zeigt keine Vorschläge", async () => {
+  await seed({ persons: [testPerson()], vaccinations: [testVaccination()] });
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+  expect(screen.queryByText("Bisher eingetragen")).toBeNull();
+});
