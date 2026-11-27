@@ -318,7 +318,6 @@ export const T = {
     saved: "Gespeichert.",
     answersIntro:
       "Manche Impfungen empfiehlt die STIKO nur bestimmten Menschen. Diese Angaben bleiben auf diesem Gerät.",
-    saveAnswers: "Angaben speichern",
     reminders: "Erinnerungen",
     leadTime: "Vorlauf",
     leadTimeOption: (n: number) => (n === 1 ? "1 Monat" : `${n} Monate`),

@@ -1,5 +1,9 @@
-import { screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Router } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
+import { AppDataProvider } from "@/app/data/AppData";
+import { openRepository } from "@/core/storage/repository";
 import { renderWithData, seed, testPerson } from "@/test/helpers";
 import { InfoScreen } from "./InfoScreen";
 import { SettingsScreen } from "./SettingsScreen";
@@ -118,25 +122,57 @@ it("Vorlauf und Saison-Tag werden sofort gespeichert", async () => {
   expect(data().settings.leadMonths).toBe(3);
 });
 
-it("geänderte Angaben werden mit „Angaben speichern“ gespeichert", async () => {
+it("geänderte Angaben werden sofort gespeichert, ohne Knopf", async () => {
   await seed({});
   const user = userEvent.setup();
   const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(screen.queryByRole("button", { name: "Angaben speichern" })).toBeNull();
 
   await user.click(
     screen.getByRole("switch", { name: "Ich habe eine chronische Erkrankung" }),
   );
+  await waitFor(() => expect(data().person?.answers.chronicIllness).toBe(true));
   await user.click(screen.getByRole("radio", { name: "Nein" }));
+  await waitFor(() => expect(data().person?.answers.fsme).toBe("no"));
   await user.click(
     screen.getByRole("checkbox", {
       name: "Ich arbeite in einer Kita, Schule oder anderen Gemeinschaftseinrichtung.",
     }),
   );
-  await user.click(screen.getByRole("button", { name: "Angaben speichern" }));
-
-  await waitFor(() => expect(data().person?.answers.chronicIllness).toBe(true));
+  await waitFor(() =>
+    expect(data().person?.answers.job.communityFacility).toBe(true),
+  );
+  expect(data().person?.answers.chronicIllness).toBe(true);
   expect(data().person?.answers.fsme).toBe("no");
-  expect(data().person?.answers.job.communityFacility).toBe(true);
+});
+
+it("Angaben: scheitert das Speichern, erscheint ein Hinweis und der Schalter springt zurück", async () => {
+  await seed({ persons: [testPerson()] });
+  window.location.hash = "/einstellungen";
+  render(
+    <AppDataProvider
+      today="2026-11-27"
+      open={async (events) => ({
+        ...(await openRepository(events)),
+        savePerson: () => Promise.reject(new Error("kaputt")),
+      })}
+    >
+      <Router hook={useHashLocation}>
+        <SettingsScreen />
+      </Router>
+    </AppDataProvider>,
+  );
+  const user = userEvent.setup();
+  const chronic = await screen.findByRole("switch", {
+    name: "Ich habe eine chronische Erkrankung",
+  });
+
+  await user.click(chronic);
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
+  );
+  expect(chronic.getAttribute("aria-checked")).toBe("false");
 });
 
 it("Angaben: eigener Einleitungssatz ohne Verweis auf die Einstellungen", async () => {
@@ -166,7 +202,6 @@ it("FSME auf „Ja“ hebt ein früheres „Nein“ zur FSME-Nachfrage auf", asy
   expect(data().decisions).toHaveLength(1);
 
   await user.click(screen.getByRole("radio", { name: "Ja" }));
-  await user.click(screen.getByRole("button", { name: "Angaben speichern" }));
 
   await waitFor(() => expect(data().person?.answers.fsme).toBe("yes"));
   await waitFor(() => expect(data().decisions).toEqual([]));

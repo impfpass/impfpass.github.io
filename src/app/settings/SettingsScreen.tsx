@@ -60,39 +60,42 @@ function ProfileForm({ person }: { person: Person }) {
 function AnswersForm({ person }: { person: Person }) {
   const { decisions, actions } = useAppData();
   const [answers, setAnswers] = useState<PersonAnswers>(person.answers);
-  const [message, setMessage] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
-  async function submit(e: FormEvent) {
-    e.preventDefault();
-    setMessage(null);
+  // Jede Änderung wird sofort gespeichert, wie Vorlauf und Saison-Tag.
+  async function change(next: PersonAnswers) {
+    const previous = answers;
+    setAnswers(next);
+    setFailed(false);
     try {
-      await actions.updatePerson({ ...person, answers });
+      await actions.updatePerson({ ...person, answers: next });
       // „Nein“ zur FSME-Nachfrage auf der Übersicht gilt nach „Ja“ nicht mehr.
       const tbeDeclined = decisions.some(
         (d) => d.recommendationId === "tbe" && d.kind === "declined",
       );
-      if (
-        answers.fsme === "yes" &&
-        person.answers.fsme !== "yes" &&
-        tbeDeclined
-      ) {
+      if (next.fsme === "yes" && previous.fsme !== "yes" && tbeDeclined) {
         await actions.deleteDecision("tbe");
       }
-      setMessage(T.settings.saved);
     } catch {
-      setMessage(T.common.saveFailed);
+      setAnswers(previous);
+      setFailed(true);
     }
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+    <div className="flex flex-col gap-4">
       <p>{T.settings.answersIntro}</p>
-      <AnswersFields idPrefix="answers" value={answers} onChange={setAnswers} />
-      <Button type="submit" variant="outline">
-        {T.settings.saveAnswers}
-      </Button>
-      {message && <p role="status">{message}</p>}
-    </form>
+      <AnswersFields
+        idPrefix="answers"
+        value={answers}
+        onChange={(next) => void change(next)}
+      />
+      {failed && (
+        <p role="alert" className="text-destructive">
+          {T.common.saveFailed}
+        </p>
+      )}
+    </div>
   );
 }
 
