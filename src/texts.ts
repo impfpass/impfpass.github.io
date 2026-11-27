@@ -61,6 +61,35 @@ export const T = {
       birthDateFuture: "Das Geburtsdatum liegt in der Zukunft.",
     },
   },
+  answers: {
+    title: "Angaben für Empfehlungen",
+    intro:
+      "Manche Impfungen empfiehlt die STIKO nur bestimmten Menschen. Diese Angaben bleiben auf diesem Gerät, du kannst sie später in den Einstellungen ändern.",
+    chronic: "Ich habe eine chronische Erkrankung",
+    chronicHelp:
+      "Bei manchen Impfungen empfiehlt die STIKO Menschen mit bestimmten Grunderkrankungen, früher zu impfen. Ob das für dich gilt, entscheidet deine Ärztin oder dein Arzt. ImpfPass zeigt dir dafür Karten „Mit dem Arzt besprechen“.",
+    fsmeQuestion:
+      "Hältst du dich in FSME-Risikogebieten im Freien auf, zu Hause oder im Urlaub (Garten, Wald, Wandern)?",
+    fsmeYes: "Ja",
+    fsmeNo: "Nein",
+    fsmeOpen: "Weiß ich nicht",
+    fsmeHelp:
+      "FSME wird durch Zecken übertragen. Welche Landkreise als Risikogebiet gelten, zeigt die Karte des Robert Koch-Instituts.",
+    fsmeLink: "Karte der FSME-Risikogebiete (RKI)",
+    fsmeLinkUrl:
+      "https://www.rki.de/DE/Themen/Infektionskrankheiten/Infektionskrankheiten-A-Z/F/FSME/Karte.html",
+    jobTitle: "Beruf und Tierkontakt",
+    jobPatients: "Ich arbeite mit Patienten oder Pflegebedürftigen.",
+    jobCommunity:
+      "Ich arbeite in einer Kita, Schule oder anderen Gemeinschaftseinrichtung.",
+    jobBlood:
+      "Ich habe Kontakt mit Blut oder anderen Körperflüssigkeiten, auch im Rettungsdienst oder bei der Polizei.",
+    jobAnimals:
+      "Ich habe regelmäßig direkten Kontakt zu Geflügel, Schweinen, Wildvögeln oder ähnlichen Tieren, beruflich oder privat.",
+    jobHint:
+      "Für Impfungen wegen des Berufs ist meist die Betriebsärztin oder der Betriebsarzt zuständig, die Kosten trägt der Arbeitgeber.",
+    back: "Zurück",
+  },
   overview: {
     title: "Übersicht",
     lastVaccinated: (date: string, precision: "day" | "month" | "year") =>
@@ -145,6 +174,15 @@ export const T = {
     profile: "Profil",
     saveProfile: "Profil speichern",
     saved: "Gespeichert.",
+    saveAnswers: "Angaben speichern",
+    reminders: "Erinnerungen",
+    leadTime: "Vorlauf",
+    leadTimeOption: (n: number) => (n === 1 ? "1 Monat" : `${n} Monate`),
+    leadTimeHelp:
+      "So viele Monate vor der Fälligkeit wird eine Impfung in der Übersicht gelb. Dann ist Zeit, einen Termin auszumachen.",
+    seasonDay: "Saison-Tag",
+    seasonDayHelp:
+      "Ab diesem Tag werden die jährlichen Impfungen im Herbst gelb, etwa gegen Grippe.",
     backup: "Datensicherung",
     lastBackup: (date: string) => `Letzte Sicherung: ${date}`,
     noBackup: "Noch keine Sicherung gespeichert.",

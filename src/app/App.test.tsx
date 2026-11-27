@@ -2,7 +2,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createBackup, serializeBackup } from "@/core/formats/backup";
 import { DEFAULT_SETTINGS } from "@/core/model";
-import { StorageUnavailableError } from "@/core/storage/repository";
+import {
+  openRepository,
+  StorageUnavailableError,
+} from "@/core/storage/repository";
 import { seed, testPerson, testVaccination } from "@/test/helpers";
 import { App } from "./App";
 
@@ -17,9 +20,47 @@ it("ohne Person erscheint die Ersteinrichtung, danach die Übersicht", async () 
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
   await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Weiter" }));
   expect(
     await screen.findByRole("heading", { name: "Übersicht" }),
   ).toBeTruthy();
+});
+
+it("Ersteinrichtung in zwei Schritten speichert die Angaben", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(await screen.findByLabelText("Name"), "Christa");
+  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  expect(
+    await screen.findByRole("heading", { name: "Angaben für Empfehlungen" }),
+  ).toBeTruthy();
+  await user.click(
+    screen.getByRole("switch", { name: "Ich habe eine chronische Erkrankung" }),
+  );
+  await user.click(screen.getByRole("radio", { name: "Ja" }));
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  expect(
+    await screen.findByRole("heading", { name: "Übersicht" }),
+  ).toBeTruthy();
+  const [person] = await (await openRepository()).getPersons();
+  expect(person?.answers.chronicIllness).toBe(true);
+  expect(person?.answers.fsme).toBe("yes");
+});
+
+it("„Zurück“ im zweiten Schritt behält Name und Geburtsdatum", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(await screen.findByLabelText("Name"), "Christa");
+  await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Zurück" }));
+  expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe(
+    "Christa",
+  );
+  expect(
+    (screen.getByLabelText("Geburtsdatum") as HTMLInputElement).value,
+  ).toBe("1967-03-01");
 });
 
 it("die Ersteinrichtung bietet das Wiederherstellen einer Sicherung an", async () => {
@@ -88,6 +129,7 @@ it("die angelegte Person bleibt nach einem Neustart erhalten", async () => {
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
   await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Weiter" }));
   await screen.findByRole("heading", { name: "Übersicht" });
   unmount();
 
@@ -143,6 +185,7 @@ it("untere Navigation führt zu den Bereichen", async () => {
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
   await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Weiter" }));
   await screen.findByRole("heading", { name: "Übersicht" });
 
   const nav = screen.getByRole("navigation");
@@ -163,6 +206,7 @@ it("nach dem Speichern führt „Weitere Impfung eintragen“ zu einem leeren Fo
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
   await user.click(screen.getByRole("button", { name: "Weiter" }));
+  await user.click(await screen.findByRole("button", { name: "Weiter" }));
   await screen.findByRole("heading", { name: "Übersicht" });
 
   window.location.hash = "/impfungen/neu";

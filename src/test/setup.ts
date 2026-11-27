@@ -12,3 +12,10 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
 });
+
+// jsdom kennt ResizeObserver nicht, Radix Switch und Checkbox brauchen ihn.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};

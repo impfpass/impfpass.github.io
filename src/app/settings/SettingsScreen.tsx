@@ -4,7 +4,9 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { formatDate, todayISO } from "@/core/dates";
-import type { Person } from "@/core/model";
+import type { Person, PersonAnswers } from "@/core/model";
+import { AnswersFields } from "../answers/AnswersFields";
+import { Label } from "@/components/ui/label";
 import { RestoreButton } from "../backup/RestoreButton";
 import { useSaveBackup } from "../backup/useSaveBackup";
 import { useAppData } from "../data/AppData";
@@ -55,6 +57,111 @@ function ProfileForm({ person }: { person: Person }) {
   );
 }
 
+function AnswersForm({ person }: { person: Person }) {
+  const { actions } = useAppData();
+  const [answers, setAnswers] = useState<PersonAnswers>(person.answers);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    try {
+      await actions.updatePerson({ ...person, answers });
+      setMessage(T.settings.saved);
+    } catch {
+      setMessage(T.common.saveFailed);
+    }
+  }
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+      <p>{T.answers.intro}</p>
+      <AnswersFields idPrefix="answers" value={answers} onChange={setAnswers} />
+      <Button type="submit" variant="outline">
+        {T.settings.saveAnswers}
+      </Button>
+      {message && <p role="status">{message}</p>}
+    </form>
+  );
+}
+
+const LEAD_MONTHS = [1, 2, 3, 4, 6, 9, 12];
+const SEASON_DAYS = [
+  { value: "08-01", label: "1. August" },
+  { value: "08-15", label: "15. August" },
+  { value: "09-01", label: "1. September" },
+  { value: "09-15", label: "15. September" },
+  { value: "10-01", label: "1. Oktober" },
+];
+const SELECT_CLASS =
+  "h-11 w-full rounded-md border border-input bg-transparent px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
+
+function RemindersSection() {
+  const { settings, actions } = useAppData();
+  const [failed, setFailed] = useState(false);
+
+  async function change(next: typeof settings) {
+    setFailed(false);
+    try {
+      await actions.saveSettings(next);
+    } catch {
+      setFailed(true);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="settings-lead">{T.settings.leadTime}</Label>
+        <select
+          id="settings-lead"
+          className={SELECT_CLASS}
+          value={settings.leadMonths}
+          aria-describedby="settings-lead-help"
+          onChange={(e) =>
+            void change({ ...settings, leadMonths: Number(e.target.value) })
+          }
+        >
+          {LEAD_MONTHS.map((n) => (
+            <option key={n} value={n}>
+              {T.settings.leadTimeOption(n)}
+            </option>
+          ))}
+        </select>
+        <p id="settings-lead-help" className="text-muted-foreground">
+          {T.settings.leadTimeHelp}
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="settings-season">{T.settings.seasonDay}</Label>
+        <select
+          id="settings-season"
+          className={SELECT_CLASS}
+          value={settings.seasonDay}
+          aria-describedby="settings-season-help"
+          onChange={(e) =>
+            void change({ ...settings, seasonDay: e.target.value })
+          }
+        >
+          {SEASON_DAYS.map((d) => (
+            <option key={d.value} value={d.value}>
+              {d.label}
+            </option>
+          ))}
+        </select>
+        <p id="settings-season-help" className="text-muted-foreground">
+          {T.settings.seasonDayHelp}
+        </p>
+      </div>
+      {failed && (
+        <p role="alert" className="text-destructive">
+          {T.common.saveFailed}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function BackupSection() {
   const { settings } = useAppData();
   const { save, busy, failed } = useSaveBackup();
@@ -93,6 +200,24 @@ export function SettingsScreen() {
         </h2>
         {/* Neu aufbauen, wenn nach einer Wiederherstellung eine andere Person da ist */}
         {person && <ProfileForm key={person.id} person={person} />}
+      </section>
+      <section
+        aria-labelledby="settings-answers"
+        className="flex flex-col gap-4"
+      >
+        <h2 id="settings-answers" className="text-lg font-semibold">
+          {T.answers.title}
+        </h2>
+        {person && <AnswersForm key={person.id} person={person} />}
+      </section>
+      <section
+        aria-labelledby="settings-reminders"
+        className="flex flex-col gap-4"
+      >
+        <h2 id="settings-reminders" className="text-lg font-semibold">
+          {T.settings.reminders}
+        </h2>
+        <RemindersSection />
       </section>
       <section
         aria-labelledby="settings-backup"
