@@ -151,3 +151,40 @@ it("Dateiname mit lokalem Datum", () => {
     "impfpass-sicherung-2026-03-02.json",
   );
 });
+
+it("Blutgruppe, Rhesusfaktor und Rhesusformel überstehen Speichern und Lesen", () => {
+  const withBlood: BackupData = {
+    ...data,
+    persons: [
+      {
+        ...data.persons[0],
+        bloodGroup: "A",
+        rhesus: "negative",
+        rhesusFormula: "ccddee",
+      },
+    ],
+  };
+  const person = parseBackup(serializeBackup(createBackup(withBlood, now)))
+    .persons[0];
+  expect(person).toMatchObject({
+    bloodGroup: "A",
+    rhesus: "negative",
+    rhesusFormula: "ccddee",
+  });
+});
+
+it("eine Sicherung ohne Blutgruppe wird gelesen", () => {
+  const person = parseBackup(JSON.stringify(validFile())).persons[0];
+  expect(person.bloodGroup).toBeUndefined();
+  expect(person.rhesus).toBeUndefined();
+  expect(person.rhesusFormula).toBeUndefined();
+});
+
+it("unbekannte Blutgruppe oder unbekannter Rhesusfaktor ist beschädigt", () => {
+  const group = validFile();
+  group.persons[0].bloodGroup = "C";
+  expect(() => parseBackup(JSON.stringify(group))).toThrow("beschädigt");
+  const rhesus = validFile();
+  rhesus.persons[0].rhesus = "neutral";
+  expect(() => parseBackup(JSON.stringify(rhesus))).toThrow("beschädigt");
+});

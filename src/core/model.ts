@@ -19,12 +19,21 @@ export interface PersonAnswers {
   };
 }
 
+export const BLOOD_GROUPS = ["0", "A", "B", "AB"] as const;
+export type BloodGroup = (typeof BLOOD_GROUPS)[number];
+export type Rhesus = "positive" | "negative";
+
 export interface Person {
   id: string;
   name: string;
   birthDate: ISODate;
   answers: PersonAnswers;
   createdAt: string;
+  /** Freiwillige Angaben wie im Impfpass; fehlt ein Feld, gibt es keine Angabe. */
+  bloodGroup?: BloodGroup;
+  rhesus?: Rhesus;
+  /** Freitext wie im Pass, etwa „CcD.ee“. */
+  rhesusFormula?: string;
 }
 
 export interface Vaccination {

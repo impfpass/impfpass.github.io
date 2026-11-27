@@ -10,7 +10,7 @@ import type {
   Vaccination,
 } from "../model";
 import type { Draft } from "../import/draft";
-import { normalizeListSort } from "../model";
+import { BLOOD_GROUPS, normalizeListSort } from "../model";
 
 /** zod-Schemata für die Datensicherung, in Plan 3 auch für den Import. */
 
@@ -43,6 +43,9 @@ export const personSchema: z.ZodType<Person> = z.object({
   birthDate: isoDateSchema,
   answers: personAnswersSchema,
   createdAt: timestampSchema,
+  bloodGroup: z.enum(BLOOD_GROUPS).optional(),
+  rhesus: z.enum(["positive", "negative"]).optional(),
+  rhesusFormula: z.string().optional(),
 });
 
 export const vaccinationSchema: z.ZodType<Vaccination> = z.object({
