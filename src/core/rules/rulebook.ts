@@ -41,9 +41,15 @@ export const RULEBOOK: Rulebook = {
   changes: [
     {
       version: "2026-11-27.2",
-      ids: ["hepatitis_a", "hepatitis_b"],
+      ids: ["hepatitis_a"],
       validSince: "2026-07-02",
-      text: "ImpfPass erinnert an fehlende Dosen angefangener Impfserien gegen Hepatitis A und B und zeigt, wann sie vollständig sind.",
+      text: "ImpfPass erinnert an fehlende Dosen einer angefangenen Hepatitis-A-Serie und zeigt, wann sie vollständig ist.",
+    },
+    {
+      version: "2026-11-27.2",
+      ids: ["hepatitis_b"],
+      validSince: "2026-01-22",
+      text: "ImpfPass führt eine angefangene Hepatitis-B-Serie auch ohne beruflichen Grund zu Ende.",
     },
   ],
   rules: [

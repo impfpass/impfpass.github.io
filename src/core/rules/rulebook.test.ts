@@ -38,13 +38,20 @@ describe("RULEBOOK", () => {
     expect(compareVersions(RULEBOOK.version, "2026-11-27.1")).toBeGreaterThan(
       0,
     );
-    expect(RULEBOOK.changes).toHaveLength(1);
-    expect(RULEBOOK.changes[0]).toMatchObject({
-      version: RULEBOOK.version,
-      ids: ["hepatitis_a", "hepatitis_b"],
-      validSince: "2026-07-02",
-    });
-    expect(RULEBOOK.changes[0].text).not.toBe("");
+    // „Gilt seit“ nennt die Ausgabe, auf der die Regel beruht.
+    expect(RULEBOOK.changes).toMatchObject([
+      {
+        version: RULEBOOK.version,
+        ids: ["hepatitis_a"],
+        validSince: "2026-07-02",
+      },
+      {
+        version: RULEBOOK.version,
+        ids: ["hepatitis_b"],
+        validSince: "2026-01-22",
+      },
+    ]);
+    for (const c of RULEBOOK.changes) expect(c.text).not.toBe("");
   });
 
   it("den Satz „früher bei Erkrankungen“ tragen nur Regeln mit Altersgrenze", () => {
