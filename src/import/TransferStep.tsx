@@ -146,6 +146,7 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
           value={textLine}
           className="w-full rounded-md border p-2 font-mono text-sm"
         />
+        <p>{t.textHelp}</p>
       </section>
 
       <div className="flex flex-wrap gap-3">

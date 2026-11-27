@@ -519,6 +519,8 @@ So füllst du die Felder:
       textHeading: "Text",
       copyText: "Text kopieren",
       textLabel: "Übertragungstext",
+      textHelp:
+        "Füge den Text auf dem Handy in ImpfPass unter „Impfungen übernehmen“ mit „Text einfügen“ ein. Schickst du ihn per E-Mail, Messenger oder über eine Cloud, gehen die Daten dabei über deren Anbieter.",
       back: "Zurück zur Tabelle",
       deleteDraft: "Entwurf löschen",
       deleteTitle:

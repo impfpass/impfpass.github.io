@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { todayISO } from "@/core/dates";
 import { readTransferText, transferFileName } from "@/core/formats/transfer";
@@ -98,6 +98,16 @@ it("zeigt die Hinweise zu den Codes", () => {
   expect(screen.getByText(T.pc.send.codesHelp)).toBeTruthy();
   expect(screen.getByText(T.pc.send.codesPrivacy)).toBeTruthy();
   expect(screen.getByText(T.pc.send.fileHelp)).toBeTruthy();
+});
+
+it("sagt beim Text, wo er hin muss und über wen er geht", () => {
+  render(<TransferStep draft={draftWith(1)} onBack={noop} onCleared={noop} />);
+  const section = screen.getByRole("region", { name: "Text" });
+  expect(
+    within(section).getByText(
+      "Füge den Text auf dem Handy in ImpfPass unter „Impfungen übernehmen“ mit „Text einfügen“ ein. Schickst du ihn per E-Mail, Messenger oder über eine Cloud, gehen die Daten dabei über deren Anbieter.",
+    ),
+  ).toBeTruthy();
 });
 
 it("speichert die Datei ohne Teilen-Menü, mit den Einträgen des Entwurfs", async () => {
