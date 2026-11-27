@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { T } from "@/texts";
 import { useAppData } from "../data/AppData";
@@ -5,22 +6,29 @@ import { useAppData } from "../data/AppData";
 export function TbeQuestion() {
   const { person, actions } = useAppData();
   const Q = T.overview.tbe;
+  const [failed, setFailed] = useState(false);
   if (!person) return null;
-  const retry = () => {
-    // Die Frage bleibt stehen; ein neuer Tipp versucht es noch einmal.
+  const run = (action: Promise<void>) => {
+    setFailed(false);
+    action.catch(() => setFailed(true));
   };
   return (
     <section className="flex flex-col gap-3 rounded-lg border p-4">
       <p>{Q.question}</p>
+      {failed && (
+        <p role="alert" className="text-destructive">
+          {T.common.saveFailed}
+        </p>
+      )}
       <div className="flex flex-wrap gap-2">
         <Button
           onClick={() =>
-            void actions
-              .updatePerson({
+            run(
+              actions.updatePerson({
                 ...person,
                 answers: { ...person.answers, fsme: "yes" },
-              })
-              .catch(retry)
+              }),
+            )
           }
         >
           {Q.yes}
@@ -28,9 +36,12 @@ export function TbeQuestion() {
         <Button
           variant="outline"
           onClick={() =>
-            void actions
-              .saveDecision({ recommendationId: "tbe", kind: "declined" })
-              .catch(retry)
+            run(
+              actions.saveDecision({
+                recommendationId: "tbe",
+                kind: "declined",
+              }),
+            )
           }
         >
           {Q.no}

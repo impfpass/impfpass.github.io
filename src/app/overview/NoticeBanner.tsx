@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { Notice } from "@/core/model";
@@ -7,6 +8,8 @@ import { useAppData } from "../data/AppData";
 export function NoticeBanner({ notices }: { notices: Notice[] }) {
   const { actions } = useAppData();
   const N = T.overview.notice;
+  const [failed, setFailed] = useState(false);
+  if (notices.length === 0 && !failed) return null;
   return (
     <section className="flex flex-col gap-3 rounded-lg border bg-accent p-4">
       <ul className="flex flex-col gap-3">
@@ -31,13 +34,17 @@ export function NoticeBanner({ notices }: { notices: Notice[] }) {
           );
         })}
       </ul>
+      {failed && (
+        <p role="alert" className="text-destructive">
+          {T.common.saveFailed}
+        </p>
+      )}
       <Button
         className="self-start"
-        onClick={() =>
-          void actions.dismissNotices().catch(() => {
-            // Die Hinweise bleiben stehen; ein neuer Tipp versucht es noch einmal.
-          })
-        }
+        onClick={() => {
+          setFailed(false);
+          actions.dismissNotices().catch(() => setFailed(true));
+        }}
       >
         {N.dismiss}
       </Button>

@@ -30,7 +30,7 @@ export function OverviewScreen() {
     <div className="flex flex-col gap-5">
       <h1 className="text-2xl font-semibold">{T.overview.title}</h1>
       <InstallHint />
-      {notices.length > 0 && <NoticeBanner notices={notices} />}
+      <NoticeBanner notices={notices} />
       {showTbe && <TbeQuestion />}
       {under18 ? (
         <p>{T.overview.under18}</p>
