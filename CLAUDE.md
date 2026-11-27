@@ -24,7 +24,8 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 
 - `src/core/`: reine, getestete Funktionen ohne Oberfläche (Datenmodell, Datumshilfen, Impfstoffliste, Speicher, Sicherungsformat). Kein React hier.
 - `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern.
-- `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, `src/components/`, `react` und `react-dom`, das prüft `src/core/boundaries.test.ts`.
+- `src/import/`: die PC-App, eine zweite Seite (`import/index.html`, erreichbar unter `/import/`, eigenes Manifest in `public/import/`). Sie importiert nichts aus `src/app/`, die Handy-App nichts aus `src/import/`, das prüft `src/core/boundaries.test.ts`.
+- `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, `src/import/`, `src/components/`, `react` und `react-dom`, das prüft `src/core/boundaries.test.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
 - `src/lib/`: kleine Hilfen für die Oberfläche (`cn` aus dem Paket `cn`, das clsx und tailwind-merge ersetzt).
 - `src/test/`: Test-Setup (fake-indexeddb, cleanup).

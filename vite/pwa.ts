@@ -36,7 +36,8 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     navigateFallbackDenylist: [/^\/import\//],
     // Neue Version sofort aktivieren und die offenen Seiten übernehmen. Mit
     // injectRegister "script" setzt das Plugin das nicht selbst. Unbedenklich,
-    // weil der Build ein einziges JS-Bündel ohne nachgeladene Teile ist.
+    // weil beide Seiten (Handy-App und PC-App unter /import/) ihre Teile beim
+    // Start laden und nichts nachgeladen wird.
     skipWaiting: true,
     clientsClaim: true,
   },
