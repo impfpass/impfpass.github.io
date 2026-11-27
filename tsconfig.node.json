@@ -22,6 +22,7 @@
     "vite.config.ts",
     "vitest.config.ts",
     "pwa-assets.config.ts",
-    "vite"
+    "vite",
+    "scripts"
   ]
 }

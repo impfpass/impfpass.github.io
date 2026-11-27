@@ -15,7 +15,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "stiko:check": "node --experimental-strip-types scripts/stiko-watch/main.ts check",
+    "stiko:accept": "node --experimental-strip-types scripts/stiko-watch/main.ts accept"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

@@ -6,7 +6,7 @@ import { afterEach, beforeEach } from "vitest";
 beforeEach(() => {
   // Jeder Test beginnt mit leerer Datenbank und auf der Startseite.
   globalThis.indexedDB = new IDBFactory();
-  window.history.replaceState(null, "", "/");
+  if (typeof window !== "undefined") window.history.replaceState(null, "", "/");
 });
 
 afterEach(() => {

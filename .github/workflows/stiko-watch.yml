@@ -1,0 +1,46 @@
+name: STIKO-Wächter
+
+on:
+  schedule:
+    - cron: "17 5 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GTD_INBOX_URL: ${{ secrets.GTD_INBOX_URL }}
+      GTD_INBOX_TOKEN: ${{ secrets.GTD_INBOX_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Seiten prüfen
+        id: check
+        run: npm run stiko:check
+      - name: Issue anlegen
+        id: issue
+        if: steps.check.outputs.changed == 'true'
+        env:
+          TITLE: ${{ steps.check.outputs.title }}
+          HASH: ${{ steps.check.outputs.hash }}
+        run: |
+          gh label create stiko-watch --force
+          existing=$(gh issue list --label stiko-watch --state all --search "$HASH in:title" --json number --jq length)
+          if [ "$existing" = "0" ]; then
+            gh issue create --title "$TITLE" --body-file stiko-watch-issue.md --label stiko-watch
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: GTD-Inbox benachrichtigen
+        if: steps.issue.outputs.created == 'true' && env.GTD_INBOX_URL != '' && env.GTD_INBOX_TOKEN != ''
+        run: |
+          curl -fsS -X POST "$GTD_INBOX_URL" \
+            -H "Authorization: Bearer $GTD_INBOX_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"content":"STIKO-Seiten geändert, ImpfPass-Regeln prüfen"}'
