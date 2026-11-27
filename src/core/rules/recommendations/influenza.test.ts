@@ -78,6 +78,7 @@ describe("influenzaRule", () => {
     ).toMatchObject({
       status: "due",
       reason: { kind: "season", label: "2026/27" },
+      source: { page: 14, section: "Tab. 2, Influenza, Kategorie I" },
     });
   });
 

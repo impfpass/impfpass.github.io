@@ -208,6 +208,8 @@ export const T = {
       reason: {
         booster: (lastDate: string, years: number) =>
           `Letzte Impfung am ${lastDate}. Die nächste Auffrischung ist ${years} Jahre danach vorgesehen.`,
+        afterDose: (lastDate: string, years: number) =>
+          `Letzte Impfung am ${lastDate}. Die STIKO empfiehlt die nächste frühestens ${years} ${years === 1 ? "Jahr" : "Jahre"} danach.`,
         age: (age: number) =>
           `Die STIKO empfiehlt diese Impfung allen ab ${age} Jahren.`,
         withTd:

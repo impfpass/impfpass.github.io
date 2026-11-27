@@ -14,6 +14,7 @@ describe("covid19Rule", () => {
       status: "due",
       timing: "season",
       reason: { kind: "season", label: "2026/27" },
+      source: { page: 5, section: "Auszug Tab. 2" },
     });
     expect(covid19Rule.source).toMatchObject({
       edition: "Epid Bull 28/2026",
@@ -32,7 +33,11 @@ describe("covid19Rule", () => {
         person: person("1985-05-05", { job: { patients: true } }),
         today: "2026-11-27",
       }),
-    ).toMatchObject({ status: "due", reason: { kind: "season" } });
+    ).toMatchObject({
+      status: "due",
+      reason: { kind: "season" },
+      source: { page: 5, section: "Auszug Tab. 2, Kategorie B" },
+    });
     expect(
       run(covid19Rule, {
         person: person("1985-05-05", { job: { animalContact: true } }),
@@ -57,8 +62,11 @@ describe("covid19Rule", () => {
         person: p,
         decision: "doctor_recommends",
         today: "2026-11-27",
-      }).status,
-    ).toBe("due");
+      }),
+    ).toMatchObject({
+      status: "due",
+      source: { edition: "Epid Bull 28/2026", page: 3, section: "Beschluss" },
+    });
   });
 
   it("COVID-19: möglichst 6 Monate Abstand zur letzten Impfung (Epid Bull 28/2026, S. 4)", () => {

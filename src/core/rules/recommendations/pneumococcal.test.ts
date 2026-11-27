@@ -57,7 +57,11 @@ describe("pneumococcalRule", () => {
         today: "2026-05-09",
         leadMonths: 0,
       }),
-    ).toMatchObject({ status: "future", dueDate: "2026-05-10" });
+    ).toMatchObject({
+      status: "future",
+      dueDate: "2026-05-10",
+      reason: { kind: "after_dose", lastDate: "2020-05-10", intervalYears: 6 },
+    });
     expect(
       run(pneumococcalRule, {
         person: p,
@@ -68,6 +72,35 @@ describe("pneumococcalRule", () => {
     ).toMatchObject({ status: "due", dueDate: "2026-05-10" });
   });
 
+  it("Pneumokokken: frühere PPSV23-Dosis nach 60 verschiebt den Termin, die Begründung nennt den Abstand (Epid Bull 4/2026, S. 17)", () => {
+    expect(
+      run(pneumococcalRule, {
+        person: person("1960-01-01"),
+        vaccinations: [shot("2022-03-10", "pneumovax-23")],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "future",
+      dueDate: "2028-03-10",
+      reason: { kind: "after_dose", lastDate: "2022-03-10", intervalYears: 6 },
+      source: { page: 17, section: "Tab. 2, Pneumokokken, S" },
+    });
+  });
+
+  it("Pneumokokken: liegt die frühere Dosis lange zurück, zählt der 60. Geburtstag (Epid Bull 4/2026, S. 17)", () => {
+    expect(
+      run(pneumococcalRule, {
+        person: person("1970-01-01"),
+        vaccinations: [shot("2015-01-01", "pneumovax-23")],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "future",
+      dueDate: "2030-01-01",
+      reason: { kind: "age", age: 60 },
+    });
+  });
+
   it("Pneumokokken: Eintrag ohne Impfstoff zählt wie PPSV23 (Epid Bull 4/2026, S. 17)", () => {
     expect(
       run(pneumococcalRule, {
@@ -76,7 +109,11 @@ describe("pneumococcalRule", () => {
         today: "2026-05-09",
         leadMonths: 0,
       }),
-    ).toMatchObject({ status: "future", dueDate: "2026-05-10" });
+    ).toMatchObject({
+      status: "future",
+      dueDate: "2026-05-10",
+      reason: { kind: "after_dose", lastDate: "2020-05-10", intervalYears: 6 },
+    });
   });
 
   it("Pneumokokken: nach PCV13 oder PCV15 nach 1 Jahr (Epid Bull 4/2026, S. 17)", () => {
@@ -90,7 +127,15 @@ describe("pneumococcalRule", () => {
           today: "2026-02-28",
           leadMonths: 0,
         }),
-      ).toMatchObject({ status: "future", dueDate: "2026-03-01" });
+      ).toMatchObject({
+        status: "future",
+        dueDate: "2026-03-01",
+        reason: {
+          kind: "after_dose",
+          lastDate: "2025-03-01",
+          intervalYears: 1,
+        },
+      });
       expect(
         run(pneumococcalRule, {
           person: p,

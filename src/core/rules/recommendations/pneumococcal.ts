@@ -1,4 +1,4 @@
-import { addInterval, dosesOf } from "../helpers";
+import { dosesOf } from "../helpers";
 import { ageOrDoctor } from "../ageOrDoctor";
 import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
@@ -32,7 +32,7 @@ export const pneumococcalRule: Rule = {
         source: SOURCE,
       };
     }
-    let earliest = null;
+    let after = null;
     if (doses.length > 0) {
       const last = doses[doses.length - 1];
       // offen: nach PCV13/PCV15 1 Jahr gilt laut STIKO für die Indikationsgruppe,
@@ -40,14 +40,14 @@ export const pneumococcalRule: Rule = {
       const pcv =
         last.productId === "prevenar-13" || last.productId === "vaxneuvance";
       // Auslegung: Eintrag ohne Impfstoff zählt wie PPSV23 (6 Jahre).
-      earliest = addInterval(last.date, pcv ? { years: 1 } : { years: 6 });
+      after = { lastDate: last.date, intervalYears: pcv ? 1 : 6 };
     }
     return ageOrDoctor(ctx, {
       age: AGE,
       discussFrom: 18,
       source: SOURCE,
       discussSource: DISCUSS_SOURCE,
-      earliest,
+      after,
     });
   },
 };

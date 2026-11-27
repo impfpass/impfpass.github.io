@@ -175,6 +175,28 @@ it("ohne Schalter nennt die Gürtelrose-Seite die frühere Empfehlung bei Erkran
   ).toBeTruthy();
 });
 
+it("Pneumokokken nach früherer PPSV23-Dosis: Datum und Begründung nennen den Abstand", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1960-01-01" })],
+    vaccinations: [
+      testVaccination({
+        id: "pn",
+        date: "2022-03-10",
+        productId: "pneumovax-23",
+        label: "Pneumovax 23",
+        diseases: ["pneumococcal"],
+      }),
+    ],
+  });
+  await open("pneumococcal");
+  expect(screen.getByText("ab 10.03.2028")).toBeTruthy();
+  expect(
+    screen.getByText(
+      "Letzte Impfung am 10.03.2022. Die STIKO empfiehlt die nächste frühestens 6 Jahre danach.",
+    ),
+  ).toBeTruthy();
+});
+
 it("unbekannte Empfehlung", async () => {
   await seed({});
   await open("xyz");

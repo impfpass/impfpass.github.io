@@ -35,6 +35,8 @@ export type Timing = "normal" | "season" | "follow_up";
 
 export type Reason =
   | { kind: "booster"; lastDate: ISODate; intervalYears: number }
+  // Termin frühestens so viele Jahre nach einer früheren Dosis (Pneumokokken)
+  | { kind: "after_dose"; lastDate: ISODate; intervalYears: number }
   | { kind: "age"; age: number }
   | { kind: "series"; given: number; total: number }
   | { kind: "catch_up"; given: number; total: number }

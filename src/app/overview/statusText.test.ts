@@ -134,6 +134,15 @@ it.each<[string, Partial<Recommendation>, string]>([
     },
     "3. Dosis ab 05/2027",
   ],
+  [
+    "future nach früherer Dosis",
+    {
+      status: "future",
+      reason: { kind: "after_dose", lastDate: "2022-03-10", intervalYears: 6 },
+      dueDate: "2028-03-10",
+    },
+    "ab 03/2028",
+  ],
   ["future sonst", { status: "future", dueDate: "2030-01-01" }, "ab 01/2030"],
 ])("%s", (_name, p, text) => {
   expect(statusText(rec(p))).toBe(text);

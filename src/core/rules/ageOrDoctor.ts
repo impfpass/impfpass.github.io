@@ -16,12 +16,13 @@ export function ageOrDoctor(
     discussFrom: number;
     source: SourceRef;
     discussSource: SourceRef;
-    /** Frühester Termin wegen einer früheren Dosis, sonst null. */
-    earliest?: ISODate | null;
+    /** Frühere Dosis, nach der die nächste frühestens `intervalYears` später kommt, sonst null. */
+    after?: { lastDate: ISODate; intervalYears: number } | null;
     dose?: { number: number; of: number } | null;
   },
 ): RuleResult {
-  const earliest = opts.earliest ?? null;
+  const after = opts.after ?? null;
+  const earliest = after ? addYears(after.lastDate, after.intervalYears) : null;
   const dose = opts.dose ?? null;
   const base = { latestDate: null, dose, timing: "normal" as const };
 
@@ -51,11 +52,20 @@ export function ageOrDoctor(
       source: opts.discussSource,
     };
   }
-  const due = earliest !== null && earliest > birthday ? earliest : birthday;
+  // Verschiebt die frühere Dosis den Termin, nennt die Begründung den Abstand.
+  if (after && earliest !== null && earliest > birthday) {
+    return {
+      ...base,
+      status: startStatus(earliest, ctx.today, ctx.leadMonths),
+      dueDate: earliest,
+      reason: { kind: "after_dose", ...after },
+      source: opts.source,
+    };
+  }
   return {
     ...base,
-    status: startStatus(due, ctx.today, ctx.leadMonths),
-    dueDate: due,
+    status: startStatus(birthday, ctx.today, ctx.leadMonths),
+    dueDate: birthday,
     reason: { kind: "age", age: opts.age },
     source: opts.source,
   };

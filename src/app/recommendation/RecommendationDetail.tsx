@@ -37,6 +37,8 @@ function ReasonSentence({ rec }: { rec: Recommendation }) {
   switch (r.kind) {
     case "booster":
       return <p>{R.booster(day(r.lastDate), r.intervalYears)}</p>;
+    case "after_dose":
+      return <p>{R.afterDose(day(r.lastDate), r.intervalYears)}</p>;
     case "age":
       return <p>{R.age(r.age)}</p>;
     case "with_td":

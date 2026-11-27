@@ -29,7 +29,8 @@ export const influenzaRule: Rule = {
           ctx.today,
           ctx.seasonDay,
         ),
-        source: !byAge && byJob ? JOB_SOURCE : SOURCE,
+        // Arzt-Entscheidung: Zeile der Indikation (Grunderkrankung)
+        source: byAge ? SOURCE : byJob ? JOB_SOURCE : DISCUSS_SOURCE,
       };
     }
     const birthday = addYears(ctx.person.birthDate, AGE);
