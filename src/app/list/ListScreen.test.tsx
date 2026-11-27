@@ -17,9 +17,8 @@ it("Sortierung wird gespeichert und nach Löschen ist der Eintrag überall weg",
 
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(1);
   await user.click(screen.getByRole("button", { name: "Krankheit" }));
+  await waitFor(() => expect(data().settings.listSort).toBe("disease-asc"));
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(4);
-
-  expect(data().settings.listSort).toBe("disease-asc");
   const repo = await openRepository();
   await waitFor(async () =>
     expect((await repo.getSettings()).listSort).toBe("disease-asc"),
@@ -71,28 +70,34 @@ it("erneutes Antippen dreht die Reihenfolge um", async () => {
   expect(status()).toContain("Neueste zuerst");
   expect(rows()).toEqual(["#/impfungen/bp", "#/impfungen/sh"]);
 
+  // Das Speichern läuft asynchron, erst danach ändert sich die Anzeige.
+  const sortedBy = (value: string) =>
+    waitFor(() => expect(data().settings.listSort).toBe(value));
+
   await user.click(screen.getByRole("button", { name: "Datum" }));
+  await sortedBy("date-asc");
   expect(status()).toContain("Älteste zuerst");
   expect(rows()).toEqual(["#/impfungen/sh", "#/impfungen/bp"]);
-  expect(data().settings.listSort).toBe("date-asc");
 
   await user.click(screen.getByRole("button", { name: "Impfstoff" }));
+  await sortedBy("product-asc");
   expect(pressed("Impfstoff")).toBe("true");
   expect(pressed("Datum")).toBe("false");
   expect(status()).toContain("A bis Z");
   expect(headings()).toEqual(["Boostrix Polio", "Shingrix"]);
 
   await user.click(screen.getByRole("button", { name: "Impfstoff" }));
+  await sortedBy("product-desc");
   expect(status()).toContain("Z bis A");
   expect(headings()).toEqual(["Shingrix", "Boostrix Polio"]);
-  expect(data().settings.listSort).toBe("product-desc");
 
   await user.click(screen.getByRole("button", { name: "Krankheit" }));
+  await sortedBy("disease-asc");
   expect(status()).toContain("A bis Z");
   expect(headings()[0]).toBe("Diphtherie");
   await user.click(screen.getByRole("button", { name: "Krankheit" }));
+  await sortedBy("disease-desc");
   expect(headings()[0]).toBe("Tetanus");
-  expect(data().settings.listSort).toBe("disease-desc");
 });
 
 it("gespeicherte Sortierung älterer Versionen wird beim Öffnen verwendet", async () => {
