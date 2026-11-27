@@ -430,12 +430,12 @@ export const T = {
       medical: "ImpfPass ersetzt keine ärztliche Beratung.",
       local: "Der Entwurf bleibt in diesem Browser auf diesem PC.",
     },
-    prompt: `Auf den Fotos sind Seiten aus einem deutschen Impfpass. Lies alle Impfungen ab und gib sie als JSON in genau diesem Format zurück, in einem einzigen Codeblock:
+    prompt: `Auf den Fotos sind Seiten aus einem oder mehreren deutschen Impfpässen derselben Person. Lies alle Impfungen ab und gib sie als JSON in genau diesem Format zurück, in einem einzigen Codeblock:
 
 {"impfpass":"import","vaccinations":[{"date":"05.12.2016","name":"Boostrix Polio","batch":"AC52B123AB","doctor":"Praxis Dr. Muster, Hamburg","diseases":[],"unsure":[]}]}
 
 So füllst du die Felder:
-- Ein Eintrag je Impfung. Klebt derselbe Impfstoff mit demselben Datum in mehreren Abschnitten des Passes, trag ihn nur einmal ein.
+- Ein Eintrag je Impfung. Steht dieselbe Impfung mit demselben Datum mehrmals auf den Fotos, etwa in mehreren Abschnitten eines Passes oder aus einem älteren Pass übertragen, trag sie nur einmal ein, mit allen lesbaren Angaben.
 - date: das Datum wie im Pass als TT.MM.JJJJ. Ist nur Monat und Jahr lesbar, schreib MM.JJJJ, ist nur das Jahr lesbar, JJJJ.
 - name: der Handelsname des Impfstoffs, so wie er auf dem Aufkleber oder im Stempel steht.
 - batch: die Chargennummer, sonst "".
@@ -446,7 +446,7 @@ So füllst du die Felder:
     guide: {
       heading: "Alte Impfungen übernehmen",
       steps: [
-        "1. Fotografiere die Seiten deines Impfpasses und bring die Fotos auf diesen PC.",
+        "1. Fotografiere die Seiten deines Impfpasses und bring die Fotos auf diesen PC. Hast du mehrere Impfpässe, nimm alle.",
         "2. Kopiere die Anleitung unten und gib sie zusammen mit den Fotos einem Chatbot, etwa Claude oder ChatGPT.",
         "3. Füge die Antwort des Chatbots unten ein und prüfe die Tabelle.",
       ],
