@@ -8,6 +8,7 @@ import {
   emptyDraft,
   newRow,
   rowFromParsed,
+  withDate,
   withDiseases,
   withLabel,
   withProduct,
@@ -72,10 +73,35 @@ describe("withLabel", () => {
     expect(kinds(r)).toEqual(["productUnknown"]);
   });
 
-  it("behält beim Wechsel zu einem unbekannten Namen die Krankheiten", () => {
+  it("leert beim Wechsel von einem Impfstoff zu einem unbekannten Namen die Krankheiten", () => {
     const r = withLabel(row("a", "05.12.2016"), "Zzzqx Unbekannt");
     expect(r.productId).toBeNull();
-    expect(r.diseases).toHaveLength(4);
+    expect(r.diseases).toEqual([]);
+    expect(kinds(r)).toEqual(["noDisease"]);
+  });
+
+  it("behält von Hand gewählte Krankheiten, wenn der Name unbekannt bleibt", () => {
+    const picked = withDiseases(row("a", "05.12.2016", "Zzzqx"), ["tetanus"]);
+    const r = withLabel(picked, "Zzzqx Unbekannt");
+    expect(r.diseases).toEqual(["tetanus"]);
+    expect(withLabel(picked, "Prevenar").diseases).toEqual(["tetanus"]);
+  });
+
+  it("geprüfte Zeile, Wechsel zu „Gardasi 9“: mehrdeutig und ohne Krankheit", () => {
+    const reviewed = { ...row("a", "05.12.2016"), reviewed: true };
+    const r = withLabel(reviewed, "Gardasi 9");
+    expect(r.reviewed).toBe(false);
+    expect(r.diseases).toEqual([]);
+    const issues = issuesOf(r);
+    expect(issues.map((i) => i.kind)).toEqual([
+      "noDisease",
+      "productAmbiguous",
+    ]);
+    const ambiguous = issues.find((i) => i.kind === "productAmbiguous");
+    expect(
+      ambiguous?.kind === "productAmbiguous" &&
+        [...ambiguous.candidates].sort(),
+    ).toEqual(["Gardasil", "Gardasil 9"]);
   });
 
   it("trimmt nicht", () => {
@@ -101,6 +127,29 @@ describe("withProduct und withDiseases", () => {
     expect(withDiseases(newRow("a"), ["measles"]).diseases).toEqual([
       "measles",
     ]);
+  });
+});
+
+describe("„Hinweise geprüft“ nach Änderungen", () => {
+  const reviewed: DraftRow = {
+    ...row("a", "05.12.2016", "Bostrix Polio"),
+    reviewed: true,
+  };
+
+  it("Datum, Impfstoff und Krankheiten setzen es zurück", () => {
+    expect(withDate(reviewed, "06.12.2016")).toMatchObject({
+      date: "06.12.2016",
+      reviewed: false,
+    });
+    expect(withLabel(reviewed, "Boostrix").reviewed).toBe(false);
+    expect(withProduct(reviewed, "repevax").reviewed).toBe(false);
+    const free = { ...withLabel(newRow("b"), "Zzzqx"), reviewed: true };
+    expect(withDiseases(free, ["tetanus"]).reviewed).toBe(false);
+  });
+
+  it("nach einer Änderung des Datums sind die Hinweise wieder da", () => {
+    expect(kinds(reviewed)).toEqual([]);
+    expect(kinds(withDate(reviewed, "06.12.2016"))).toEqual(["productFuzzy"]);
   });
 });
 

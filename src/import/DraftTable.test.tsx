@@ -17,6 +17,11 @@ const row = (
   label = "Boostrix Polio",
   extra: Partial<DraftRow> = {},
 ): DraftRow => withLabel({ ...newRow(`r${++nextId}`), date, ...extra }, label);
+/** Eine Zeile mit „Hinweise geprüft“; withLabel setzt es sonst zurück. */
+const reviewedRow = (date: string, label: string): DraftRow => ({
+  ...row(date, label),
+  reviewed: true,
+});
 
 /** Rendert die Tabelle mit eigenem Zustand; `state.draft` ist der aktuelle Entwurf. */
 function setup(rows: DraftRow[], birthDate = "") {
@@ -228,6 +233,63 @@ describe("Fehler und Hinweise", () => {
 
     await userEvent.click(reviewed);
     expect(screen.getByText(hint)).toBeTruthy();
+  });
+
+  it("zeigt nach einer Änderung des Datums die Hinweise wieder", async () => {
+    const { state } = setup([reviewedRow("05.12.2016", "Bostrix Polio")]);
+    const hint = "Gelesen „Bostrix Polio“, erkannt als Boostrix Polio.";
+    expect(screen.queryByText(hint)).toBeNull();
+
+    await userEvent.type(input("Datum, Zeile 1"), "{Backspace}7");
+
+    expect(screen.getByText(hint)).toBeTruthy();
+    expect(state.draft.rows[0]).toMatchObject({
+      date: "05.12.2017",
+      reviewed: false,
+    });
+    expect(
+      (
+        screen.getByRole("checkbox", {
+          name: "Hinweise geprüft, Zeile 1",
+        }) as HTMLButtonElement
+      ).getAttribute("aria-checked"),
+    ).toBe("false");
+  });
+
+  it("behält „Hinweise geprüft“, wenn Arzt, Charge oder Notiz sich ändern", async () => {
+    const { state } = setup([reviewedRow("05.12.2016", "Bostrix Polio")]);
+    await userEvent.type(input("Arzt oder Praxis, Zeile 1"), "Dr. M");
+    await userEvent.type(input("Charge, Zeile 1"), "AB1");
+    await userEvent.type(input("Notiz, Zeile 1"), "links");
+    expect(state.draft.rows[0]).toMatchObject({
+      doctor: "Dr. M",
+      batch: "AB1",
+      note: "links",
+      reviewed: true,
+    });
+    expect(
+      screen.queryByText(
+        "Gelesen „Bostrix Polio“, erkannt als Boostrix Polio.",
+      ),
+    ).toBeNull();
+  });
+
+  it("geprüfte Zeile mit neuem, mehrdeutigem Namen zeigt Kandidaten und Fehler", async () => {
+    const { state } = setup([reviewedRow("05.12.2016", "Boostrix Polio")]);
+    const label = input("Impfstoff, Zeile 1");
+    await userEvent.clear(label);
+    await userEvent.type(label, "Gardasi 9");
+
+    const r = within(tableRow(1));
+    expect(r.getByText("Mehrere Impfstoffe passen:")).toBeTruthy();
+    expect(r.getByRole("button", { name: "Gardasil 9, Zeile 1" })).toBeTruthy();
+    expect(
+      r.getByText("Impfstoff nicht erkannt. Wähle die Krankheiten."),
+    ).toBeTruthy();
+    expect(state.draft.rows[0]).toMatchObject({
+      diseases: [],
+      reviewed: false,
+    });
   });
 
   it("bietet „Hinweise geprüft“ nur bei Hinweisen an", () => {

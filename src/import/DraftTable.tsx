@@ -20,6 +20,7 @@ import {
   checkBirthDate,
   checkDraft,
   newRow,
+  withDate,
   withDiseases,
   withLabel,
   withProduct,
@@ -331,7 +332,7 @@ function RowView({
           value={row.date}
           onChange={(e) => {
             const date = e.target.value;
-            onChange((r) => ({ ...r, date }));
+            onChange((r) => withDate(r, date));
           }}
         />
       </td>

@@ -67,7 +67,20 @@ export function newRow(id: string): DraftRow {
   };
 }
 
-/** Das Label wie eingegeben; Impfstoff und Krankheiten folgen der Erkennung. */
+/*
+ * Ändern sich Datum, Impfstoff oder Krankheiten, gilt „Hinweise geprüft“ nicht
+ * mehr: Die Hinweise können neu sein. Charge, Arzt und Notiz behalten es.
+ */
+
+export function withDate(row: DraftRow, date: string): DraftRow {
+  return { ...row, date, reviewed: false };
+}
+
+/**
+ * Das Label wie eingegeben; Impfstoff und Krankheiten folgen der Erkennung.
+ * Passt der neue Name auf keinen Impfstoff mehr, gehören die Krankheiten des
+ * bisherigen nicht dazu. Nur von Hand gewählte bleiben.
+ */
 export function withLabel(row: DraftRow, label: string): DraftRow {
   const r = recognizeProduct(label);
   if (r.kind === "exact" || r.kind === "fuzzy") {
@@ -76,9 +89,16 @@ export function withLabel(row: DraftRow, label: string): DraftRow {
       label,
       productId: r.product.id,
       diseases: [...r.product.diseases],
+      reviewed: false,
     };
   }
-  return { ...row, label, productId: null };
+  return {
+    ...row,
+    label,
+    productId: null,
+    diseases: row.productId === null ? row.diseases : [],
+    reviewed: false,
+  };
 }
 
 export function withProduct(row: DraftRow, productId: string): DraftRow {
@@ -89,13 +109,14 @@ export function withProduct(row: DraftRow, productId: string): DraftRow {
     label: product.name,
     productId: product.id,
     diseases: [...product.diseases],
+    reviewed: false,
   };
 }
 
 /** Krankheiten wählt man nur von Hand, wenn es keinen Impfstoff gibt. */
 export function withDiseases(row: DraftRow, diseases: DiseaseId[]): DraftRow {
   if (row.productId !== null) return row;
-  return { ...row, diseases };
+  return { ...row, diseases, reviewed: false };
 }
 
 export function rowFromParsed(p: ParsedRow, id: string): DraftRow {
