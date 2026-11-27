@@ -86,13 +86,7 @@ function AnswersForm({ person }: { person: Person }) {
 }
 
 const LEAD_MONTHS = [1, 2, 3, 4, 6, 9, 12];
-const SEASON_DAYS = [
-  { value: "08-01", label: "1. August" },
-  { value: "08-15", label: "15. August" },
-  { value: "09-01", label: "1. September" },
-  { value: "09-15", label: "15. September" },
-  { value: "10-01", label: "1. Oktober" },
-];
+const SEASON_DAYS = ["08-01", "08-15", "09-01", "09-15", "10-01"] as const;
 const SELECT_CLASS =
   "h-11 w-full rounded-md border border-input bg-transparent px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
 
@@ -144,8 +138,8 @@ function RemindersSection() {
           }
         >
           {SEASON_DAYS.map((d) => (
-            <option key={d.value} value={d.value}>
-              {d.label}
+            <option key={d} value={d}>
+              {T.settings.seasonDayOptions[d]}
             </option>
           ))}
         </select>

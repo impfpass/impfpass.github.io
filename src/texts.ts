@@ -181,6 +181,13 @@ export const T = {
     leadTimeHelp:
       "So viele Monate vor der Fälligkeit wird eine Impfung in der Übersicht gelb. Dann ist Zeit, einen Termin auszumachen.",
     seasonDay: "Saison-Tag",
+    seasonDayOptions: {
+      "08-01": "1. August",
+      "08-15": "15. August",
+      "09-01": "1. September",
+      "09-15": "15. September",
+      "10-01": "1. Oktober",
+    },
     seasonDayHelp:
       "Ab diesem Tag werden die jährlichen Impfungen im Herbst gelb, etwa gegen Grippe.",
     backup: "Datensicherung",

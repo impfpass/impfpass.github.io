@@ -96,7 +96,7 @@ export function AnswersFields(props: {
         {JOBS.map((j) => {
           const id = `${idPrefix}-job-${j.key}`;
           return (
-            <div key={j.key} className="flex min-h-11 items-start gap-3 py-2">
+            <div key={j.key} className="flex min-h-11 items-center gap-3">
               <Checkbox
                 id={id}
                 checked={value.job[j.key]}
@@ -107,7 +107,10 @@ export function AnswersFields(props: {
                   })
                 }
               />
-              <Label htmlFor={id} className="flex-1 font-normal">
+              <Label
+                htmlFor={id}
+                className="min-h-11 flex-1 items-center font-normal"
+              >
                 {j.label}
               </Label>
             </div>
