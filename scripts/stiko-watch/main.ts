@@ -20,7 +20,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function fetchAll(): Promise<PageText[]> {
   const result: PageText[] = [];
-  const pages = watchedPages(new Date().getFullYear());
+  const now = new Date();
+  const pages = watchedPages(now.getFullYear(), now.getMonth() + 1);
   for (const [i, page] of pages.entries()) {
     if (i > 0) await sleep(PAUSE_MS);
     const res = await fetch(page.url, { headers: { "User-Agent": USER_AGENT } });

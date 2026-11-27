@@ -14,8 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
-      GTD_INBOX_URL: ${{ secrets.GTD_INBOX_URL }}
-      GTD_INBOX_TOKEN: ${{ secrets.GTD_INBOX_TOKEN }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -38,8 +36,13 @@ jobs:
             echo "created=true" >> "$GITHUB_OUTPUT"
           fi
       - name: GTD-Inbox benachrichtigen
-        if: steps.issue.outputs.created == 'true' && env.GTD_INBOX_URL != '' && env.GTD_INBOX_TOKEN != ''
+        if: steps.issue.outputs.created == 'true'
+        # Die Secrets nur in diesem Schritt; ohne Secrets endet er ohne Aufruf.
+        env:
+          GTD_INBOX_URL: ${{ secrets.GTD_INBOX_URL }}
+          GTD_INBOX_TOKEN: ${{ secrets.GTD_INBOX_TOKEN }}
         run: |
+          [ -n "$GTD_INBOX_URL" ] && [ -n "$GTD_INBOX_TOKEN" ] || exit 0
           curl -fsS -X POST "$GTD_INBOX_URL" \
             -H "Authorization: Bearer $GTD_INBOX_TOKEN" \
             -H "Content-Type: application/json" \

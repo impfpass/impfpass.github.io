@@ -59,13 +59,13 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 
 ## Regeln aktualisieren
 
-Der Workflow `.github/workflows/stiko-watch.yml` prüft monatlich vier RKI-Seiten (Empfehlungen, Begründungen, Mitteilungen, Jahresarchiv des Epidemiologischen Bulletins) gegen `scripts/stiko-watch/state.json` und legt bei einer Änderung ein Issue „STIKO-Seiten geändert (…)“ an. Er committet nichts. Ablauf:
+Der Workflow `.github/workflows/stiko-watch.yml` prüft monatlich vier RKI-Seiten (Empfehlungen, Begründungen, Mitteilungen, Jahresarchiv des Epidemiologischen Bulletins) gegen `scripts/stiko-watch/state.json` und legt bei einer Änderung ein Issue „STIKO-Seiten geändert (…)“ an. Im Januar prüft er zusätzlich das Archiv des Vorjahres, damit Beiträge aus dem Dezember nicht entgehen. Er committet nichts. Hat GitHub den Workflow nach 60 Tagen ohne Aktivität im Repo abgeschaltet, unter Actions, „STIKO-Wächter“, wieder einschalten. Ablauf:
 
 1. Das Issue lesen und die genannten Stellen im Epidemiologischen Bulletin nachlesen.
 2. Fällt eine Regel weg, ändert sie sich oder kommt eine dazu: erst die Tests in `src/core/rules/recommendations/*.test.ts` für den neuen Stand schreiben, mit Fundstelle im Testnamen, und rot sehen.
 3. Regel und `source` anpassen. Empfehlungs-IDs nie umbenennen; eine weggefallene Empfehlung wird aus `RULEBOOK.rules` entfernt, ihr Name bleibt in `T.rec.names`.
-4. In `src/core/rules/rulebook.ts` `version` hochzählen (Datum des Updates und laufende Nummer, etwa `2027-02-03.1`), bei einer neuen Gesamtausgabe `edition` und `editionUrl` ändern, und einen Eintrag in `changes` anlegen (`ids`, `validSince` = Veröffentlichung im Epid. Bull., `text` für den Hinweis, ein Satz, der nach „Neu:“, „Geändert:“ oder „Entfällt:“ steht).
-5. `npm run stiko:accept`, damit der Wächter den neuen Stand kennt (braucht Netz, dauert wegen der 30 s Pause je Abruf etwa 2 Minuten).
+4. In `src/core/rules/rulebook.ts` `version` hochzählen (Datum des Updates und laufende Nummer, etwa `2027-02-03.1`) und einen Eintrag in `changes` anlegen (`ids`, `validSince` = Veröffentlichung im Epid. Bull., `text` für den Hinweis, ein Satz, der nach „Neu:“, „Geändert:“ oder „Entfällt:“ steht). Bei einer neuen Gesamtausgabe der STIKO-Empfehlungen außerdem einen neuen Quellen-Helfer wie `src/core/rules/recommendations/eb4.ts` anlegen, die Seitenzahlen aller Regeln an der neuen Ausgabe prüfen und auf den neuen Helfer umstellen, `edition` und `sources` im Regelwerk anpassen.
+5. `npm run stiko:accept`, damit der Wächter den neuen Stand kennt (braucht Netz, dauert wegen der 30 s Pause je Abruf etwa 2 Minuten, im Januar etwas länger).
 6. Lint, Typprüfung, Tests, Build; Commit `feat(rules): …`; Push startet den Deploy; das Issue mit Verweis auf den Commit schließen.
 
 Ändert sich nur das Layout der RKI-Seite oder etwas ohne Bezug zu den Regeln: nur Schritt 5 und 6.

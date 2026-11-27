@@ -50,12 +50,30 @@ describe("extractMainText", () => {
 
 describe("watchedPages", () => {
   it("das Jahresarchiv des Bulletins zählt nur Zeilen mit STIKO", () => {
-    const bull = watchedPages(2026).find((p) => p.id === "epid-bull-2026");
+    const bull = watchedPages(2026, 11).find((p) => p.id === "epid-bull-2026");
     expect(bull?.url).toContain("/Epidemiologisches-Bulletin/2026/EB-2026-node.html");
     expect(bull?.missingIsEmpty).toBe(true);
     const lines = ["Ausgabe 1: Masern", "Ausgabe 2: STIKO-Beschluss"];
     expect(lines.filter((l) => bull!.lineFilter!.test(l))).toEqual([
       "Ausgabe 2: STIKO-Beschluss",
+    ]);
+  });
+  it("im Januar zusätzlich das Archiv des Vorjahres, mit demselben Filter", () => {
+    const ids = (month: number) => watchedPages(2027, month).map((p) => p.id);
+    expect(ids(1)).toEqual([
+      "stiko-empfehlungen",
+      "stiko-begruendungen",
+      "stiko-mitteilungen",
+      "epid-bull-2027",
+      "epid-bull-2026",
+    ]);
+    expect(ids(2)).not.toContain("epid-bull-2026");
+    expect(ids(12)).not.toContain("epid-bull-2026");
+    const prev = watchedPages(2027, 1).find((p) => p.id === "epid-bull-2026");
+    expect(prev?.url).toContain("/Epidemiologisches-Bulletin/2026/EB-2026-node.html");
+    const lines = ["Ausgabe 50: Masern", "Ausgabe 51: STIKO-Beschluss"];
+    expect(lines.filter((l) => prev!.lineFilter!.test(l))).toEqual([
+      "Ausgabe 51: STIKO-Beschluss",
     ]);
   });
 });

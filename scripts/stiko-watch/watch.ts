@@ -28,7 +28,21 @@ export interface PageChange {
 const BASE = "https://www.rki.de/DE";
 const STIKO = `${BASE}/Themen/Infektionskrankheiten/Impfen/Staendige-Impfkommission/Empfehlungen-der-STIKO`;
 
-export function watchedPages(year: number): WatchedPage[] {
+function bulletinArchive(year: number): WatchedPage {
+  return {
+    id: `epid-bull-${year}`,
+    url: `${BASE}/Aktuelles/Publikationen/Epidemiologisches-Bulletin/${year}/EB-${year}-node.html`,
+    lineFilter: /STIKO/i,
+    missingIsEmpty: true,
+  };
+}
+
+/**
+ * Seiten für den Lauf im Monat `month` (1 bis 12) des Jahres `year`. Im Januar
+ * kommt das Archiv des Vorjahres dazu, damit Beiträge aus dem Dezember nicht
+ * entgehen.
+ */
+export function watchedPages(year: number, month: number): WatchedPage[] {
   return [
     {
       id: "stiko-empfehlungen",
@@ -42,12 +56,8 @@ export function watchedPages(year: number): WatchedPage[] {
       id: "stiko-mitteilungen",
       url: `${STIKO}/Mitteilungen/mitteilungen-node.html`,
     },
-    {
-      id: `epid-bull-${year}`,
-      url: `${BASE}/Aktuelles/Publikationen/Epidemiologisches-Bulletin/${year}/EB-${year}-node.html`,
-      lineFilter: /STIKO/i,
-      missingIsEmpty: true,
-    },
+    bulletinArchive(year),
+    ...(month === 1 ? [bulletinArchive(year - 1)] : []),
   ];
 }
 
