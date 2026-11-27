@@ -38,6 +38,7 @@ it("Profil: Geburtsdatum in der Zukunft wird abgelehnt", async () => {
     await screen.findByText("Das Geburtsdatum liegt in der Zukunft."),
   ).toBeTruthy();
   expect(data().person?.birthDate).toBe("1967-03-15");
+  expect(document.activeElement).toBe(birth);
 });
 
 it("Sicherung speichern merkt sich das Datum der letzten Sicherung", async () => {

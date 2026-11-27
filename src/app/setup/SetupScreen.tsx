@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { todayISO } from "@/core/dates";
 import { RestoreButton } from "../backup/RestoreButton";
 import { useAppData } from "../data/AppData";
 import { isStandalone, shouldShowInstallHint } from "../installHintRules";
 import { T } from "../texts";
+import { focusFirstError } from "./focusFirstError";
 import { PersonFields } from "./PersonFields";
 import { validatePerson, type PersonErrors } from "./validatePerson";
 
@@ -19,8 +21,11 @@ export function SetupScreen() {
   async function submit(e: FormEvent) {
     e.preventDefault();
     const found = validatePerson(name, birthDate, todayISO());
-    setErrors(found);
-    if (found.name || found.birthDate) return;
+    flushSync(() => setErrors(found));
+    if (found.name || found.birthDate) {
+      focusFirstError("setup", found);
+      return;
+    }
     setBusy(true);
     setFailed(false);
     try {

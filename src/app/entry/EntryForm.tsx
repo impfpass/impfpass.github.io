@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,8 +140,14 @@ export function EntryForm({
       diseases: chosenDiseases,
     };
     const found = validateEntry(input, person.birthDate, todayISO());
-    setErrors(found);
-    if (found.date || found.product) return;
+    // Erst die Meldungen zeigen, dann ins erste fehlerhafte Feld springen,
+    // damit Screenreader die verknüpfte Meldung mit vorlesen.
+    flushSync(() => setErrors(found));
+    if (found.date || found.product) {
+      const first = found.date ? `entry-${precision}` : "entry-product";
+      document.getElementById(first)?.focus();
+      return;
+    }
 
     const now = new Date().toISOString();
     const v: Vaccination = {
@@ -248,6 +255,8 @@ export function EntryForm({
               <Input
                 id="entry-month"
                 type="month"
+                // Für Browser ohne Monatsauswahl, die ein Textfeld zeigen
+                placeholder="JJJJ-MM"
                 max={todayISO().slice(0, 7)}
                 value={month}
                 onChange={(e) => setMonth(e.target.value)}
@@ -281,7 +290,11 @@ export function EntryForm({
           autoComplete="off"
           value={label}
           onChange={(e) => changeLabel(e.target.value)}
-          aria-describedby="entry-product-hint"
+          aria-describedby={
+            errors.product
+              ? "entry-product-hint entry-product-error"
+              : "entry-product-hint"
+          }
           aria-invalid={errors.product ? true : undefined}
         />
         <p id="entry-product-hint" className="text-muted-foreground">

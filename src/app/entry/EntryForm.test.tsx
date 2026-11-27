@@ -156,3 +156,37 @@ it("ein genau erkannter Name lässt längere Namen weiter zur Auswahl", async ()
   ).toBeTruthy();
   expect(screen.queryByRole("button", { name: "Boostrix Polio" })).toBeNull();
 });
+
+it("bei Fehlern springt der Fokus ins Feld, die Meldung hängt am Feld", async () => {
+  await seed({ persons: [testPerson({ birthDate: "1967-03-15" })] });
+  const user = userEvent.setup();
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+
+  const product = screen.getByLabelText("Impfstoff");
+  expect(document.activeElement).toBe(product);
+  const describedBy = product.getAttribute("aria-describedby") ?? "";
+  const messages = describedBy
+    .split(" ")
+    .map((id) => document.getElementById(id)?.textContent);
+  expect(messages.join(" ")).toContain(
+    screen.getByText(/Bitte einen Impfstoff/).textContent,
+  );
+
+  const date = screen.getByLabelText("Datum");
+  await user.clear(date);
+  await user.type(date, "1960-01-01");
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+  expect(document.activeElement).toBe(date);
+});
+
+it("Monatsfeld nennt das Format für Browser ohne Monatsauswahl", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<EntryForm />, "/impfungen/neu");
+  await user.click(screen.getByRole("radio", { name: "nur Monat" }));
+  expect(screen.getByLabelText("Monat").getAttribute("placeholder")).toBe(
+    "JJJJ-MM",
+  );
+});

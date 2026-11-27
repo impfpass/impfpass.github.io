@@ -110,6 +110,18 @@ it("Geburtsdatum in der Zukunft wird abgelehnt", async () => {
   expect(screen.queryByRole("heading", { name: "Übersicht" })).toBeNull();
 });
 
+it("bei Fehlern in der Ersteinrichtung springt der Fokus ins erste Feld", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  const name = await screen.findByLabelText("Name");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  expect(document.activeElement).toBe(name);
+
+  await user.type(name, "Christa");
+  await user.click(screen.getByRole("button", { name: "Weiter" }));
+  expect(document.activeElement).toBe(screen.getByLabelText("Geburtsdatum"));
+});
+
 it("Name und Geburtsdatum sind Pflicht", async () => {
   const user = userEvent.setup();
   render(<App />);

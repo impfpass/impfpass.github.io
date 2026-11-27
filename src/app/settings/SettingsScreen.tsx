@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import type { Person } from "@/core/model";
 import { RestoreButton } from "../backup/RestoreButton";
 import { useSaveBackup } from "../backup/useSaveBackup";
 import { useAppData } from "../data/AppData";
+import { focusFirstError } from "../setup/focusFirstError";
 import { PersonFields } from "../setup/PersonFields";
 import { validatePerson, type PersonErrors } from "../setup/validatePerson";
 import { T } from "../texts";
@@ -22,8 +24,11 @@ function ProfileForm({ person }: { person: Person }) {
     e.preventDefault();
     setMessage(null);
     const found = validatePerson(name, birthDate, todayISO());
-    setErrors(found);
-    if (found.name || found.birthDate) return;
+    flushSync(() => setErrors(found));
+    if (found.name || found.birthDate) {
+      focusFirstError("profile", found);
+      return;
+    }
     try {
       await actions.updatePerson({ ...person, name: name.trim(), birthDate });
       setMessage(T.settings.saved);
