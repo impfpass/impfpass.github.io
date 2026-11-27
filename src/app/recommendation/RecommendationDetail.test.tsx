@@ -266,6 +266,27 @@ it("eine angefangene Hepatitis-B-Serie ohne Beruf erklärt das Nachholen", async
   ).toBeTruthy();
 });
 
+it("eine vollständige Hepatitis A nennt den langen Schutz", async () => {
+  const havrix = (id: string, date: string) =>
+    testVaccination({
+      id,
+      date,
+      productId: "havrix",
+      label: "Havrix",
+      diseases: ["hepatitis_a"],
+    });
+  await seed({
+    persons: [testPerson({ birthDate: "1990-05-10" })],
+    vaccinations: [havrix("ha1", "2020-01-01"), havrix("ha2", "2020-08-01")],
+  });
+  await open("hepatitis_a");
+  expect(
+    screen.getByText(
+      "Die Impfungen sind vollständig. Die STIKO rechnet mit einem Schutz für mindestens 10 bis 20 Jahre. Ob später eine Auffrischung nötig wird, ist derzeit offen.",
+    ),
+  ).toBeTruthy();
+});
+
 it("ohne Statuszeile steht unter der Überschrift kein leerer Absatz", async () => {
   await seed({
     persons: [

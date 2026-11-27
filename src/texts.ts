@@ -163,6 +163,7 @@ export const T = {
       mmr: "Masern, Mumps, Röteln",
       varicella: "Windpocken",
       hepatitis_b: "Hepatitis B",
+      hepatitis_a: "Hepatitis A",
       influenza: "Grippe",
       covid19: "COVID-19",
       pneumococcal: "Pneumokokken",
@@ -183,6 +184,7 @@ export const T = {
       seasonDone: (label: string) => `für die Saison ${label} geimpft`,
       protectedUntil: (d: string) => `geschützt bis ${d}`,
       protectedNoBooster: "geschützt, keine Auffrischung nötig",
+      protectedOpen: "geschützt, Auffrischung derzeit nicht vorgesehen",
       nextSeason: (d: string) => `nächste Saison ab ${d}`,
       fromAge: (age: number, d: string) => `ab ${age} Jahren, also ab ${d}`,
       from: (d: string) => `ab ${d}`,
@@ -244,6 +246,8 @@ export const T = {
         doctor: "Deine Ärztin oder dein Arzt empfiehlt sie dir.",
         complete:
           "Die Impfungen sind vollständig, eine Auffrischung ist nicht vorgesehen.",
+        longProtection:
+          "Die Impfungen sind vollständig. Die STIKO rechnet mit einem Schutz für mindestens 10 bis 20 Jahre. Ob später eine Auffrischung nötig wird, ist derzeit offen.",
         none: "Die STIKO empfiehlt diese Impfung für dich derzeit nicht.",
       },
     },

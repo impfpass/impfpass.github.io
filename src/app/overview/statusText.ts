@@ -32,7 +32,10 @@ export function statusText(
       return S.dueFrom(due);
     case "protected":
       if (r.timing === "season") return S.seasonDone(label);
-      return r.dueDate ? S.protectedUntil(due) : S.protectedNoBooster;
+      if (r.dueDate) return S.protectedUntil(due);
+      return r.reason.kind === "long_protection"
+        ? S.protectedOpen
+        : S.protectedNoBooster;
     case "future":
       // Vor der Saison-Regel: Unter der Altersgrenze zählt der Geburtstag.
       if (r.reason.kind === "age") return S.fromAge(r.reason.age, due);

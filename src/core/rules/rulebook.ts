@@ -1,5 +1,7 @@
 import { covid19Rule } from "./recommendations/covid19";
 import { FI_ENCEPUR, FI_FSME_IMMUN } from "./recommendations/fachinfo";
+import { EB27_URL } from "./recommendations/eb27";
+import { hepatitisARule } from "./recommendations/hepatitisA";
 import { hepatitisBRule } from "./recommendations/hepatitisB";
 import { influenzaRule } from "./recommendations/influenza";
 import { mmrRule } from "./recommendations/mmr";
@@ -14,7 +16,7 @@ import { zosterRule } from "./recommendations/zoster";
 import type { Rulebook } from "./types";
 
 export const RULEBOOK: Rulebook = {
-  version: "2026-11-27.1",
+  version: "2026-11-27.2",
   edition: "Epid. Bull. 4/2026, geprüft bis Epid. Bull. 48/2026",
   sources: [
     {
@@ -31,8 +33,19 @@ export const RULEBOOK: Rulebook = {
     },
     { label: FI_FSME_IMMUN.edition, url: FI_FSME_IMMUN.url },
     { label: FI_ENCEPUR.edition, url: FI_ENCEPUR.url },
+    {
+      label: "Reiseimpfempfehlungen STIKO/DTG 2026, Epid. Bull. 27/2026",
+      url: EB27_URL,
+    },
   ],
-  changes: [],
+  changes: [
+    {
+      version: "2026-11-27.2",
+      ids: ["hepatitis_a", "hepatitis_b"],
+      validSince: "2026-07-02",
+      text: "ImpfPass erinnert an fehlende Dosen angefangener Impfserien gegen Hepatitis A und B und zeigt, wann sie vollständig sind.",
+    },
+  ],
   rules: [
     tdRule,
     pertussisRule,
@@ -40,6 +53,7 @@ export const RULEBOOK: Rulebook = {
     mmrRule,
     varicellaRule,
     hepatitisBRule,
+    hepatitisARule,
     influenzaRule,
     covid19Rule,
     pneumococcalRule,

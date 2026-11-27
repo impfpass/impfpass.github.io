@@ -13,6 +13,7 @@ export type RecommendationId =
   | "mmr"
   | "varicella"
   | "hepatitis_b"
+  | "hepatitis_a"
   | "influenza"
   | "covid19"
   | "pneumococcal"
@@ -46,6 +47,8 @@ export type Reason =
   | { kind: "season"; label: string } // label etwa '2026/27'
   | { kind: "indication"; indication: "job" | "tbe" | "doctor" }
   | { kind: "complete" }
+  // Vollständig; Schutz mindestens 10 bis 20 Jahre, ob aufgefrischt werden muss, ist offen (Hepatitis A)
+  | { kind: "long_protection" }
   | { kind: "discuss"; topic: "chronic" | "serology"; normalAge: number | null }
   | { kind: "none" };
 

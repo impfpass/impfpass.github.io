@@ -55,6 +55,8 @@ function ReasonSentence({ rec }: { rec: Recommendation }) {
       return <p>{R[r.indication]}</p>;
     case "complete":
       return <p>{R.complete}</p>;
+    case "long_protection":
+      return <p>{R.longProtection}</p>;
     case "discuss":
       return <DiscussReason rec={rec} />;
     case "none":

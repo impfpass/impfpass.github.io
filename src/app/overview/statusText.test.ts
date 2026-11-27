@@ -101,6 +101,16 @@ it.each<[string, Partial<Recommendation>, string]>([
     "geschützt, keine Auffrischung nötig",
   ],
   [
+    "protected vollständig",
+    { status: "protected", reason: { kind: "complete" } },
+    "geschützt, keine Auffrischung nötig",
+  ],
+  [
+    "protected mit langem Schutz",
+    { status: "protected", reason: { kind: "long_protection" } },
+    "geschützt, Auffrischung derzeit nicht vorgesehen",
+  ],
+  [
     "future season",
     { status: "future", timing: "season", dueDate: "2027-09-01" },
     "nächste Saison ab 09/2027",

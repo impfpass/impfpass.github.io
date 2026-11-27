@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { person, shot } from "@/test/rules";
 import { evaluate } from "./evaluate";
+import { compareVersions } from "./helpers";
 import { RULEBOOK } from "./rulebook";
 
 describe("RULEBOOK", () => {
@@ -13,6 +14,7 @@ describe("RULEBOOK", () => {
       "mmr",
       "varicella",
       "hepatitis_b",
+      "hepatitis_a",
       "influenza",
       "covid19",
       "pneumococcal",
@@ -20,17 +22,29 @@ describe("RULEBOOK", () => {
       "rsv",
       "tbe",
     ]);
-    expect(new Set(ids).size).toBe(12);
+    expect(new Set(ids).size).toBe(13);
     for (const rule of RULEBOOK.rules) {
       expect(rule.source.url).toMatch(/^https:\/\//);
       expect(rule.source.edition).not.toBe("");
     }
-    expect(RULEBOOK.sources).toHaveLength(5);
+    expect(RULEBOOK.sources).toHaveLength(6);
+    expect(RULEBOOK.sources.map((s) => s.label)).toContain(
+      "Reiseimpfempfehlungen STIKO/DTG 2026, Epid. Bull. 27/2026",
+    );
     for (const s of RULEBOOK.sources) {
       expect(s.label).not.toBe("");
       expect(s.url).toMatch(/^https:\/\//);
     }
-    expect(RULEBOOK.changes).toEqual([]);
+    expect(compareVersions(RULEBOOK.version, "2026-11-27.1")).toBeGreaterThan(
+      0,
+    );
+    expect(RULEBOOK.changes).toHaveLength(1);
+    expect(RULEBOOK.changes[0]).toMatchObject({
+      version: RULEBOOK.version,
+      ids: ["hepatitis_a", "hepatitis_b"],
+      validSince: "2026-07-02",
+    });
+    expect(RULEBOOK.changes[0].text).not.toBe("");
   });
 
   it("den Satz „früher bei Erkrankungen“ tragen nur Regeln mit Altersgrenze", () => {
@@ -59,7 +73,7 @@ describe("RULEBOOK", () => {
       seasonDay: "09-01",
     });
     const status = Object.fromEntries(recs.map((r) => [r.id, r.status]));
-    expect(recs).toHaveLength(12);
+    expect(recs).toHaveLength(13);
     expect(status).toMatchObject({
       td: "overdue",
       pertussis: "due",
@@ -69,8 +83,29 @@ describe("RULEBOOK", () => {
       rsv: "future",
       mmr: "not_applicable",
       tbe: "due",
+      hepatitis_a: "not_applicable",
     });
   });
+});
+
+it("„Möchte ich nicht“ blendet eine angefangene Hepatitis-A-Serie aus", () => {
+  const p = person("1985-05-05");
+  const recs = evaluate(
+    p,
+    [shot("2026-03-27", "havrix")],
+    [
+      {
+        personId: p.id,
+        recommendationId: "hepatitis_a",
+        kind: "declined",
+        at: "2026-11-27T10:00:00.000Z",
+      },
+    ],
+    "2026-11-27",
+    RULEBOOK,
+    { leadMonths: 6, seasonDay: "09-01" },
+  );
+  expect(recs.find((r) => r.id === "hepatitis_a")?.status).toBe("declined");
 });
 
 const ruleSources = import.meta.glob<string>(
