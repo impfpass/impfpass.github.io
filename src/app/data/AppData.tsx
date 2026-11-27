@@ -58,6 +58,8 @@ export interface AppData {
     updatePerson(p: Person): Promise<void>;
     saveVaccination(v: Vaccination): Promise<void>;
     deleteVaccination(id: string): Promise<void>;
+    /** Speichert alle oder keine; die Empfehlungen werden neu berechnet. */
+    importVaccinations(vs: Vaccination[]): Promise<void>;
     /** Person und Zeitpunkt setzt der Provider. */
     saveDecision(input: {
       recommendationId: string;
@@ -308,6 +310,14 @@ export function AppDataProvider(props: {
     [requireRepo],
   );
 
+  const importVaccinations = useCallback(
+    async (vs: Vaccination[]) => {
+      await requireRepo().addVaccinations(vs);
+      setState((s) => ({ ...s, vaccinations: [...s.vaccinations, ...vs] }));
+    },
+    [requireRepo],
+  );
+
   const saveDecision = useCallback<AppData["actions"]["saveDecision"]>(
     async ({ recommendationId, kind, reason }) => {
       const r = requireRepo();
@@ -403,6 +413,7 @@ export function AppDataProvider(props: {
         updatePerson,
         saveVaccination,
         deleteVaccination,
+        importVaccinations,
         saveDecision,
         deleteDecision,
         dismissNotices,
@@ -424,6 +435,7 @@ export function AppDataProvider(props: {
       updatePerson,
       saveVaccination,
       deleteVaccination,
+      importVaccinations,
       saveDecision,
       deleteDecision,
       dismissNotices,

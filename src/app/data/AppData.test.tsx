@@ -448,3 +448,45 @@ describe("Empfehlungen und Regel-Stand", () => {
     );
   });
 });
+
+describe("importVaccinations", () => {
+  it("ergänzt die Impfungen und berechnet die Empfehlungen neu", async () => {
+    await seed({});
+    const { data } = await renderWithData(null, "/", {
+      rulebook: V1,
+      today: TODAY,
+    });
+    await waitFor(() => expect(statusOf(data(), "td")).toBe("due"));
+
+    await act(() =>
+      data().actions.importVaccinations([
+        testVaccination({ id: "i1", date: "2020-05-04", source: "import" }),
+        testVaccination({ id: "i2", date: "2021-01-02", source: "import" }),
+      ]),
+    );
+
+    expect(data().vaccinations.map((v) => v.id)).toEqual(["i1", "i2"]);
+    expect(statusOf(data(), "td")).not.toBe("due");
+    expect(await (await openRepository()).getVaccinations("p1")).toHaveLength(
+      2,
+    );
+  });
+
+  it("lässt den Stand unverändert, wenn das Speichern scheitert", async () => {
+    await seed({});
+    const { data } = await renderWithData(null, "/", {
+      rulebook: V1,
+      today: TODAY,
+    });
+    await waitFor(() => expect(data().status).toBe("ready"));
+    const broken = testVaccination({
+      id: "i1",
+      note: (() => "x") as unknown as string,
+    });
+
+    await expect(
+      act(() => data().actions.importVaccinations([broken])),
+    ).rejects.toThrow();
+    expect(data().vaccinations).toEqual([]);
+  });
+});

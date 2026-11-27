@@ -38,6 +38,8 @@ export interface Repository {
   getVaccinations(personId: string): Promise<Vaccination[]>;
   saveVaccination(v: Vaccination): Promise<void>;
   deleteVaccination(id: string): Promise<void>;
+  /** Speichert alle oder keine in einer einzigen Transaktion. */
+  addVaccinations(vs: Vaccination[]): Promise<void>;
   getDecisions(personId: string): Promise<Decision[]>;
   /** Eine Entscheidung je Person und Empfehlung; eine neue ersetzt die alte. */
   saveDecision(d: Decision): Promise<void>;
@@ -87,6 +89,22 @@ function createRepository(db: ImpfPassDatabase): Repository {
       await db.put("vaccinations", v);
     },
     deleteVaccination: (id) => db.delete("vaccinations", id),
+    addVaccinations: async (vs) => {
+      if (vs.length === 0) return;
+      const tx = db.transaction("vaccinations", "readwrite");
+      const requests: Promise<unknown>[] = [];
+      try {
+        for (const v of vs) requests.push(tx.store.put(v));
+      } catch (error) {
+        // Ein synchron geworfener Fehler (etwa DataCloneError) bricht die
+        // Transaktion nicht von selbst ab; die schon gestellten Einträge
+        // würden sonst gespeichert.
+        tx.abort();
+        await Promise.allSettled([...requests, tx.done]);
+        throw error;
+      }
+      await Promise.all([...requests, tx.done]);
+    },
     // Wenige Einträge je Gerät, ein Index lohnt sich nicht.
     getDecisions: async (personId) =>
       (await db.getAll("decisions")).filter((d) => d.personId === personId),

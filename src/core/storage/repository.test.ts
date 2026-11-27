@@ -255,3 +255,28 @@ it("unlesbarer Regel-Stand ergibt null", async () => {
   raw.close();
   expect(await repo.getRuleState("p1")).toBeNull();
 });
+
+it("addVaccinations speichert alle Einträge", async () => {
+  await repo.addVaccinations([vaccination("a", "p1"), vaccination("b", "p1")]);
+  expect((await repo.getVaccinations("p1")).map((v) => v.id).sort()).toEqual([
+    "a",
+    "b",
+  ]);
+});
+
+it("addVaccinations mit leerer Liste ändert nichts", async () => {
+  await repo.addVaccinations([]);
+  expect(await repo.getVaccinations("p1")).toEqual([]);
+});
+
+it("addVaccinations speichert nichts, wenn ein Eintrag scheitert", async () => {
+  const broken = {
+    ...vaccination("b", "p1"),
+    note: () => "nicht speicherbar",
+  } as unknown as Vaccination;
+
+  await expect(
+    repo.addVaccinations([vaccination("a", "p1"), broken]),
+  ).rejects.toThrow();
+  expect(await repo.getVaccinations("p1")).toEqual([]);
+});
