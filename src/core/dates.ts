@@ -37,3 +37,38 @@ export function formatDate(date: ISODate, p: DatePrecision): string {
   if (p === "month") return `${month}/${year}`;
   return `${day}.${month}.${year}`;
 }
+
+const parts = (date: ISODate): [number, number, number] => {
+  const [y, m, d] = date.split("-").map(Number);
+  return [y, m, d];
+};
+
+/** Rechnet in UTC, damit keine Zeitumstellung dazwischenkommt. */
+export function addDays(date: ISODate, days: number): ISODate {
+  const [y, m, d] = parts(date);
+  const result = new Date(Date.UTC(y, m - 1, d + days));
+  return `${pad(result.getUTCFullYear(), 4)}-${pad(result.getUTCMonth() + 1)}-${pad(result.getUTCDate())}`;
+}
+
+/** Über das Monatsende hinaus wird der letzte Tag des Zielmonats genommen. */
+export function addMonths(date: ISODate, months: number): ISODate {
+  const [y, m, d] = parts(date);
+  const total = y * 12 + (m - 1) + months;
+  const year = Math.floor(total / 12);
+  const month = total - year * 12; // 0-basiert
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return `${pad(year, 4)}-${pad(month + 1)}-${pad(Math.min(d, lastDay))}`;
+}
+
+/** 29.02. wird zum 28.02., wenn das Zieljahr kein Schaltjahr ist. */
+export function addYears(date: ISODate, years: number): ISODate {
+  return addMonths(date, years * 12);
+}
+
+/** Vollendete Jahre am Stichtag: die größte Zahl n mit addYears(birthDate, n) <= date. */
+export function ageOn(birthDate: ISODate, date: ISODate): number {
+  let n = Number(date.slice(0, 4)) - Number(birthDate.slice(0, 4));
+  while (n > 0 && addYears(birthDate, n) > date) n--;
+  while (addYears(birthDate, n + 1) <= date) n++;
+  return n;
+}

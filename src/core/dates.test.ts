@@ -1,4 +1,8 @@
 import {
+  addDays,
+  addMonths,
+  addYears,
+  ageOn,
   formatDate,
   isValidISODate,
   normalizeToPrecision,
@@ -38,4 +42,28 @@ it("formatDate", () => {
   expect(formatDate("2016-12-05", "day")).toBe("05.12.2016");
   expect(formatDate("2016-12-01", "month")).toBe("12/2016");
   expect(formatDate("2016-01-01", "year")).toBe("2016");
+});
+
+it("addMonths hält das Monatsende ein", () => {
+  expect(addMonths("2026-01-31", 1)).toBe("2026-02-28");
+  expect(addMonths("2024-01-31", 1)).toBe("2024-02-29");
+  expect(addMonths("2027-03-01", -6)).toBe("2026-09-01");
+  expect(addMonths("2026-08-31", -6)).toBe("2026-02-28");
+});
+
+it("addYears am 29. Februar", () => {
+  expect(addYears("1964-02-29", 60)).toBe("2024-02-29");
+  expect(addYears("1968-02-29", 59)).toBe("2027-02-28");
+});
+
+it("addDays über Monats- und Jahreswechsel", () => {
+  expect(addDays("2026-12-31", 1)).toBe("2027-01-01");
+  expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
+});
+
+it("ageOn am Tag vor und am Geburtstag", () => {
+  expect(ageOn("1967-03-01", "2027-02-28")).toBe(59);
+  expect(ageOn("1967-03-01", "2027-03-01")).toBe(60);
+  expect(ageOn("1968-02-29", "2027-02-27")).toBe(58);
+  expect(ageOn("1968-02-29", "2027-02-28")).toBe(59);
 });
