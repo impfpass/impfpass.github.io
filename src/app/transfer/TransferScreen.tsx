@@ -7,6 +7,7 @@ import {
   decodeCollected,
   MAX_TRANSFER_BYTES,
   missingParts,
+  readTransferText,
   TransferError,
   type TransferCollector,
 } from "@/core/formats/transfer";
@@ -28,7 +29,7 @@ type View =
 
 interface Problem {
   message: string;
-  /** Teil einer anderen Übertragung: „Neu beginnen“ fängt mit ihm an. */
+  /** Passt nicht zu den gesammelten Teilen: „Neu beginnen“ fängt mit ihm an. */
   restartWith?: string;
 }
 
@@ -43,6 +44,19 @@ function isForeignLine(line: string): boolean {
     return false;
   } catch (e) {
     return e instanceof TransferError && e.code === "notTransfer";
+  }
+}
+
+/**
+ * Die ganze Übertragung, wenn der Text sie allein enthält, wie Datei und Text
+ * vom PC. Sonst `null`; Fehler meldet dann das Sammeln Zeile für Zeile.
+ */
+function wholeTransfer(content: string): TransferPayload | null {
+  try {
+    const result = readTransferText(content);
+    return "payload" in result ? result.payload : null;
+  } catch {
+    return null;
   }
 }
 
@@ -69,6 +83,14 @@ export function TransferScreen() {
     setCollectorState(c);
   }
 
+  function showPreview(payload: TransferPayload) {
+    setView({
+      kind: "preview",
+      payload,
+      items: planImport(vaccinations, payload.entries),
+    });
+  }
+
   /**
    * Nimmt eine Teilzeile auf, aus dem Scanner, einer Datei oder eingefügtem
    * Text. Ist die Übertragung vollständig, erscheint die Vorschau.
@@ -78,10 +100,10 @@ export function TransferScreen() {
     try {
       next = addPart(latest.current, line).collector;
     } catch (e) {
-      const other = e instanceof TransferError && e.code === "otherTransfer";
+      // Mit gesammelten Teilen führt „Neu beginnen“ aus jeder Sackgasse.
       setProblem({
         message: messageOf(e),
-        ...(other && { restartWith: line }),
+        ...(latest.current !== null && { restartWith: line }),
       });
       return "failed";
     }
@@ -92,12 +114,7 @@ export function TransferScreen() {
     }
     setCollector(null);
     try {
-      const payload = decodeCollected(next);
-      setView({
-        kind: "preview",
-        payload,
-        items: planImport(vaccinations, payload.entries),
-      });
+      showPreview(decodeCollected(next));
       return "complete";
     } catch (e) {
       setProblem({ message: messageOf(e) });
@@ -107,6 +124,15 @@ export function TransferScreen() {
 
   /** Datei und eingefügter Text: eine oder mehrere Teilzeilen. */
   function readText(content: string): boolean {
+    // Datei und Text vom PC sind ein einziger Teil 1/1. Gescannte Teile
+    // derselben Übertragung sind anders geteilt und passen nicht dazu.
+    const whole = wholeTransfer(content);
+    if (whole) {
+      setCollector(null);
+      setProblem(null);
+      showPreview(whole);
+      return true;
+    }
     const lines = content
       .split(/\r\n|\r|\n/)
       .map((line) => line.trim())

@@ -273,6 +273,76 @@ it("ein Teil einer anderen Übertragung bietet „Neu beginnen“ an", async () 
   expect(screen.queryByRole("button", { name: "Neu beginnen" })).toBeNull();
 });
 
+it("nach gescannten Teilen liest eingefügter Text die ganze Übertragung", async () => {
+  // Text und Datei vom PC sind ein einziger Teil 1/1 derselben Übertragung.
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  await paste(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await paste(user, textOf(payload));
+
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+
+  // Die gesammelten Teile sind danach verworfen.
+  await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+  expect(screen.queryByText(/Teilen gelesen/)).toBeNull();
+});
+
+it("nach gescannten Teilen liest eine Datei die ganze Übertragung", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [, second] = partsOf(payload, 3);
+  await paste(user, second);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 1 und 3.",
+  );
+
+  await user.upload(
+    screen.getByTestId("transfer-file"),
+    new File([`${textOf(payload)}\n`], "impfpass-uebertragung-2026-11-27.txt", {
+      type: "text/plain",
+    }),
+  );
+
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+});
+
+it("passt ein Teil nicht zu den gesammelten, führt „Neu beginnen“ heraus", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  // Dieselbe Übertragung, anders geteilt: gleiche ID, andere Gesamtzahl.
+  const [otherSplit] = partsOf(payload, 2);
+  await paste(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await paste(user, otherSplit);
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Die Übertragung ist beschädigt. Erzeuge sie am PC neu.",
+  );
+  await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+
+  expect(
+    await screen.findByText("1 von 2 Teilen gelesen. Es fehlt noch Teil 2."),
+  ).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
 it("eine Übertragung mit Version 2 meldet „neuere Version“ und speichert nichts", async () => {
   await seed({});
   const user = userEvent.setup();
