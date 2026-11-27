@@ -64,8 +64,9 @@ it("gültige Datei: Rückfrage, dann ersetzt", async () => {
       "Alle Daten auf diesem Gerät durch die Sicherung ersetzen?",
     ),
   ).toBeTruthy();
-  expect(dialog.textContent).toContain("20.11.2026");
-  expect(dialog.textContent).toContain("2 Impfungen");
+  expect(dialog.textContent).toContain(
+    "Die Sicherung vom 20.11.2026 für Hans enthält 2 Impfungen.",
+  );
   expect(data().person?.name).toBe("Christa");
 
   await user.click(screen.getByRole("button", { name: "Ersetzen" }));
@@ -79,6 +80,24 @@ it("gültige Datei: Rückfrage, dann ersetzt", async () => {
   expect(
     await screen.findByText("Die Sicherung wurde wiederhergestellt."),
   ).toBeTruthy();
+});
+
+it("zu große Datei wird gar nicht erst gelesen", async () => {
+  await seed({ vaccinations: [testVaccination()] });
+  const user = userEvent.setup();
+  await renderWithData(<RestoreButton />);
+  const big = new File([new Uint8Array(5 * 1024 * 1024 + 1)], "video.mov");
+  const read = vi.spyOn(big, "text");
+
+  await user.upload(fileInput(), big);
+
+  expect(
+    await screen.findByText(
+      "Diese Datei ist zu groß für eine ImpfPass-Sicherung.",
+    ),
+  ).toBeTruthy();
+  expect(read).not.toHaveBeenCalled();
+  expect(screen.queryByRole("alertdialog")).toBeNull();
 });
 
 it("gültige Datei: Abbrechen lässt alles, wie es ist", async () => {

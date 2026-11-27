@@ -14,6 +14,9 @@ import {
 export const BACKUP_FORMAT = "impfpass-backup";
 export const BACKUP_VERSION = 1;
 
+/** Größer wird keine echte Sicherung; schützt vor versehentlich gewählten Videos. */
+export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
+
 export interface BackupFile extends BackupData {
   format: typeof BACKUP_FORMAT;
   version: typeof BACKUP_VERSION;

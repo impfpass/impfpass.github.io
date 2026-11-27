@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { todayISO } from "@/core/dates";
+import { RestoreButton } from "../backup/RestoreButton";
 import { useAppData } from "../data/AppData";
 import { isStandalone, shouldShowInstallHint } from "../installHintRules";
 import { T } from "../texts";
@@ -60,6 +61,10 @@ export function SetupScreen() {
           {T.setup.submit}
         </Button>
       </form>
+      <section className="flex flex-col gap-2 border-t pt-6">
+        <p>{T.setup.restoreHint}</p>
+        <RestoreButton />
+      </section>
     </main>
   );
 }

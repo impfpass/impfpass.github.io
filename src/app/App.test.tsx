@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createBackup, serializeBackup } from "@/core/formats/backup";
+import { DEFAULT_SETTINGS } from "@/core/model";
 import { StorageUnavailableError } from "@/core/storage/repository";
+import { testPerson, testVaccination } from "@/test/helpers";
 import { App } from "./App";
 
 it("zeigt den App-Namen", async () => {
@@ -17,6 +20,35 @@ it("ohne Person erscheint die Ersteinrichtung, danach die Übersicht", async () 
   expect(
     await screen.findByRole("heading", { name: "Übersicht" }),
   ).toBeTruthy();
+});
+
+it("die Ersteinrichtung bietet das Wiederherstellen einer Sicherung an", async () => {
+  const user = userEvent.setup();
+  render(<App />);
+  const backup = createBackup(
+    {
+      persons: [testPerson({ name: "Hans" })],
+      vaccinations: [testVaccination()],
+      decisions: [],
+      settings: DEFAULT_SETTINGS,
+    },
+    new Date("2026-11-20T09:00:00Z"),
+  );
+  await screen.findByLabelText("Name");
+  await user.upload(
+    document.querySelector<HTMLInputElement>('input[type="file"]')!,
+    new File([serializeBackup(backup)], "sicherung.json"),
+  );
+
+  const dialog = await screen.findByRole("alertdialog");
+  expect(dialog.textContent).toContain("Diese Sicherung übernehmen?");
+  expect(dialog.textContent).not.toContain("gelöscht");
+  await user.click(screen.getByRole("button", { name: "Übernehmen" }));
+
+  expect(
+    await screen.findByRole("heading", { name: "Übersicht" }),
+  ).toBeTruthy();
+  expect(screen.getByText("Tetanus")).toBeTruthy();
 });
 
 it("die angelegte Person bleibt nach einem Neustart erhalten", async () => {

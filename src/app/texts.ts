@@ -1,4 +1,19 @@
 // Alle Texte der Oberfläche an einer Stelle, damit Begriffe einheitlich bleiben.
+/** „Hans“, „Hans und Christa“, „Hans, Christa und Paul“ */
+function joinNames(names: readonly string[]): string {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} und ${names[names.length - 1]}`;
+}
+
+function backupSummary(
+  date: string,
+  names: readonly string[],
+  count: number,
+): string {
+  const forWhom = names.length > 0 ? ` für ${joinNames(names)}` : "";
+  return `Die Sicherung vom ${date}${forWhom} enthält ${count} ${count === 1 ? "Impfung" : "Impfungen"}.`;
+}
+
 export const T = {
   app: {
     name: "ImpfPass",
@@ -38,6 +53,7 @@ export const T = {
     name: "Name",
     birthDate: "Geburtsdatum",
     submit: "Weiter",
+    restoreHint: "Du hast schon eine Sicherung von ImpfPass?",
     errors: {
       nameMissing: "Bitte gib einen Namen ein.",
       birthDateMissing: "Bitte gib das Geburtsdatum ein.",
@@ -148,9 +164,13 @@ export const T = {
       "Die Sicherung konnte nicht erstellt werden. Bitte versuche es noch einmal.",
     restore: "Sicherung wiederherstellen",
     confirmTitle: "Alle Daten auf diesem Gerät durch die Sicherung ersetzen?",
-    confirmText: (date: string, count: number) =>
-      `Die Sicherung vom ${date} enthält ${count} ${count === 1 ? "Impfung" : "Impfungen"}. Was jetzt auf diesem Gerät gespeichert ist, wird dabei gelöscht.`,
+    confirmText: (date: string, names: readonly string[], count: number) =>
+      `${backupSummary(date, names, count)} Was jetzt auf diesem Gerät gespeichert ist, wird dabei gelöscht.`,
     confirmAction: "Ersetzen",
+    confirmTitleEmpty: "Diese Sicherung übernehmen?",
+    confirmTextEmpty: (date: string, names: readonly string[], count: number) =>
+      backupSummary(date, names, count),
+    confirmActionEmpty: "Übernehmen",
     restored: "Die Sicherung wurde wiederhergestellt.",
     restoreFailed:
       "Die Wiederherstellung hat nicht geklappt. Die bisherigen Daten sind unverändert.",
@@ -159,6 +179,7 @@ export const T = {
       tooNew:
         "Diese Sicherung stammt aus einer neueren Version von ImpfPass. Bitte aktualisiere die App.",
       corrupt: "Die Sicherung ist beschädigt und kann nicht gelesen werden.",
+      tooLarge: "Diese Datei ist zu groß für eine ImpfPass-Sicherung.",
     },
   },
 } as const;

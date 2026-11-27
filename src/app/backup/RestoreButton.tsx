@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate, todayISO } from "@/core/dates";
 import {
   BackupError,
+  MAX_BACKUP_BYTES,
   parseBackup,
   type BackupFile,
 } from "@/core/formats/backup";
@@ -20,7 +21,9 @@ import { useAppData } from "../data/AppData";
 import { T } from "../texts";
 
 export function RestoreButton() {
-  const { actions } = useAppData();
+  const { person, actions } = useAppData();
+  // Ohne Person (Ersteinrichtung) geht beim Übernehmen nichts verloren.
+  const empty = person === null;
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<BackupFile | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +36,10 @@ export function RestoreButton() {
     if (!file) return;
     setError(null);
     setDone(false);
+    if (file.size > MAX_BACKUP_BYTES) {
+      setError(T.backup.errors.tooLarge);
+      return;
+    }
     try {
       setPending(parseBackup(await file.text()));
     } catch (err) {
@@ -57,6 +64,10 @@ export function RestoreButton() {
   const created = pending
     ? formatDate(todayISO(new Date(pending.createdAt)), "day")
     : "";
+  const names = pending
+    ? pending.persons.map((p) => p.name).filter(Boolean)
+    : [];
+  const confirmText = empty ? T.backup.confirmTextEmpty : T.backup.confirmText;
 
   return (
     <div className="flex flex-col gap-2">
@@ -87,16 +98,18 @@ export function RestoreButton() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{T.backup.confirmTitle}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {empty ? T.backup.confirmTitleEmpty : T.backup.confirmTitle}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {pending &&
-                T.backup.confirmText(created, pending.vaccinations.length)}
+                confirmText(created, names, pending.vaccinations.length)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{T.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={confirm}>
-              {T.backup.confirmAction}
+              {empty ? T.backup.confirmActionEmpty : T.backup.confirmAction}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
