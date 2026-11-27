@@ -59,10 +59,14 @@ export const T = {
     addFirst: "Impfung eintragen",
     sort: {
       label: "Sortierung",
-      dateDesc: "Neueste zuerst",
-      dateAsc: "Älteste zuerst",
+      date: "Datum",
       product: "Impfstoff",
       disease: "Krankheit",
+      newestFirst: "Neueste zuerst",
+      oldestFirst: "Älteste zuerst",
+      aToZ: "A bis Z",
+      zToA: "Z bis A",
+      flipHint: "Zum Umdrehen nochmals tippen.",
     },
   },
   entry: {

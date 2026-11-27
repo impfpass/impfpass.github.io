@@ -1,18 +1,25 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { ListSort, Vaccination } from "@/core/model";
 import { useAppData } from "../data/AppData";
 import { T } from "../texts";
 import { groupByDisease, groupByProduct, sortByDate } from "./grouping";
+import { nextSort, splitSort, type SortKey } from "./sortOrder";
 import { VaccinationRow } from "./VaccinationRow";
 
-const SORTS: { value: ListSort; label: string }[] = [
-  { value: "date-desc", label: T.list.sort.dateDesc },
-  { value: "date-asc", label: T.list.sort.dateAsc },
-  { value: "product", label: T.list.sort.product },
-  { value: "disease", label: T.list.sort.disease },
+const SORT_KEYS: { key: SortKey; label: string }[] = [
+  { key: "date", label: T.list.sort.date },
+  { key: "product", label: T.list.sort.product },
+  { key: "disease", label: T.list.sort.disease },
 ];
+
+function directionText(sort: ListSort): string {
+  const { key, dir } = splitSort(sort);
+  if (key === "date") {
+    return dir === "desc" ? T.list.sort.newestFirst : T.list.sort.oldestFirst;
+  }
+  return dir === "asc" ? T.list.sort.aToZ : T.list.sort.zToA;
+}
 
 function Rows({ items }: { items: Vaccination[] }) {
   return (
@@ -29,11 +36,10 @@ function Rows({ items }: { items: Vaccination[] }) {
 export function ListScreen() {
   const { vaccinations, settings, actions } = useAppData();
   const sort = settings.listSort;
+  const { key: sortKey, dir } = splitSort(sort);
 
-  function changeSort(value: string) {
-    // Radix meldet "" beim erneuten Antippen der gewählten Stufe.
-    if (!value || value === sort) return;
-    void actions.saveSettings({ ...settings, listSort: value as ListSort });
+  function choose(key: SortKey) {
+    void actions.saveSettings({ ...settings, listSort: nextSort(sort, key) });
   }
 
   let content;
@@ -46,17 +52,13 @@ export function ListScreen() {
         </Button>
       </div>
     );
-  } else if (sort === "date-desc" || sort === "date-asc") {
-    content = (
-      <Rows
-        items={sortByDate(vaccinations, sort === "date-asc" ? "asc" : "desc")}
-      />
-    );
+  } else if (sortKey === "date") {
+    content = <Rows items={sortByDate(vaccinations, dir)} />;
   } else {
     const groups =
-      sort === "product"
-        ? groupByProduct(vaccinations)
-        : groupByDisease(vaccinations);
+      sortKey === "product"
+        ? groupByProduct(vaccinations, dir)
+        : groupByDisease(vaccinations, dir);
     content = (
       <div className="flex flex-col gap-6">
         {groups.map((g) => (
@@ -72,21 +74,28 @@ export function ListScreen() {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">{T.list.title}</h1>
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        spacing={1}
-        value={sort}
-        onValueChange={changeSort}
-        aria-label={T.list.sort.label}
-        className="grid w-full grid-cols-2"
-      >
-        {SORTS.map((s) => (
-          <ToggleGroupItem key={s.value} value={s.value} className="w-full">
-            {s.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <div className="flex flex-col gap-1">
+        <div
+          role="group"
+          aria-label={T.list.sort.label}
+          className="grid w-full grid-cols-3 gap-2"
+        >
+          {SORT_KEYS.map((s) => (
+            <Button
+              key={s.key}
+              type="button"
+              variant={s.key === sortKey ? "default" : "outline"}
+              aria-pressed={s.key === sortKey}
+              onClick={() => choose(s.key)}
+            >
+              {s.label}
+            </Button>
+          ))}
+        </div>
+        <p role="status" className="text-muted-foreground">
+          {directionText(sort)}. {T.list.sort.flipHint}
+        </p>
+      </div>
       {content}
     </div>
   );

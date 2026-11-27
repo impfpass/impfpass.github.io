@@ -54,6 +54,16 @@ const data: BackupData = {
 
 const validFile = () => JSON.parse(serializeBackup(createBackup(data, now)));
 
+it("Sortierung älterer Versionen wird umgesetzt, unbekannte wird Standard", () => {
+  const file = validFile();
+  file.settings.listSort = "product";
+  expect(parseBackup(JSON.stringify(file)).settings.listSort).toBe(
+    "product-asc",
+  );
+  file.settings.listSort = "unbekannt";
+  expect(parseBackup(JSON.stringify(file)).settings.listSort).toBe("date-desc");
+});
+
 it("Hin- und Rückweg ergibt dieselben Daten", () => {
   const backup = createBackup(data, now);
   expect(backup).toMatchObject({

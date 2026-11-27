@@ -8,6 +8,7 @@ import type {
   Settings,
   Vaccination,
 } from "../model";
+import { normalizeListSort } from "../model";
 
 /** zod-Schemata für die Datensicherung, in Plan 3 auch für den Import. */
 
@@ -72,7 +73,7 @@ export const decisionSchema: z.ZodType<Decision> = z.object({
 export const settingsSchema: z.ZodType<Settings> = z.object({
   leadMonths: z.number().int().min(0),
   seasonDay: z.string().regex(/^\d{2}-\d{2}$/),
-  listSort: z.enum(["date-desc", "date-asc", "product", "disease"]),
+  listSort: z.string().transform(normalizeListSort),
   gtdUrl: z.string().optional(),
   lastBackupAt: z.string().optional(),
   installHintDismissed: z.boolean().optional(),

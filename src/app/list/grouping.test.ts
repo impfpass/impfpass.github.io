@@ -133,3 +133,29 @@ it("nach Impfstoff: Titel ist der Produktname, Gruppen alphabetisch", () => {
     "shingrix",
   ]);
 });
+
+it("Gruppen auch von Z bis A, Einträge bleiben neueste zuerst", () => {
+  const shingrix = testVaccination({
+    id: "s",
+    productId: "shingrix",
+    label: "Shingrix",
+    diseases: ["zoster"],
+  });
+  const oldBoostrix = testVaccination({ id: "old", date: "2010-01-01" });
+  const newBoostrix = testVaccination({ id: "new", date: "2020-01-01" });
+  const all = [oldBoostrix, shingrix, newBoostrix];
+
+  const products = groupByProduct(all, "desc");
+  expect(products.map((g) => g.title)).toEqual(["Shingrix", "Boostrix Polio"]);
+  expect(products[1].items.map((v) => v.id)).toEqual(["new", "old"]);
+
+  const diseases = groupByDisease(all, "desc");
+  expect(diseases.map((g) => g.title)).toEqual([
+    "Tetanus",
+    "Kinderlähmung (Polio)",
+    "Keuchhusten",
+    "Gürtelrose",
+    "Diphtherie",
+  ]);
+  expect(diseases[0].items.map((v) => v.id)).toEqual(["new", "old"]);
+});

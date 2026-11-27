@@ -1,5 +1,5 @@
 import { IDBFactory } from "fake-indexeddb";
-import type { Person, Settings, Vaccination } from "../model";
+import type { ListSort, Person, Settings, Vaccination } from "../model";
 import { DEFAULT_ANSWERS } from "../model";
 import {
   openRepository,
@@ -81,11 +81,21 @@ it("speichert Einstellungen", async () => {
   const s: Settings = {
     leadMonths: 3,
     seasonDay: "09-15",
-    listSort: "disease",
+    listSort: "disease-desc",
     lastBackupAt: "2026-11-26T10:00:00.000Z",
   };
   await repo.saveSettings(s);
   expect(await repo.getSettings()).toEqual(s);
+});
+
+it("liest gespeicherte Sortierung älterer Versionen als A bis Z", async () => {
+  // Bis Commit fef589e hieß die Sortierung "product" bzw. "disease".
+  await repo.saveSettings({
+    leadMonths: 6,
+    seasonDay: "09-01",
+    listSort: "disease" as string as ListSort,
+  });
+  expect((await repo.getSettings()).listSort).toBe("disease-asc");
 });
 
 it("replaceAll ersetzt alles, exportAll liefert es zurück", async () => {
@@ -94,7 +104,7 @@ it("replaceAll ersetzt alles, exportAll liefert es zurück", async () => {
   await repo.saveSettings({
     leadMonths: 1,
     seasonDay: "10-01",
-    listSort: "product",
+    listSort: "product-asc",
   });
 
   const data: BackupData = {

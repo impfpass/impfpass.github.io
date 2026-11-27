@@ -28,12 +28,24 @@ export function sortByDate(
   );
 }
 
+/** Gruppen nach Titel, A bis Z oder Z bis A. */
+function sortByTitle(groups: Group[], dir: "asc" | "desc"): Group[] {
+  const sign = dir === "asc" ? 1 : -1;
+  return groups.sort((x, y) => sign * x.title.localeCompare(y.title, "de"));
+}
+
 function productKey(v: Vaccination): string {
   return v.productId ?? `text:${normalizeLabel(v.label)}`;
 }
 
-/** Eine Gruppe je Impfstoff bzw. je Freitext-Bezeichnung, alphabetisch. */
-export function groupByProduct(vs: Vaccination[]): Group[] {
+/**
+ * Eine Gruppe je Impfstoff bzw. je Freitext-Bezeichnung, alphabetisch.
+ * Innerhalb der Gruppen stehen die neuesten Einträge oben.
+ */
+export function groupByProduct(
+  vs: Vaccination[],
+  dir: "asc" | "desc" = "asc",
+): Group[] {
   const groups = new Map<string, Group>();
   // Neueste zuerst, damit der Titel einer Freitext-Gruppe der jüngsten
   // Schreibweise folgt.
@@ -47,19 +59,22 @@ export function groupByProduct(vs: Vaccination[]): Group[] {
     }
     group.items.push(v);
   }
-  return [...groups.values()].sort((x, y) =>
-    x.title.localeCompare(y.title, "de"),
-  );
+  return sortByTitle([...groups.values()], dir);
 }
 
-/** Eine Gruppe je vorkommender Krankheit, alphabetisch nach deutschem Namen. */
-export function groupByDisease(vs: Vaccination[]): Group[] {
+/**
+ * Eine Gruppe je vorkommender Krankheit, alphabetisch nach deutschem Namen.
+ * Innerhalb der Gruppen stehen die neuesten Einträge oben.
+ */
+export function groupByDisease(
+  vs: Vaccination[],
+  dir: "asc" | "desc" = "asc",
+): Group[] {
   const sorted = sortByDate(vs, "desc");
-  return DISEASE_IDS.map((d) => ({
+  const groups = DISEASE_IDS.map((d) => ({
     key: d,
     title: DISEASES[d].name,
     items: sorted.filter((v) => v.diseases.includes(d)),
-  }))
-    .filter((g) => g.items.length > 0)
-    .sort((x, y) => x.title.localeCompare(y.title, "de"));
+  })).filter((g) => g.items.length > 0);
+  return sortByTitle(groups, dir);
 }

@@ -1,5 +1,5 @@
 import type { Decision, Person, Settings, Vaccination } from "../model";
-import { DEFAULT_SETTINGS } from "../model";
+import { DEFAULT_SETTINGS, normalizeListSort } from "../model";
 import {
   openDatabase,
   SETTINGS_KEY,
@@ -52,7 +52,8 @@ export async function openRepository(): Promise<Repository> {
 function createRepository(db: ImpfPassDatabase): Repository {
   const getSettings = async (): Promise<Settings> => {
     const stored = await db.get("settings", SETTINGS_KEY);
-    return { ...DEFAULT_SETTINGS, ...stored };
+    const settings = { ...DEFAULT_SETTINGS, ...stored };
+    return { ...settings, listSort: normalizeListSort(settings.listSort) };
   };
 
   return {

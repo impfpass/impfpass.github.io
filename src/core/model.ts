@@ -54,7 +54,37 @@ export interface Decision {
   at: string;
 }
 
-export type ListSort = "date-desc" | "date-asc" | "product" | "disease";
+/** Sortierung der Impfliste: wonach und in welche Richtung. */
+export type ListSort =
+  | "date-desc"
+  | "date-asc"
+  | "product-asc"
+  | "product-desc"
+  | "disease-asc"
+  | "disease-desc";
+
+const LIST_SORTS: readonly string[] = [
+  "date-desc",
+  "date-asc",
+  "product-asc",
+  "product-desc",
+  "disease-asc",
+  "disease-desc",
+] satisfies ListSort[];
+
+/**
+ * Macht aus einem gespeicherten Wert eine gültige Sortierung. Bis Commit
+ * fef589e hieß es "product" bzw. "disease" (immer A bis Z); unbekannte Werte
+ * ergeben die Voreinstellung.
+ */
+export function normalizeListSort(value: unknown): ListSort {
+  if (value === "product") return "product-asc";
+  if (value === "disease") return "disease-asc";
+  if (typeof value === "string" && LIST_SORTS.includes(value)) {
+    return value as ListSort;
+  }
+  return "date-desc";
+}
 
 export interface Settings {
   leadMonths: number;

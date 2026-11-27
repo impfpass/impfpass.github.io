@@ -120,7 +120,7 @@ it("Wiederherstellen übernimmt keine Geräte-Einstellungen aus der Sicherung", 
       decisions: [],
       settings: {
         ...DEFAULT_SETTINGS,
-        listSort: "disease",
+        listSort: "disease-desc",
         installHintDismissed: true,
         lastBackupAt: "2020-01-01T08:00:00.000Z",
       },
@@ -137,7 +137,7 @@ it("Wiederherstellen übernimmt keine Geräte-Einstellungen aus der Sicherung", 
   await waitFor(() => expect(data().person?.name).toBe("Hans"));
   // Sortierung kommt aus der Sicherung, der Installationshinweis gehört zum Gerät,
   // und die Daten auf dem Gerät entsprechen jetzt genau dieser Sicherung.
-  expect(data().settings.listSort).toBe("disease");
+  expect(data().settings.listSort).toBe("disease-desc");
   expect(data().settings.installHintDismissed).toBeUndefined();
   expect(data().settings.lastBackupAt).toBe("2026-11-20T09:00:00.000Z");
   const repo = await openRepository();

@@ -1,5 +1,6 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ListSort } from "@/core/model";
 import { openRepository } from "@/core/storage/repository";
 import {
   renderWithData,
@@ -15,13 +16,13 @@ it("Sortierung wird gespeichert und nach Löschen ist der Eintrag überall weg",
   const { data } = await renderWithData(<ListScreen />, "/impfungen");
 
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(1);
-  await user.click(screen.getByRole("radio", { name: "Krankheit" }));
+  await user.click(screen.getByRole("button", { name: "Krankheit" }));
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(4);
 
-  expect(data().settings.listSort).toBe("disease");
+  expect(data().settings.listSort).toBe("disease-asc");
   const repo = await openRepository();
   await waitFor(async () =>
-    expect((await repo.getSettings()).listSort).toBe("disease"),
+    expect((await repo.getSettings()).listSort).toBe("disease-asc"),
   );
 
   await act(() => data().actions.deleteVaccination("v1"));
@@ -43,17 +44,73 @@ it("zeigt Datum, Impfstoff und Krankheiten einer Impfung", async () => {
   expect(link.getAttribute("href")).toBe("#/impfungen/v1");
 });
 
-it("gespeicherte Sortierung wird beim Öffnen verwendet", async () => {
+it("erneutes Antippen dreht die Reihenfolge um", async () => {
+  await seed({
+    vaccinations: [
+      testVaccination({ id: "bp", date: "2020-01-01" }),
+      testVaccination({
+        id: "sh",
+        date: "2010-01-01",
+        productId: "shingrix",
+        label: "Shingrix",
+        diseases: ["zoster"],
+      }),
+    ],
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<ListScreen />, "/impfungen");
+  const rows = () =>
+    screen.getAllByRole("link").map((l) => l.getAttribute("href"));
+  const headings = () =>
+    screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+  const pressed = (name: string) =>
+    screen.getByRole("button", { name }).getAttribute("aria-pressed");
+  const status = () => screen.getByRole("status").textContent;
+
+  expect(pressed("Datum")).toBe("true");
+  expect(status()).toContain("Neueste zuerst");
+  expect(rows()).toEqual(["#/impfungen/bp", "#/impfungen/sh"]);
+
+  await user.click(screen.getByRole("button", { name: "Datum" }));
+  expect(status()).toContain("Älteste zuerst");
+  expect(rows()).toEqual(["#/impfungen/sh", "#/impfungen/bp"]);
+  expect(data().settings.listSort).toBe("date-asc");
+
+  await user.click(screen.getByRole("button", { name: "Impfstoff" }));
+  expect(pressed("Impfstoff")).toBe("true");
+  expect(pressed("Datum")).toBe("false");
+  expect(status()).toContain("A bis Z");
+  expect(headings()).toEqual(["Boostrix Polio", "Shingrix"]);
+
+  await user.click(screen.getByRole("button", { name: "Impfstoff" }));
+  expect(status()).toContain("Z bis A");
+  expect(headings()).toEqual(["Shingrix", "Boostrix Polio"]);
+  expect(data().settings.listSort).toBe("product-desc");
+
+  await user.click(screen.getByRole("button", { name: "Krankheit" }));
+  expect(status()).toContain("A bis Z");
+  expect(headings()[0]).toBe("Diphtherie");
+  await user.click(screen.getByRole("button", { name: "Krankheit" }));
+  expect(headings()[0]).toBe("Tetanus");
+  expect(data().settings.listSort).toBe("disease-desc");
+});
+
+it("gespeicherte Sortierung älterer Versionen wird beim Öffnen verwendet", async () => {
   await seed({
     vaccinations: [testVaccination()],
-    settings: { leadMonths: 6, seasonDay: "09-01", listSort: "disease" },
+    settings: {
+      leadMonths: 6,
+      seasonDay: "09-01",
+      listSort: "disease" as string as ListSort,
+    },
   });
   await renderWithData(<ListScreen />, "/impfungen");
   expect(
     screen
-      .getByRole("radio", { name: "Krankheit" })
-      .getAttribute("aria-checked"),
+      .getByRole("button", { name: "Krankheit" })
+      .getAttribute("aria-pressed"),
   ).toBe("true");
+  expect(screen.getByRole("status").textContent).toContain("A bis Z");
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(4);
 });
 
