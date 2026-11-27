@@ -317,6 +317,36 @@ describe("draftToEntries", () => {
     });
   });
 
+  it("ein unscharf erkannter Name wird zum Namen des Impfstoffs", () => {
+    const r = withLabel(
+      { ...newRow("a"), date: "05.12.2016" },
+      "Bostrix Polio",
+    );
+    expect(draftToEntries(draftOf([r]), today)[0]).toMatchObject({
+      productId: "boostrix-polio",
+      label: "Boostrix Polio",
+    });
+  });
+
+  it("ein Name ohne erkannten Impfstoff bleibt wie eingegeben", () => {
+    const r = withDiseases(
+      withLabel({ ...newRow("a"), date: "1990" }, "Tetanol alt"),
+      ["tetanus"],
+    );
+    expect(draftToEntries(draftOf([r]), today)[0]).toMatchObject({
+      productId: null,
+      label: "Tetanol alt",
+    });
+  });
+
+  it("ein genau erkannter Name bleibt wie eingegeben", () => {
+    const r = withLabel({ ...newRow("a"), date: "05.12.2016" }, "Boostrix-IPV");
+    expect(draftToEntries(draftOf([r]), today)[0]).toMatchObject({
+      productId: "boostrix-polio",
+      label: "Boostrix-IPV",
+    });
+  });
+
   it("wirft bei einem Fehler", () => {
     expect(() => draftToEntries(draftOf([row("a", "")]), today)).toThrow();
   });

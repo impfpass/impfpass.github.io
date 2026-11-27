@@ -266,6 +266,22 @@ export function checkDraft(
   return result;
 }
 
+/**
+ * Die Bezeichnung für die Übertragung. Ein unscharf erkannter Name ist meist
+ * ein Lesefehler des Chatbots; dann gilt der Name des erkannten Impfstoffs.
+ */
+function entryLabel(row: DraftRow): string {
+  const label = row.label.trim();
+  if (!label) return diseaseLabel(row.diseases);
+  if (row.productId !== null) {
+    const rec = recognizeProduct(label);
+    if (rec.kind === "fuzzy" && rec.product.id === row.productId) {
+      return rec.product.name;
+    }
+  }
+  return label;
+}
+
 /** Die Einträge für die Übertragung. Wirft, solange eine Zeile einen Fehler hat. */
 export function draftToEntries(draft: Draft, today: ISODate): TransferEntry[] {
   if (draft.rows.length > MAX_TRANSFER_ENTRIES) {
@@ -286,7 +302,7 @@ export function draftToEntries(draft: Draft, today: ISODate): TransferEntry[] {
       date: date.date,
       datePrecision: date.precision,
       productId: row.productId,
-      label: row.label.trim() || diseaseLabel(row.diseases),
+      label: entryLabel(row),
       diseases: [...row.diseases],
     };
     const batch = row.batch.trim();
