@@ -11,6 +11,7 @@ import { InstallHint } from "../InstallHint";
 import { DiscussCard } from "./DiscussCard";
 import { groupForOverview, type Light } from "./lights";
 import { NoticeBanner } from "./NoticeBanner";
+import { otherHint } from "./otherHint";
 import { RecommendationRow } from "./RecommendationRow";
 import { TbeQuestion } from "./TbeQuestion";
 
@@ -73,30 +74,36 @@ export function OverviewScreen() {
         <section className="flex flex-col gap-2">
           <h2 className="text-xl font-semibold">{T.overview.others}</h2>
           <ul className="flex flex-col divide-y">
-            {groups.others.map(({ disease, last }) => (
-              <li key={disease}>
-                <Link
-                  href={`/impfungen/${last.id}`}
-                  className="flex min-h-14 items-center gap-3 rounded-md px-2 py-2 hover:bg-accent"
-                >
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="font-medium">
-                      {DISEASES[disease].name}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {T.overview.lastVaccinated(
-                        formatDate(last.date, last.datePrecision),
-                        last.datePrecision,
+            {groups.others.map(({ disease, last }) => {
+              const hint = otherHint(disease, vaccinations);
+              return (
+                <li key={disease}>
+                  <Link
+                    href={`/impfungen/${last.id}`}
+                    className="flex min-h-14 items-center gap-3 rounded-md px-2 py-2 hover:bg-accent"
+                  >
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="font-medium">
+                        {DISEASES[disease].name}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {T.overview.lastVaccinated(
+                          formatDate(last.date, last.datePrecision),
+                          last.datePrecision,
+                        )}
+                      </span>
+                      {hint && (
+                        <span className="text-muted-foreground">{hint}</span>
                       )}
                     </span>
-                  </span>
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-5 shrink-0"
-                  />
-                </Link>
-              </li>
-            ))}
+                    <ChevronRight
+                      aria-hidden="true"
+                      className="size-5 shrink-0"
+                    />
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </section>
       )}

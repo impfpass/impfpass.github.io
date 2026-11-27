@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { DEFAULT_ANSWERS } from "@/core/model";
+import { DEFAULT_ANSWERS, type Vaccination } from "@/core/model";
 import { RULEBOOK } from "@/core/rules/rulebook";
 import {
   renderWithData,
@@ -8,6 +8,7 @@ import {
   testPerson,
   testVaccination,
 } from "@/test/helpers";
+import { T } from "@/texts";
 import { OverviewScreen } from "./OverviewScreen";
 
 const TODAY = "2026-11-27";
@@ -239,4 +240,72 @@ it("unter 18 erscheint der Hinweis auf die Altersgrenze", async () => {
   ).toBeTruthy();
   expect(screen.getByText(/Tetanus/)).toBeTruthy();
   expect(screen.queryByText("Jetzt fällig")).toBeNull();
+});
+
+const shotOf = (
+  id: string,
+  date: string,
+  productId: string,
+  label: string,
+  diseases: Vaccination["diseases"],
+) => testVaccination({ id, date, productId, label, diseases });
+
+it("vollständige Hepatitis A steht unter „Geschützt“, Tollwut, BCG und Pocken mit Satz unter „Weitere Impfungen“", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1985-05-05" })],
+    vaccinations: [
+      shotOf("ha1", "2020-01-01", "havrix", "Havrix", ["hepatitis_a"]),
+      shotOf("ha2", "2020-08-01", "havrix", "Havrix", ["hepatitis_a"]),
+      shotOf("r1", "2019-01-01", "rabipur", "Rabipur", ["rabies"]),
+      shotOf("r2", "2019-01-08", "rabipur", "Rabipur", ["rabies"]),
+      shotOf("r3", "2019-01-29", "rabipur", "Rabipur", ["rabies"]),
+      shotOf("bcg", "1970-01-01", "bcg", "BCG", ["tuberculosis"]),
+      shotOf("pk", "1970-06-01", "pocken", "Pocken-Impfstoff", ["smallpox"]),
+    ],
+  });
+  await renderWithData(<OverviewScreen />, "/", { today: TODAY });
+
+  const green = screen
+    .getByRole("heading", { name: "Geschützt" })
+    .closest("section")!;
+  const hepA = within(green).getByRole("link", { name: /Hepatitis A/ });
+  expect(hepA.textContent).toContain(
+    "geschützt, Auffrischung derzeit nicht vorgesehen",
+  );
+  const others = screen
+    .getByRole("heading", { name: "Weitere Impfungen" })
+    .closest("section")!;
+  expect(within(others).queryByText("Hepatitis A")).toBeNull();
+  const H = T.overview.otherHints;
+  expect(within(others).getByText(H.rabiesComplete)).toBeTruthy();
+  expect(within(others).getByText(H.tuberculosis)).toBeTruthy();
+  expect(within(others).getByText(H.smallpox)).toBeTruthy();
+});
+
+it("„Möchte ich nicht“ bei Hepatitis A: ausgeblendet und nicht unter „Weitere Impfungen“", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1985-05-05" })],
+    vaccinations: [
+      shotOf("ha1", "2026-03-27", "havrix", "Havrix", ["hepatitis_a"]),
+      shotOf("bcg", "1970-01-01", "bcg", "BCG", ["tuberculosis"]),
+    ],
+    decisions: [
+      {
+        personId: "p1",
+        recommendationId: "hepatitis_a",
+        kind: "declined",
+        at: "2026-11-27T10:00:00.000Z",
+      },
+    ],
+  });
+  await renderWithData(<OverviewScreen />, "/", { today: TODAY });
+
+  const hidden = screen
+    .getByRole("heading", { name: "Ausgeblendet" })
+    .closest("section")!;
+  expect(within(hidden).getByText("Hepatitis A")).toBeTruthy();
+  const others = screen
+    .getByRole("heading", { name: "Weitere Impfungen" })
+    .closest("section")!;
+  expect(within(others).queryByText("Hepatitis A")).toBeNull();
 });

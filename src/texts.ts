@@ -124,6 +124,18 @@ export const T = {
     },
     makeAppointment: "Termin ausmachen",
     others: "Weitere Impfungen",
+    otherHints: {
+      rabiesComplete:
+        "Grundimmunisierung vollständig, für Reisen ist keine Auffrischung nötig. Nach einem Biss trotzdem sofort zum Arzt.",
+      rabiesTwo:
+        "2 von 3 Dosen. Besteht weiter ein Risiko, empfiehlt die STIKO die 3. innerhalb eines Jahres. Nach einem Biss sofort zum Arzt.",
+      rabiesOne:
+        "Eine Dosis zählt noch nicht als Schutz. Nach einem Biss sofort zum Arzt.",
+      tuberculosis:
+        "Die STIKO empfiehlt die BCG-Impfung nicht mehr. Eine Auffrischung gibt es nicht.",
+      smallpox:
+        "Keine Auffrischung vorgesehen. Bei einer Mpox-Impfung zählt sie mit, dann reicht meist 1 Dosis.",
+    },
     hidden: "Ausgeblendet",
     declined: "Möchte ich nicht",
     notNeeded: (reason: string | undefined) =>
