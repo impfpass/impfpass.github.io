@@ -397,6 +397,28 @@ So füllst du die Felder:
       noEntries: "Die Antwort enthält keine Impfungen.",
       tooLong: "Die Antwort ist zu lang. Füge höchstens 1 MB Text ein.",
     },
+    issues: {
+      dateMissing: "Datum fehlt.",
+      dateInvalid: "Datum nicht lesbar. Schreib TT.MM.JJJJ, MM.JJJJ oder JJJJ.",
+      dateFuture: "Das Datum liegt in der Zukunft.",
+      dateBeforeBirth: "Das Datum liegt vor dem Geburtsdatum.",
+      noDisease: "Impfstoff nicht erkannt. Wähle die Krankheiten.",
+      textTooLong: "Text zu lang, höchstens 500 Zeichen je Feld.",
+      productFuzzy: (read: string, name: string) =>
+        `Gelesen „${read}“, erkannt als ${name}.`,
+      productAmbiguous: "Mehrere Impfstoffe passen:",
+      productUnknown:
+        "Impfstoff nicht in der Liste. Die Krankheiten sind von Hand gewählt.",
+      fields: {
+        date: "Datum",
+        label: "Impfstoff",
+        batch: "Charge",
+        doctor: "Arzt oder Praxis",
+        diseases: "Krankheiten",
+      },
+      unsure: (fields: string[]) => `Unsicher gelesen: ${fields.join(", ")}.`,
+      duplicate: (n: number) => `Vielleicht doppelt, siehe Zeile ${n}.`,
+    },
     hints: {
       diseaseUnknown: (name: string) => `Krankheit „${name}“ nicht erkannt.`,
     },

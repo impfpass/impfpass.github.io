@@ -25,8 +25,9 @@ export const MAX_TRANSFER_BYTES = 1_000_000;
 
 const TRANSFER_VERSION = 1;
 const MAX_PARTS = 99;
-const MAX_ENTRIES = 2000;
-const MAX_TEXT = 500;
+/** Grenzen, die das Handy beim Lesen durchsetzt; der PC hält sie beim Erzeugen ein. */
+export const MAX_TRANSFER_ENTRIES = 2000;
+export const MAX_TEXT_LENGTH = 500;
 
 const ID_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 const ID_LENGTH = 6;
@@ -78,7 +79,7 @@ const wireDateSchema = z
   .string()
   .regex(WIRE_DATE)
   .refine((s) => isValidISODate(normalizeToPrecision(s, precisionOf(s))));
-const textSchema = z.string().min(1).max(MAX_TEXT);
+const textSchema = z.string().min(1).max(MAX_TEXT_LENGTH);
 /** `0` steht für die Voreinstellung, Nullen am Ende entfallen. */
 const orDefault = <S extends z.ZodType>(schema: S) =>
   z.union([z.literal(0), schema]).optional();
@@ -97,7 +98,7 @@ const wireEntrySchema = z.tuple([
 const wireSchema = z.object({
   i: z.string().regex(ID_PATTERN),
   c: timestampSchema,
-  e: z.array(wireEntrySchema).max(MAX_ENTRIES),
+  e: z.array(wireEntrySchema).max(MAX_TRANSFER_ENTRIES),
 });
 
 type WireEntry = z.infer<typeof wireEntrySchema>;

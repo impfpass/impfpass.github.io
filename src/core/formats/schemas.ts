@@ -9,6 +9,7 @@ import type {
   Settings,
   Vaccination,
 } from "../model";
+import type { Draft } from "../import/draft";
 import { normalizeListSort } from "../model";
 
 /** zod-Schemata für die Datensicherung, in Plan 3 auch für den Import. */
@@ -102,4 +103,28 @@ export const ruleStateSchema: z.ZodType<RuleState> = z.object({
       validSince: isoDateSchema.nullable(),
     }),
   ),
+});
+
+const rowFieldSchema = z.enum(["date", "label", "batch", "doctor", "diseases"]);
+
+/** Entwurf der PC-App (Plan 3), liegt in der Datenbank `impfpass-import`. */
+export const draftSchema: z.ZodType<Draft> = z.object({
+  version: z.literal(1),
+  birthDate: z.string(),
+  rows: z.array(
+    z.object({
+      id: z.string().min(1),
+      date: z.string(),
+      label: z.string(),
+      productId: z.string().min(1).nullable(),
+      diseases: z.array(diseaseIdSchema),
+      batch: z.string(),
+      doctor: z.string(),
+      note: z.string(),
+      unsure: z.array(rowFieldSchema),
+      hints: z.array(z.string()),
+      reviewed: z.boolean(),
+    }),
+  ),
+  updatedAt: timestampSchema,
 });
