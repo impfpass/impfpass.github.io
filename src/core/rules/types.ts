@@ -89,6 +89,11 @@ export interface Rule {
   discussTopic?: "chronic" | "serology";
   /** Zielgruppe, wie die STIKO sie beschreibt (Text der Karte). */
   discussTargetGroup?: string;
+  /**
+   * Die STIKO empfiehlt die Impfung allen ab einem Alter und bei
+   * Grunderkrankung früher; dann nennt die Detailansicht das.
+   */
+  discussEarlier?: boolean;
   evaluate(ctx: RuleContext): RuleResult;
 }
 

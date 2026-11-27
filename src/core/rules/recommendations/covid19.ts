@@ -14,6 +14,7 @@ export const covid19Rule: Rule = {
   diseases: ["covid19"],
   source: SOURCE,
   discussTopic: "chronic",
+  discussEarlier: true,
   discussTargetGroup:
     "Personen im Alter von ≥ 6 Monaten bei erhöhter gesundheitlicher Gefährdung für einen schweren COVID-19-Verlauf infolge einer Grunderkrankung",
   evaluate(ctx): RuleResult {

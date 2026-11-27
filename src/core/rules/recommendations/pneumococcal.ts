@@ -12,6 +12,7 @@ export const pneumococcalRule: Rule = {
   diseases: ["pneumococcal"],
   source: SOURCE,
   discussTopic: "chronic",
+  discussEarlier: true,
   discussTargetGroup:
     "Kinder, Jugendliche und Erwachsene mit erhöhter gesundheitlicher Gefährdung infolge einer Grunderkrankung",
   evaluate(ctx): RuleResult {

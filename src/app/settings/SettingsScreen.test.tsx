@@ -138,3 +138,36 @@ it("geänderte Angaben werden mit „Angaben speichern“ gespeichert", async ()
   expect(data().person?.answers.fsme).toBe("no");
   expect(data().person?.answers.job.communityFacility).toBe(true);
 });
+
+it("Angaben: eigener Einleitungssatz ohne Verweis auf die Einstellungen", async () => {
+  await seed({});
+  await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(
+    screen.getByText(
+      "Manche Impfungen empfiehlt die STIKO nur bestimmten Menschen. Diese Angaben bleiben auf diesem Gerät.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByText(/später in den Einstellungen/)).toBeNull();
+});
+
+it("FSME auf „Ja“ hebt ein früheres „Nein“ zur FSME-Nachfrage auf", async () => {
+  await seed({
+    decisions: [
+      {
+        personId: "p1",
+        recommendationId: "tbe",
+        kind: "declined",
+        at: "2026-11-20T10:00:00.000Z",
+      },
+    ],
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(data().decisions).toHaveLength(1);
+
+  await user.click(screen.getByRole("radio", { name: "Ja" }));
+  await user.click(screen.getByRole("button", { name: "Angaben speichern" }));
+
+  await waitFor(() => expect(data().person?.answers.fsme).toBe("yes"));
+  await waitFor(() => expect(data().decisions).toEqual([]));
+});

@@ -130,7 +130,21 @@ export function AppDataProvider(props: {
     () => props.reload ?? (() => window.location.reload()),
   );
   const rulebook = props.rulebook ?? RULEBOOK;
-  const today = props.today ?? todayISO();
+  // Die installierte App bleibt oft tagelang geöffnet: Bei der Rückkehr in die
+  // App das Datum neu lesen. Gleiches Datum rendert nicht neu.
+  const [systemToday, setSystemToday] = useState(() => todayISO());
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === "visible") setSystemToday(todayISO());
+    };
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
+  }, []);
+  const today = props.today ?? systemToday;
   const [state, setState] = useState<State>(INITIAL);
 
   // Derselbe Stand wie `state.ruleState`, aber ohne neu zu rendern lesbar:

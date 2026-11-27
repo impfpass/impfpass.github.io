@@ -133,6 +133,12 @@ it("Hinweise erscheinen und verschwinden mit „Verstanden“", async () => {
             validSince: null,
           },
           {
+            kind: "new",
+            recommendationId: "pneumococcal",
+            text: null,
+            validSince: null,
+          },
+          {
             kind: "dropped",
             recommendationId: "varicella",
             text: "Windpocken fallen weg.",
@@ -151,9 +157,10 @@ it("Hinweise erscheinen und verschwinden mit „Verstanden“", async () => {
     screen.getByText("Neu: Neue RSV-Empfehlung. Betrifft dich."),
   ).toBeTruthy();
   expect(screen.getByText("Geändert: Gürtelrose")).toBeTruthy();
+  expect(screen.getByText("Neu: Pneumokokken. Betrifft dich.")).toBeTruthy();
   expect(screen.getByText("Entfällt: Windpocken fallen weg.")).toBeTruthy();
   const links = screen.getAllByRole("link", { name: "Ansehen" });
-  expect(links).toHaveLength(2);
+  expect(links).toHaveLength(3);
   expect(links[0].getAttribute("href")).toBe("#/empfehlungen/rsv");
 
   await user.click(screen.getByRole("button", { name: "Verstanden" }));

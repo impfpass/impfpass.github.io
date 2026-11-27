@@ -13,7 +13,7 @@ describe("mmrRule", () => {
     ).toMatchObject({
       status: "due",
       dueDate: null,
-      reason: { kind: "catch_up", given: 0, total: 1 },
+      reason: { kind: "series", given: 0, total: 1 },
     });
     expect(mmrRule.id).toBe("mmr");
     expect(mmrRule.diseases).toEqual(["measles", "mumps", "rubella"]);
@@ -34,7 +34,7 @@ describe("mmrRule", () => {
     expect(at("1990-01-01")).toMatchObject({
       status: "due",
       dueDate: null,
-      reason: { kind: "catch_up", given: 1, total: 2 },
+      reason: { kind: "series", given: 1, total: 2 },
     });
     expect(at("1998-02-28").status).toBe("due");
     expect(at("1998-03-01")).toMatchObject({

@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DEFAULT_ANSWERS } from "@/core/model";
 import { RULEBOOK } from "@/core/rules/rulebook";
@@ -195,6 +195,69 @@ it("Pneumokokken nach früherer PPSV23-Dosis: Datum und Begründung nennen den A
       "Letzte Impfung am 10.03.2022. Die STIKO empfiehlt die nächste frühestens 6 Jahre danach.",
     ),
   ).toBeTruthy();
+});
+
+it("Nachholhinweis rät, frühere Impfungen einzutragen", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1960-05-10" })],
+    vaccinations: [td("a", "2020-01-01")],
+  });
+  await open("td");
+  expect(
+    screen.getByText(
+      "Eingetragen sind 1 von 3 Impfungen der Grundimmunisierung. Stehen frühere Impfungen in einem anderen Impfpass, trag sie hier ein, auch wenn nur das Jahr bekannt ist. Dann rechnet ImpfPass mit den Auffrischungen weiter.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByText(/wähle „Nicht nötig“/)).toBeNull();
+});
+
+it("„Nicht nötig“ sagt, dass auch spätere Auffrischungen entfallen", async () => {
+  await seedTd();
+  const user = userEvent.setup();
+  await open("td");
+  const hint =
+    "Die Impfung erscheint dann nicht mehr unter den Empfehlungen, auch nicht für spätere Auffrischungen. Mit „Wieder anzeigen“ holst du sie zurück.";
+  expect(screen.queryByText(hint)).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Nicht nötig" }));
+  const group = screen.getByRole("group", {
+    name: "Warum ist die Impfung nicht nötig?",
+  });
+  expect(within(group).getByText(hint)).toBeTruthy();
+});
+
+it("MMR nennt die eine fehlende Impfung in der Einzahl", async () => {
+  await seed({ persons: [testPerson({ birthDate: "1980-03-01" })] });
+  await open("mmr");
+  expect(screen.getByText("Eingetragen sind 0 von 1 Impfung.")).toBeTruthy();
+});
+
+it("Hepatitis B nennt keine frühere Empfehlung bei Erkrankungen", async () => {
+  await seed({ persons: [testPerson({ birthDate: "1990-05-10" })] });
+  await open("hepatitis_b");
+  expect(
+    screen.queryByText(
+      "Bei bestimmten Erkrankungen empfiehlt die STIKO diese Impfung früher.",
+    ),
+  ).toBeNull();
+});
+
+it("ohne Statuszeile steht unter der Überschrift kein leerer Absatz", async () => {
+  await seed({
+    persons: [
+      testPerson({
+        birthDate: "1990-05-10",
+        answers: { ...DEFAULT_ANSWERS, chronicIllness: true },
+      }),
+    ],
+  });
+  const { data } = await open("zoster");
+  expect(data().recommendations.find((r) => r.id === "zoster")!.status).toBe(
+    "discuss",
+  );
+  const header = screen.getByRole("heading", { level: 1 }).parentElement!;
+  for (const p of header.querySelectorAll("p")) {
+    expect(p.textContent).not.toBe("");
+  }
 });
 
 it("unbekannte Empfehlung", async () => {

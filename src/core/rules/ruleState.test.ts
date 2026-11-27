@@ -142,6 +142,15 @@ describe("Neu-Erkennung", () => {
     expect(s.notices).toEqual([]);
   });
 
+  it("leerer Schnappschuss (etwa unter 18) ergibt mit neuerem Regelwerk keine Hinweise", () => {
+    const empty = nextRuleState(null, "p1", [], v1);
+    expect(empty.snapshot).toEqual([]);
+    const s = nextRuleState(empty, "p1", recsV2, v2);
+    expect(s.notices).toEqual([]);
+    expect(s.seenVersion).toBe("2027-01-15.1");
+    expect(s.snapshot.map((e) => e.id)).toEqual(["a", "b", "c"]);
+  });
+
   it("abgelehnte Empfehlungen stehen nicht im Schnappschuss", () => {
     const snap = snapshotOf([
       rec("a", { status: "declined" }),

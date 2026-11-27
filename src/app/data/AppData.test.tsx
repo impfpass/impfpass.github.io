@@ -68,6 +68,45 @@ it("verbindet sich nach einem Abbruch der Datenbank neu", async () => {
   await waitFor(() => expect(data().status).toBe("ready"));
 });
 
+describe("Tagesdatum", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("liest das Datum bei Rückkehr in die App neu", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 27, 23, 30));
+    const data = renderProvider({});
+    await waitFor(() => expect(data().status).toBe("ready"));
+    expect(data().today).toBe("2026-11-27");
+
+    vi.setSystemTime(new Date(2026, 10, 28, 7, 0));
+    expect(document.visibilityState).toBe("visible");
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(data().today).toBe("2026-11-28");
+
+    vi.setSystemTime(new Date(2026, 10, 29, 7, 0));
+    act(() => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    expect(data().today).toBe("2026-11-29");
+  });
+
+  it("der Tag aus den Props hat Vorrang", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 10, 27, 12, 0));
+    const data = renderProvider({ today: "2026-01-15" });
+    await waitFor(() => expect(data().status).toBe("ready"));
+    vi.setSystemTime(new Date(2026, 10, 28, 12, 0));
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(data().today).toBe("2026-01-15");
+  });
+});
+
 // Test-Regelwerk mit festen Regeln, damit die Tests nicht von den
 // STIKO-Regeln abhängen.
 const TODAY = "2026-11-27";

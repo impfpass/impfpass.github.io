@@ -58,7 +58,7 @@ function ProfileForm({ person }: { person: Person }) {
 }
 
 function AnswersForm({ person }: { person: Person }) {
-  const { actions } = useAppData();
+  const { decisions, actions } = useAppData();
   const [answers, setAnswers] = useState<PersonAnswers>(person.answers);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -67,6 +67,17 @@ function AnswersForm({ person }: { person: Person }) {
     setMessage(null);
     try {
       await actions.updatePerson({ ...person, answers });
+      // „Nein“ zur FSME-Nachfrage auf der Übersicht gilt nach „Ja“ nicht mehr.
+      const tbeDeclined = decisions.some(
+        (d) => d.recommendationId === "tbe" && d.kind === "declined",
+      );
+      if (
+        answers.fsme === "yes" &&
+        person.answers.fsme !== "yes" &&
+        tbeDeclined
+      ) {
+        await actions.deleteDecision("tbe");
+      }
       setMessage(T.settings.saved);
     } catch {
       setMessage(T.common.saveFailed);
@@ -75,7 +86,7 @@ function AnswersForm({ person }: { person: Person }) {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
-      <p>{T.answers.intro}</p>
+      <p>{T.settings.answersIntro}</p>
       <AnswersFields idPrefix="answers" value={answers} onChange={setAnswers} />
       <Button type="submit" variant="outline">
         {T.settings.saveAnswers}

@@ -12,6 +12,7 @@ export const rsvRule: Rule = {
   diseases: ["rsv"],
   source: SOURCE,
   discussTopic: "chronic",
+  discussEarlier: true,
   discussTargetGroup:
     "Personen im Alter von 60 – 74 Jahren mit schweren Ausprägungen von chronischen Erkrankungen der Atmungsorgane, chronischen Herz-Kreislauf- und Nierenerkrankungen, hämato-onkologischen Erkrankungen, Diabetes mellitus (mit Komplikationen), einer chronischen neurologischen oder neuromuskulären Erkrankung oder einer schweren angeborenen oder erworbenen Immundefizienz",
   evaluate(ctx): RuleResult {

@@ -33,6 +33,12 @@ describe("RULEBOOK", () => {
     expect(RULEBOOK.changes).toEqual([]);
   });
 
+  it("den Satz „früher bei Erkrankungen“ tragen nur Regeln mit Altersgrenze", () => {
+    expect(
+      RULEBOOK.rules.filter((r) => r.discussEarlier).map((r) => r.id),
+    ).toEqual(["influenza", "covid19", "pneumococcal", "zoster", "rsv"]);
+  });
+
   it("Version hat die Form YYYY-MM-DD.N", () => {
     expect(RULEBOOK.version).toMatch(/^\d{4}-\d{2}-\d{2}\.\d+$/);
     expect(RULEBOOK.edition).toBe(

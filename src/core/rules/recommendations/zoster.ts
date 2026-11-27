@@ -14,6 +14,7 @@ export const zosterRule: Rule = {
   diseases: ["zoster"],
   source: SOURCE,
   discussTopic: "chronic",
+  discussEarlier: true,
   discussTargetGroup:
     "Personen ≥ 18 Jahre mit erhöhter gesundheitlicher Gefährdung an Herpes zoster zu erkranken infolge einer angeborenen bzw. erworbenen, insbesondere einer iatrogenen, Immundefizienz oder infolge schwerer Ausprägung einer chronischen Grunderkrankung",
   evaluate(ctx): RuleResult {

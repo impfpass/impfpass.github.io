@@ -14,6 +14,7 @@ export const influenzaRule: Rule = {
   diseases: ["influenza"],
   source: SOURCE,
   discussTopic: "chronic",
+  discussEarlier: true,
   discussTargetGroup:
     "Personen ≥ 6 Monate mit erhöhter gesundheitlicher Gefährdung infolge einer Grunderkrankung",
   evaluate(ctx): RuleResult {

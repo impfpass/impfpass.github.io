@@ -58,6 +58,11 @@ export function nextRuleState(
   if (compareVersions(rulebook.version, prev.seenVersion) <= 0) {
     return { ...prev, personId, snapshot };
   }
+  // Ohne früheren Schnappschuss (etwa unter 18) gäbe es nur „Neu“ für alles:
+  // Stand übernehmen, keine Hinweise.
+  if (prev.snapshot.length === 0) {
+    return { ...prev, personId, seenVersion: rulebook.version, snapshot };
+  }
   const fresh: Notice[] = compareSnapshots(prev.snapshot, snapshot).map(
     ({ kind, id }) => {
       let best: Rulebook["changes"][number] | undefined;

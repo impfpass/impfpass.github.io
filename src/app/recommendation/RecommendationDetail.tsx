@@ -85,6 +85,7 @@ function NotNeededForm({
   return (
     <fieldset className="flex flex-col gap-1 rounded-lg border p-3">
       <legend className="px-1 font-medium">{NN.legend}</legend>
+      <p className="text-muted-foreground">{T.rec.detail.notNeededHint}</p>
       {NOT_NEEDED_CHOICES.map((c) => (
         <label key={c} className="flex min-h-11 items-center gap-3">
           <input
@@ -223,9 +224,7 @@ export function RecommendationDetail({ id }: { id: string }) {
     "desc",
   );
   const showEarlier =
-    person?.answers.chronicIllness === false &&
-    rule?.discussTargetGroup !== undefined &&
-    rule.discussTopic === "chronic";
+    person?.answers.chronicIllness === false && rule?.discussEarlier === true;
   const doctorChoice =
     rec.status === "discuss" ||
     decision?.kind === "doctor_recommends" ||
@@ -240,6 +239,7 @@ export function RecommendationDetail({ id }: { id: string }) {
     fn().catch(() => setFailed(true));
   };
   const { source } = rec;
+  const status = statusText(rec, "day");
 
   return (
     <div className="flex flex-col gap-4">
@@ -248,7 +248,7 @@ export function RecommendationDetail({ id }: { id: string }) {
         <h1 className="text-2xl font-semibold">
           {T.rec.names[rec.id] ?? rec.id}
         </h1>
-        <p className="text-muted-foreground">{statusText(rec, "day")}</p>
+        {status && <p className="text-muted-foreground">{status}</p>}
         {change && (
           <p className="text-muted-foreground">
             {D.validSince(formatDate(change.validSince, "day"))}

@@ -5,6 +5,16 @@ function joinNames(names: readonly string[]): string {
   return `${names.slice(0, -1).join(", ")} und ${names[names.length - 1]}`;
 }
 
+/** „1 Impfung“, „2 Impfungen“ */
+function vaccinationCount(n: number): string {
+  return `${n} ${n === 1 ? "Impfung" : "Impfungen"}`;
+}
+
+/** Hängt einen Punkt an, wenn der Text nicht schon mit einem Satzzeichen endet. */
+function sentence(text: string): string {
+  return /[.!?…]$/.test(text) ? text : `${text}.`;
+}
+
 function backupSummary(
   date: string,
   names: readonly string[],
@@ -116,7 +126,7 @@ export const T = {
       `STIKO-Stand: ${edition}, Regeln vom ${date}`,
     footerAdvice: "ImpfPass ersetzt keine ärztliche Beratung.",
     notice: {
-      new: (text: string) => `Neu: ${text} Betrifft dich.`,
+      new: (text: string) => `Neu: ${sentence(text)} Betrifft dich.`,
       changed: (text: string) => `Geändert: ${text}`,
       dropped: (text: string) => `Entfällt: ${text}`,
       view: "Ansehen",
@@ -194,6 +204,8 @@ export const T = {
       notNeeded: "Nicht nötig",
       showAgain: "Wieder anzeigen",
       declinedText: "Du möchtest diese Impfung nicht. Sie ist ausgeblendet.",
+      notNeededHint:
+        "Die Impfung erscheint dann nicht mehr unter den Empfehlungen, auch nicht für spätere Auffrischungen. Mit „Wieder anzeigen“ holst du sie zurück.",
       notNeededReasons: {
         legend: "Warum ist die Impfung nicht nötig?",
         illness: "Erkrankung durchgemacht",
@@ -215,9 +227,9 @@ export const T = {
         withTd:
           "Die STIKO empfiehlt Erwachsenen, die nächste fällige Impfung gegen Tetanus und Diphtherie einmal mit Keuchhusten-Schutz zu bekommen.",
         series: (given: number, total: number) =>
-          `Eingetragen sind ${given} von ${total} Impfungen.`,
+          `Eingetragen sind ${given} von ${vaccinationCount(total)}.`,
         catchUp: (given: number, total: number) =>
-          `Eingetragen sind ${given} von ${total} Impfungen der Grundimmunisierung. Stehen frühere Impfungen in einem anderen Impfpass, wähle „Nicht nötig“.`,
+          `Eingetragen sind ${given} von ${vaccinationCount(total)} der Grundimmunisierung. Stehen frühere Impfungen in einem anderen Impfpass, trag sie hier ein, auch wenn nur das Jahr bekannt ist. Dann rechnet ImpfPass mit den Auffrischungen weiter.`,
         season: (label: string) => `Jährliche Impfung, Saison ${label}.`,
         job: "Empfohlen wegen deiner Tätigkeit.",
         tbe: "Empfohlen, weil du dich in FSME-Risikogebieten aufhältst.",
@@ -304,6 +316,8 @@ export const T = {
     profile: "Profil",
     saveProfile: "Profil speichern",
     saved: "Gespeichert.",
+    answersIntro:
+      "Manche Impfungen empfiehlt die STIKO nur bestimmten Menschen. Diese Angaben bleiben auf diesem Gerät.",
     saveAnswers: "Angaben speichern",
     reminders: "Erinnerungen",
     leadTime: "Vorlauf",

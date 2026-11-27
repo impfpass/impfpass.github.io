@@ -62,7 +62,7 @@ export const mmrRule: Rule = {
       dose: null,
       timing: "normal",
       reason: {
-        kind: "catch_up",
+        kind: "series",
         given: doses.length,
         total: doses.length + 1,
       },
