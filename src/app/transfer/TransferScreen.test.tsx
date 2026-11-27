@@ -420,6 +420,9 @@ it("ein Teil einer anderen Übertragung bietet „Neu beginnen“ an", async () 
     screen.getByText("1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3."),
   ).toBeTruthy();
 
+  expect(
+    screen.queryByRole("button", { name: "Von vorn beginnen" }),
+  ).toBeNull();
   await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
 
   expect(
@@ -427,6 +430,62 @@ it("ein Teil einer anderen Übertragung bietet „Neu beginnen“ an", async () 
   ).toBeTruthy();
   expect(screen.queryByRole("alert")).toBeNull();
   expect(screen.queryByRole("button", { name: "Neu beginnen" })).toBeNull();
+});
+
+it("ein fremder Code nach gesammelten Teilen behält sie und bietet „Von vorn beginnen“", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  await scan(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await scan(user, "https://example.org");
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Das ist kein Code von ImpfPass.",
+  );
+  expect(screen.queryByRole("button", { name: "Neu beginnen" })).toBeNull();
+  expect(
+    screen.getByText("1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3."),
+  ).toBeTruthy();
+
+  await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+
+  expect(screen.queryByText(/Teilen gelesen/)).toBeNull();
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Von vorn beginnen" }),
+  ).toBeNull();
+});
+
+it("eine neuere Version nach gesammelten Teilen bietet nur „Von vorn beginnen“", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  const [newer] = packParts(
+    { i: "TEST01", c: CREATED_AT, e: [["2020-05-04", "boostrix-polio"]] },
+    { version: 2 },
+  );
+  await paste(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await paste(user, newer);
+
+  expect((await screen.findByRole("alert")).textContent).toMatch(
+    /neueren Version von ImpfPass/,
+  );
+  expect(screen.queryByRole("button", { name: "Neu beginnen" })).toBeNull();
+  expect(
+    screen.getByText("1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3."),
+  ).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+  expect(screen.queryByText(/Teilen gelesen/)).toBeNull();
 });
 
 it("nach gescannten Teilen liest eingefügter Text die ganze Übertragung", async () => {

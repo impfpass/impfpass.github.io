@@ -562,6 +562,7 @@ So füllst du die Felder:
     progress: (read: number, total: number, missing: readonly number[]) =>
       `${read} von ${total} Teilen gelesen. ${missing.length === 1 ? "Es fehlt" : "Es fehlen"} noch Teil ${joinNames(missing.map(String))}.`,
     restart: "Neu beginnen",
+    startOver: "Von vorn beginnen",
     scanner: {
       videoLabel: "Kamerabild",
       help: "Halte die Kamera auf den Code am PC-Bildschirm.",

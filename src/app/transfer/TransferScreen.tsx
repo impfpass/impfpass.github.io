@@ -42,10 +42,22 @@ interface Problem {
   message: string;
   /** Passt nicht zu den gesammelten Teilen: „Neu beginnen“ fängt mit ihm an. */
   restartWith?: string;
+  /** Taugt auch allein nicht als Anfang: „Von vorn beginnen“ verwirft die Teile. */
+  startOver?: boolean;
 }
 
 function messageOf(e: unknown): string {
   return e instanceof TransferError ? e.message : T.transfer.errors.corrupt;
+}
+
+/** Kann eine neue Übertragung mit dieser Zeile beginnen? */
+function canStartWith(line: string): boolean {
+  try {
+    addPart(null, line);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** Zeilen ohne Teil einer Übertragung, etwa Gruß und Unterschrift einer E-Mail. */
@@ -112,11 +124,15 @@ export function TransferScreen() {
     try {
       next = addPart(latest.current, line).collector;
     } catch (e) {
-      // Mit gesammelten Teilen führt „Neu beginnen“ aus jeder Sackgasse.
-      setProblem({
-        message: messageOf(e),
-        ...(latest.current !== null && { restartWith: line }),
-      });
+      // Mit gesammelten Teilen gibt es immer einen Ausweg: „Neu beginnen“ mit
+      // dieser Zeile, wenn sie allein taugt, sonst „Von vorn beginnen“.
+      const way =
+        latest.current === null
+          ? {}
+          : canStartWith(line)
+            ? { restartWith: line }
+            : { startOver: true };
+      setProblem({ message: messageOf(e), ...way });
       return "failed";
     }
     setProblem(null);
@@ -162,6 +178,11 @@ export function TransferScreen() {
   function restart(line: string) {
     setCollector(null);
     onCode(line);
+  }
+
+  function startOver() {
+    setCollector(null);
+    setProblem(null);
   }
 
   async function onFile(e: ChangeEvent<HTMLInputElement>) {
@@ -262,6 +283,11 @@ export function TransferScreen() {
               onClick={() => restart(restartWith)}
             >
               {T.transfer.restart}
+            </Button>
+          )}
+          {problem.startOver && (
+            <Button type="button" variant="outline" onClick={startOver}>
+              {T.transfer.startOver}
             </Button>
           )}
         </div>
