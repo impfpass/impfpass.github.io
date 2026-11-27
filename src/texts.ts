@@ -126,11 +126,11 @@ export const T = {
     others: "Weitere Impfungen",
     otherHints: {
       rabiesComplete:
-        "Grundimmunisierung vollständig, für Reisen ist keine Auffrischung nötig. Nach einem Biss trotzdem sofort zum Arzt.",
+        "Grundimmunisierung vollständig, für Reisen ist keine Auffrischung nötig. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus trotzdem sofort zum Arzt.",
       rabiesTwo:
-        "2 von 3 Dosen. Besteht weiter ein Risiko, empfiehlt die STIKO die 3. innerhalb eines Jahres. Nach einem Biss sofort zum Arzt.",
+        "2 von 3 Dosen. Besteht weiter ein Risiko, empfiehlt die STIKO die 3. innerhalb eines Jahres. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus sofort zum Arzt.",
       rabiesOne:
-        "Eine Dosis zählt noch nicht als Schutz. Nach einem Biss sofort zum Arzt.",
+        "Eine Dosis zählt noch nicht als Schutz. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus sofort zum Arzt.",
       tuberculosis:
         "Die STIKO empfiehlt die BCG-Impfung nicht mehr. Eine Auffrischung gibt es nicht.",
       smallpox:

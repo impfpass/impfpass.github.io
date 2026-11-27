@@ -40,3 +40,9 @@ it("Tollwut: drei Dosen mit nur bekanntem Monat zählen einzeln", () => {
   const m = () => shot("2019-01-01", "rabipur", "month");
   expect(otherHint("rabies", [m(), m(), m()])).toBe(H.rabiesComplete);
 });
+
+it("Tollwut: der Satz nennt jeden möglichen Kontakt, nicht nur den Biss (Epid Bull 4/2026, S. 60, Tab. 10)", () => {
+  for (const text of [H.rabiesComplete, H.rabiesTwo, H.rabiesOne]) {
+    expect(text).toContain("Biss, Kratzer oder Kontakt mit einer Fledermaus");
+  }
+});
