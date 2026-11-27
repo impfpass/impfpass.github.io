@@ -493,8 +493,9 @@ So füllst du die Felder:
       summary: (n: number, errors: number, hints: number) =>
         `${n} ${n === 1 ? "Impfung" : "Impfungen"}, ${errors} mit Fehlern, ${hints} mit Hinweisen.`,
       birthInvalid:
-        "Das Geburtsdatum ist nicht lesbar. Schreib es als TT.MM.JJJJ.",
-      birthFuture: "Das Geburtsdatum liegt in der Zukunft.",
+        "Das Geburtsdatum ist nicht lesbar. Schreib es als TT.MM.JJJJ. Ändere es in Schritt 1.",
+      birthFuture:
+        "Das Geburtsdatum liegt in der Zukunft. Ändere es in Schritt 1.",
       next: "Weiter zum Übertragen",
       blocked: "Behebe zuerst die rot markierten Zeilen.",
       confirmHints: (h: number) =>

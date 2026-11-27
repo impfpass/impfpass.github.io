@@ -312,7 +312,7 @@ describe("Fehler und Hinweise", () => {
     setup([row("05.12.1950")], "31.02.1967");
     expect(
       screen.getByText(
-        "Das Geburtsdatum ist nicht lesbar. Schreib es als TT.MM.JJJJ.",
+        "Das Geburtsdatum ist nicht lesbar. Schreib es als TT.MM.JJJJ. Ändere es in Schritt 1.",
       ),
     ).toBeTruthy();
     expect(
@@ -323,7 +323,9 @@ describe("Fehler und Hinweise", () => {
   it("meldet ein Geburtsdatum in der Zukunft und prüft ohne es", () => {
     setup([row("05.12.2016")], "01.01.2099");
     expect(
-      screen.getByText("Das Geburtsdatum liegt in der Zukunft."),
+      screen.getByText(
+        "Das Geburtsdatum liegt in der Zukunft. Ändere es in Schritt 1.",
+      ),
     ).toBeTruthy();
     expect(
       screen.queryByText("Das Datum liegt vor dem Geburtsdatum."),
