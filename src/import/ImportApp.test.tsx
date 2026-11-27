@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { emptyDraft, newRow } from "@/core/import/draft";
 import { openDraftStore } from "@/core/storage/draftStore";
+import fixture from "@/test/fixtures/chatbot-answer.txt?raw";
 import { T } from "@/texts";
 import { ImportApp } from "./ImportApp";
 
@@ -65,4 +66,33 @@ it("warnt, wenn nicht gespeichert werden kann, und arbeitet weiter", async () =>
   expect(
     screen.getByRole("heading", { level: 2, name: "Anleitung" }),
   ).toBeTruthy();
+});
+
+it("liest eine Antwort ein, zeigt Schritt 2 mit Meldung, die beim Wechsel verschwindet", async () => {
+  render(<ImportApp />);
+  await screen.findByText("1 Anleitung");
+  await userEvent.click(screen.getByLabelText(T.pc.guide.answerLabel));
+  await userEvent.paste(fixture);
+  await userEvent.click(screen.getByRole("button", { name: "Einlesen" }));
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Tabelle prüfen" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("status").textContent).toBe(
+    "12 Impfungen eingelesen. Prüfe sie in der Tabelle.",
+  );
+  await userEvent.click(screen.getByRole("button", { name: "1 Anleitung" }));
+  await userEvent.click(
+    screen.getByRole("button", { name: "2 Tabelle prüfen" }),
+  );
+  expect(screen.queryByRole("status")).toBeNull();
+});
+
+it("geht ohne Chatbot ohne Meldung zu Schritt 2", async () => {
+  render(<ImportApp />);
+  await screen.findByText("1 Anleitung");
+  await userEvent.click(
+    screen.getByRole("button", { name: "Ohne Chatbot weiter" }),
+  );
+  expect(current().textContent).toBe("2 Tabelle prüfen");
+  expect(screen.queryByRole("status")).toBeNull();
 });

@@ -404,6 +404,30 @@ So füllst du die Felder:
 - diseases: nur wenn kein Handelsname lesbar ist, die Krankheiten auf Deutsch, etwa ["Tetanus","Diphtherie"]. Sonst [].
 - unsure: die Felder, die du nicht sicher lesen konntest, etwa ["date","batch"]. Rate nicht. Schreib, was du lesen kannst, und nenn das Feld hier.
 - Lass alles weg, was keine Impfung ist, etwa Tuberkulintests, Blutgruppe oder Antikörperbefunde.`,
+    guide: {
+      heading: "Alte Impfungen übernehmen",
+      steps: [
+        "1. Fotografiere die Seiten deines Impfpasses und bring die Fotos auf diesen PC.",
+        "2. Kopiere die Anleitung unten und gib sie zusammen mit den Fotos einem Chatbot, etwa Claude oder ChatGPT.",
+        "3. Füge die Antwort des Chatbots unten ein und prüfe die Tabelle.",
+      ],
+      privacy:
+        "Die Fotos zeigen Gesundheitsdaten. Lädst du sie bei einem Chatbot hoch, landen sie beim Anbieter des Chatbots, nicht bei ImpfPass. Schalte dort die Verwendung deiner Daten für das Training ab, wo das geht.",
+      promptLabel: "Anleitung für den Chatbot",
+      copy: "Anleitung kopieren",
+      copied: "Kopiert.",
+      copyFailed:
+        "Kopieren hat nicht geklappt. Der Text ist markiert, kopiere ihn mit Strg+C.",
+      birthDate: "Geburtsdatum (freiwillig)",
+      birthDateHelp:
+        "Nur zur Prüfung der Daten. Es bleibt auf diesem PC und wird nicht übertragen.",
+      birthDatePlaceholder: "TT.MM.JJJJ",
+      answerLabel: "Antwort des Chatbots",
+      read: "Einlesen",
+      skip: "Ohne Chatbot weiter",
+      imported: (n: number) =>
+        `${n} ${n === 1 ? "Impfung" : "Impfungen"} eingelesen. Prüfe sie in der Tabelle.`,
+    },
     chatbotErrors: {
       noJson:
         "In der Antwort steht keine Liste von Impfungen. Kopiere die ganze Antwort des Chatbots, auch den Codeblock.",

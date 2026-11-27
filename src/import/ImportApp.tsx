@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { DraftStore } from "@/core/storage/draftStore";
 import { openDraftStore } from "@/core/storage/draftStore";
 import { T } from "@/texts";
+import { GuideStep } from "./GuideStep";
 import { useDraft } from "./useDraft";
 
 type Step = 1 | 2 | 3;
@@ -18,10 +19,17 @@ export function ImportApp({
 }: {
   openStore?: () => Promise<DraftStore>;
 }) {
-  const { status, draft, persistent } = useDraft(openStore);
+  const { status, draft, persistent, update } = useDraft(openStore);
   // null: noch nicht gewählt, dann entscheidet der geladene Entwurf.
   const [chosen, setChosen] = useState<Step | null>(null);
   const step: Step = chosen ?? (draft.rows.length > 0 ? 2 : 1);
+  // Meldung aus Schritt 1, gilt nur, bis der Schritt wechselt.
+  const [message, setMessage] = useState<string | null>(null);
+
+  function goTo(n: Step) {
+    setChosen(n);
+    setMessage(null);
+  }
 
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-6">
@@ -56,7 +64,7 @@ export function ImportApp({
                       <button
                         type="button"
                         className="min-h-11 min-w-11 px-3"
-                        onClick={() => setChosen(n)}
+                        onClick={() => goTo(n)}
                       >
                         {label}
                       </button>
@@ -69,11 +77,26 @@ export function ImportApp({
               <h2 className="text-xl font-semibold">
                 {STEPS[step - 1].heading}
               </h2>
+              {step === 1 && (
+                <GuideStep
+                  draft={draft}
+                  update={update}
+                  onDone={(msg) => {
+                    setChosen(2);
+                    setMessage(msg ?? null);
+                  }}
+                />
+              )}
+              {step === 2 && message && (
+                <p role="status" className="mt-4 rounded-md border p-3">
+                  {message}
+                </p>
+              )}
             </section>
           </>
         )}
       </main>
-      <footer className="space-y-1 text-sm">
+      <footer className="space-y-1">
         <p>{T.pc.footer.medical}</p>
         <p>{T.pc.footer.local}</p>
       </footer>
