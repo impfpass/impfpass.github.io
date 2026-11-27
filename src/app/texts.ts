@@ -119,7 +119,7 @@ export const T = {
   },
   backupHint: {
     question: "Sicherung speichern?",
-    text: "Deine Daten liegen nur auf diesem Gerät. Eine Sicherung schützt sie, falls das Handy verloren geht.",
+    text: "Deine Daten liegen nur auf diesem Gerät. Speichere die Sicherung in iCloud Drive oder auf einem anderen Gerät, dann sind sie auch geschützt, wenn das Handy verloren geht.",
     now: "Jetzt sichern",
     later: "Später",
     done: "Die Sicherung ist gespeichert.",

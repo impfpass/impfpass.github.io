@@ -25,7 +25,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - `src/core/`: reine, getestete Funktionen ohne Oberfläche (Datenmodell, Datumshilfen, Impfstoffliste, Speicher, Sicherungsformat). Kein React hier.
 - `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern. Alle Texte stehen in `src/app/texts.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
-- `src/lib/`: kleine Hilfen für die Oberfläche (`cn`).
+- `src/lib/`: kleine Hilfen für die Oberfläche (`cn` aus dem Paket `cn`, das clsx und tailwind-merge ersetzt).
 - `src/test/`: Test-Setup (fake-indexeddb, cleanup).
 - `docs/`: Design, Pläne, Entwicklungsnotizen (`docs/dev-log/`).
 
@@ -49,6 +49,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - Mindestens iOS 16.4 (Build-Ziel von Vite 8, Radix nutzt `toSorted`). `vite/bootFallback.ts` setzt eine Startmeldung in `#root`, die React ersetzt; bleibt sie stehen, erscheint nach 10 s der Hinweis auf den zu alten Browser.
 - Service Worker mit `skipWaiting` und `clientsClaim` (`vite/pwa.ts`), damit neue Versionen ohne Schließen aller Fenster ankommen.
 - Keine nativen Dialoge (`confirm`, `alert`, `prompt`). Bestätigungen laufen über shadcn `AlertDialog`.
+- Katalog-IDs nie umbenennen oder neu vergeben (Impfstoffe in `src/core/catalog/products.ts`, Krankheiten in `src/core/catalog/diseases.ts`). Sie stehen in gespeicherten Impfungen und in Sicherungen. Ein Impfstoff, der nicht mehr im Handel ist, bekommt `historic: true`; ein neuer Name kommt als Alias dazu.
 - Kalenderdaten sind Strings `YYYY-MM-DD`. Mit `Date` wird nur in `todayISO` gerechnet, denn `new Date().toISOString()` liefert UTC und damit nachts in Deutschland den Vortag.
 - Bezeichner im Code englisch, Texte der Oberfläche deutsch.
 - CI mit Node 22. Die Tests laufen vor jedem Deploy, bei Fehlern wird nicht veröffentlicht.
