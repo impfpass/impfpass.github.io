@@ -1,0 +1,23 @@
+Gerne, ich habe alle Seiten durchgesehen. Hier ist die Liste der Impfungen aus dem Impfpass:
+
+```json
+{
+  "impfpass": "import",
+  "vaccinations": [
+    {"date": "12.03.1996", "name": "Td-IMMUN", "batch": "A3321", "doctor": "Dr. Lehmann, Kiel", "diseases": [], "unsure": []},
+    {"date": "04.09.1998", "name": "Priorix", "batch": "MR4411", "doctor": "Praxis Dr. Brandt, Kiel", "diseases": [], "unsure": []},
+    {"date": "02.10.1998", "name": "Priorix", "batch": "MR4502", "doctor": "Praxis Dr. Brandt, Kiel", "diseases": [], "unsure": []},
+    {"date": "15.05.2006", "name": "Bostrix Polio", "batch": "AC37B045AA", "doctor": "Gemeinschaftspraxis Nord, Lübeck", "diseases": [], "unsure": []},
+    {"date": "20.04.2009", "name": "FSME-IMMUN", "batch": "VP1822", "doctor": "Dr. Sommer, Lübeck", "diseases": [], "unsure": []},
+    {"date": "18.05.2009", "name": "FSME-IMMUN", "batch": "VP1907", "doctor": "Dr. Sommer, Lübeck", "diseases": [], "unsure": []},
+    {"date": "10.06.2010", "name": "", "batch": "", "doctor": "Praxis am Markt, Flensburg", "diseases": ["Tetanus", "Diphtherie"], "unsure": []},
+    {"date": "08.11.2014", "name": "Influsplit Tetra", "batch": "G8841", "doctor": "Dr. Weiß, Hamburg", "diseases": [], "unsure": []},
+    {"date": "2016", "name": "Boostrix Polio", "batch": "AC52B123AB", "doctor": "Praxis Dr. Muster, Hamburg", "diseases": [], "unsure": ["date"]},
+    {"date": "14.04.2021", "name": "Comirnaty", "batch": "ET3045", "doctor": "Impfzentrum Hamburg", "diseases": [], "unsure": []},
+    {"date": "05.05.2021", "name": "Comirnaty", "batch": "FA7812", "doctor": "Impfzentrum Hamburg", "diseases": [], "unsure": []},
+    {"date": "22.02.2024", "name": "Shingrix", "batch": "5RBN3", "doctor": "Dr. Weiß, Hamburg", "diseases": [], "unsure": []}
+  ]
+}
+```
+
+Auf Seite 7 war noch ein Tuberkulintest eingetragen, den habe ich weggelassen. Falls einzelne Stempel unleserlich waren, steht das Feld unter "unsure".

@@ -376,4 +376,28 @@ export const T = {
       tooLarge: "Diese Datei ist zu groß für eine ImpfPass-Sicherung.",
     },
   },
+  pc: {
+    prompt: `Auf den Fotos sind Seiten aus einem deutschen Impfpass. Lies alle Impfungen ab und gib sie als JSON in genau diesem Format zurück, in einem einzigen Codeblock:
+
+{"impfpass":"import","vaccinations":[{"date":"05.12.2016","name":"Boostrix Polio","batch":"AC52B123AB","doctor":"Praxis Dr. Muster, Hamburg","diseases":[],"unsure":[]}]}
+
+So füllst du die Felder:
+- Ein Eintrag je Impfung. Klebt derselbe Impfstoff mit demselben Datum in mehreren Abschnitten des Passes, trag ihn nur einmal ein.
+- date: das Datum wie im Pass als TT.MM.JJJJ. Ist nur Monat und Jahr lesbar, schreib MM.JJJJ, ist nur das Jahr lesbar, JJJJ.
+- name: der Handelsname des Impfstoffs, so wie er auf dem Aufkleber oder im Stempel steht.
+- batch: die Chargennummer, sonst "".
+- doctor: Arzt, Praxis oder Ort aus dem Stempel, sonst "".
+- diseases: nur wenn kein Handelsname lesbar ist, die Krankheiten auf Deutsch, etwa ["Tetanus","Diphtherie"]. Sonst [].
+- unsure: die Felder, die du nicht sicher lesen konntest, etwa ["date","batch"]. Rate nicht. Schreib, was du lesen kannst, und nenn das Feld hier.
+- Lass alles weg, was keine Impfung ist, etwa Tuberkulintests, Blutgruppe oder Antikörperbefunde.`,
+    chatbotErrors: {
+      noJson:
+        "In der Antwort steht keine Liste von Impfungen. Kopiere die ganze Antwort des Chatbots, auch den Codeblock.",
+      noEntries: "Die Antwort enthält keine Impfungen.",
+      tooLong: "Die Antwort ist zu lang. Füge höchstens 1 MB Text ein.",
+    },
+    hints: {
+      diseaseUnknown: (name: string) => `Krankheit „${name}“ nicht erkannt.`,
+    },
+  },
 } as const;
