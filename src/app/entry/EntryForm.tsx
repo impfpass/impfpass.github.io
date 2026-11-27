@@ -13,7 +13,7 @@ import type { DatePrecision, Vaccination } from "@/core/model";
 import { validateEntry, type EntryErrors } from "@/core/validation";
 import { useAppData } from "../data/AppData";
 import { diseaseNames } from "../format";
-import { T } from "../texts";
+import { T } from "@/texts";
 import { BackupHint } from "./BackupHint";
 
 const PRECISIONS: { value: DatePrecision; label: string }[] = [

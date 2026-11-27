@@ -1,4 +1,4 @@
-import { T } from "@/app/texts";
+import { T } from "@/texts";
 import { isValidISODate, normalizeToPrecision } from "./dates";
 import type { DatePrecision, DiseaseId, ISODate } from "./model";
 

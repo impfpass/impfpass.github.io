@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { todayISO } from "@/core/dates";
-import { T } from "../texts";
+import { T } from "@/texts";
 import type { PersonErrors } from "./validatePerson";
 
 /** Eingabefelder Name und Geburtsdatum (Ersteinrichtung und Profil). */

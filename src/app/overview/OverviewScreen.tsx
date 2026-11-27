@@ -5,7 +5,7 @@ import { DISEASES } from "@/core/catalog/diseases";
 import { formatDate } from "@/core/dates";
 import { useAppData } from "../data/AppData";
 import { InstallHint } from "../InstallHint";
-import { T } from "../texts";
+import { T } from "@/texts";
 import { lastByDisease } from "./lastByDisease";
 
 /** Übergangslösung bis Plan 2: je Krankheit die letzte Impfung. */

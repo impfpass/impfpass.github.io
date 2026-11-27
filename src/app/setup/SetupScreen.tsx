@@ -5,7 +5,7 @@ import { todayISO } from "@/core/dates";
 import { RestoreButton } from "../backup/RestoreButton";
 import { useAppData } from "../data/AppData";
 import { isStandalone, shouldShowInstallHint } from "../installHintRules";
-import { T } from "../texts";
+import { T } from "@/texts";
 import { focusFirstError } from "./focusFirstError";
 import { PersonFields } from "./PersonFields";
 import { validatePerson, type PersonErrors } from "./validatePerson";

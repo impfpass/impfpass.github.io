@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { T } from "../src/app/texts.ts";
+import { T } from "../src/texts.ts";
 
 /**
  * Schlichtes CSS ohne Tailwind (das ältere Safari teils nicht versteht). Der

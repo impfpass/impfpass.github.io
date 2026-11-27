@@ -11,7 +11,7 @@ import { useAppData } from "../data/AppData";
 import { focusFirstError } from "../setup/focusFirstError";
 import { PersonFields } from "../setup/PersonFields";
 import { validatePerson, type PersonErrors } from "../setup/validatePerson";
-import { T } from "../texts";
+import { T } from "@/texts";
 
 function ProfileForm({ person }: { person: Person }) {
   const { actions } = useAppData();

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { House, List, Plus, Settings } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { T } from "./texts";
+import { T } from "@/texts";
 
 const ITEMS = [
   {

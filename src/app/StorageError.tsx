@@ -1,4 +1,4 @@
-import { T } from "./texts";
+import { T } from "@/texts";
 
 export function StorageError() {
   return (

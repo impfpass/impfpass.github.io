@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { T } from "@/app/texts";
+import { T } from "@/texts";
 import { DISEASE_IDS } from "../catalog/diseases";
 import { todayISO } from "../dates";
 import type { BackupData } from "../storage/repository";

@@ -23,7 +23,8 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 ## Ordner
 
 - `src/core/`: reine, getestete Funktionen ohne Oberfläche (Datenmodell, Datumshilfen, Impfstoffliste, Speicher, Sicherungsformat). Kein React hier.
-- `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern. Alle Texte stehen in `src/app/texts.ts`.
+- `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern.
+- `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, das prüft `src/core/boundaries.test.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
 - `src/lib/`: kleine Hilfen für die Oberfläche (`cn` aus dem Paket `cn`, das clsx und tailwind-merge ersetzt).
 - `src/test/`: Test-Setup (fake-indexeddb, cleanup).
@@ -41,7 +42,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 
 - Zur Laufzeit keine Anfragen an Dritte, keine externen Schriften, keine Analyse-Dienste. Alle Bibliotheken werden mitgeliefert.
 - Alle Daten bleiben im Browser (IndexedDB). Sie verlassen das Gerät nur, wenn der Anwender es ausdrücklich auslöst.
-- Oberfläche nur Deutsch. Jeder sichtbare Text steht in `src/app/texts.ts`.
+- Oberfläche nur Deutsch. Jeder sichtbare Text steht in `src/texts.ts`.
 - Handy-App an der Wurzel von `https://impfpass.github.io/`, Repo `impfpass/impfpass.github.io`, Lizenz MIT. Die Adresse darf sich nach der ersten echten Nutzung nicht mehr ändern, weil der Browser-Speicher an der Domain hängt.
 - Voreinstellungen: Vorlauf 6 Monate, Saison-Tag `09-01`.
 - Gut lesbar auch für Ältere: Grundschrift 18 px (`html { font-size: 112.5% }`), Bedienflächen mindestens 44 × 44 px, helles und dunkles Design nach Systemeinstellung.

@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { ListSort, Vaccination } from "@/core/model";
 import { useAppData } from "../data/AppData";
-import { T } from "../texts";
+import { T } from "@/texts";
 import { groupByDisease, groupByProduct, sortByDate } from "./grouping";
 import { nextSort, splitSort, type SortKey } from "./sortOrder";
 import { VaccinationRow } from "./VaccinationRow";

@@ -12,7 +12,7 @@ import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
-import { T } from "./texts";
+import { T } from "@/texts";
 
 /**
  * Formular für eine neue Impfung. `reselect` zählt, wie oft der Tab

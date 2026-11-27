@@ -1,6 +1,6 @@
 import { isValidISODate } from "@/core/dates";
 import type { ISODate } from "@/core/model";
-import { T } from "../texts";
+import { T } from "@/texts";
 
 export interface PersonErrors {
   name?: string;

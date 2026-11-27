@@ -1,6 +1,6 @@
 import { ChevronLeft } from "lucide-react";
 import { Link } from "wouter";
-import { T } from "../texts";
+import { T } from "@/texts";
 
 export function InfoScreen() {
   return (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { T } from "../texts";
+import { T } from "@/texts";
 import { useSaveBackup } from "../backup/useSaveBackup";
 
 /** Angebot nach dem Speichern eines Eintrags, eine Sicherung anzulegen. */

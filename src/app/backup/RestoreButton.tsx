@@ -18,7 +18,7 @@ import {
   type BackupFile,
 } from "@/core/formats/backup";
 import { useAppData } from "../data/AppData";
-import { T } from "../texts";
+import { T } from "@/texts";
 
 export function RestoreButton() {
   const { person, actions } = useAppData();

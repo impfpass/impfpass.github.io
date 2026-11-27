@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/core/dates";
 import { useAppData } from "../data/AppData";
 import { diseaseNames, vaccinationName } from "../format";
-import { T } from "../texts";
+import { T } from "@/texts";
 
 function BackLink() {
   return (

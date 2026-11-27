@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { T } from "../src/app/texts";
+import { T } from "../src/texts";
 import { BOOT_STYLE, bootFallbackPlugin } from "./bootFallback";
 
 type Hook = (html: string) => {

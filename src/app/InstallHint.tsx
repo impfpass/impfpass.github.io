@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAppData } from "./data/AppData";
 import { isStandalone, shouldShowInstallHint } from "./installHintRules";
-import { T } from "./texts";
+import { T } from "@/texts";
 
 /** Tipp für das iPhone, ImpfPass zum Home-Bildschirm hinzuzufügen. */
 export function InstallHint() {
