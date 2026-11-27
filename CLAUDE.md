@@ -25,6 +25,9 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - `src/core/`: reine, getestete Funktionen ohne Oberfläche (Datenmodell, Datumshilfen, Impfstoffliste, Speicher, Sicherungsformat). Kein React hier.
 - `src/app/`: die Oberfläche. Sie liest und schreibt nur über den Kern.
 - `src/import/`: die PC-App, eine zweite Seite (`import/index.html`, erreichbar unter `/import/`, eigenes Manifest in `public/import/`). Sie importiert nichts aus `src/app/`, die Handy-App nichts aus `src/import/`, das prüft `src/core/boundaries.test.ts`.
+- `src/core/import/`: die Logik des PC-Imports ohne Oberfläche: Chatbot-Antwort lesen, Impfdaten aus dem Pass, Entwurf und Prüfungen, Dublettenregel, Zusammenführen. Das Übertragungsformat und die QR-Aufteilung liegen in `src/core/formats/` (`transfer.ts` und Nachbardateien).
+- `src/app/transfer/`: die Handy-Seite „Impfungen übernehmen“ (Codes scannen, Datei oder Text einfügen, Vorschau, Übernahme).
+- `src/components/QrCode.tsx` und `src/lib/saveFile.ts`: gemeinsame Bausteine von Handy- und PC-App.
 - `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, `src/import/`, `src/components/`, `react` und `react-dom`, das prüft `src/core/boundaries.test.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
 - `src/lib/`: kleine Hilfen für die Oberfläche (`cn` aus dem Paket `cn`, das clsx und tailwind-merge ersetzt).
@@ -51,7 +54,10 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - Mindestens iOS 16.4 (Build-Ziel von Vite 8, Radix nutzt `toSorted`). `vite/bootFallback.ts` setzt eine Startmeldung in `#root`, die React ersetzt; bleibt sie stehen, erscheint nach 10 s der Hinweis auf den zu alten Browser.
 - Service Worker mit `skipWaiting` und `clientsClaim` (`vite/pwa.ts`), damit neue Versionen ohne Schließen aller Fenster ankommen.
 - Keine nativen Dialoge (`confirm`, `alert`, `prompt`). Bestätigungen laufen über shadcn `AlertDialog`.
-- Katalog-IDs nie umbenennen oder neu vergeben (Impfstoffe in `src/core/catalog/products.ts`, Krankheiten in `src/core/catalog/diseases.ts`). Sie stehen in gespeicherten Impfungen und in Sicherungen. Ein Impfstoff, der nicht mehr im Handel ist, bekommt `historic: true`; ein neuer Name kommt als Alias dazu. Dasselbe gilt für die Empfehlungs-IDs (`RecommendationId`): Sie stehen in Entscheidungen, Regel-Ständen und Sicherungen.
+- Katalog-IDs nie umbenennen oder neu vergeben (Impfstoffe in `src/core/catalog/products.ts`, Krankheiten in `src/core/catalog/diseases.ts`). Sie stehen in gespeicherten Impfungen, in Sicherungen und in Übertragungen vom PC. Ein Impfstoff, der nicht mehr im Handel ist, bekommt `historic: true`; ein neuer Name kommt als Alias dazu. Dasselbe gilt für die Empfehlungs-IDs (`RecommendationId`): Sie stehen in Entscheidungen, Regel-Ständen und Sicherungen.
+- Übertragungsformat (`src/core/formats/transfer.ts`): Teilzeilen `IP:<Version>:<n>/<gesamt>:<Id>:<Base45>:<CRC>`. Die Bedeutung von Version 1 ändert sich nie. Neue oder geänderte Felder brauchen Version 2; die Handy-App antwortet auf unbekannte Versionen mit „tooNew“.
+- `T.pc.prompt` (die Anweisung an den Chatbot) und `parseChatbotAnswer` werden immer zusammen geändert. Der Test in `src/core/import/chatbot.test.ts` prüft, dass das JSON-Beispiel im Prompt gelesen werden kann.
+- Der Entwurf der PC-App liegt in einer eigenen IndexedDB-Datenbank `impfpass-import`. Die PC-App berührt die Datenbank `impfpass` der Handy-App nicht.
 - Kalenderdaten sind Strings `YYYY-MM-DD`. Mit `Date` wird nur in `todayISO` gerechnet, denn `new Date().toISOString()` liefert UTC und damit nachts in Deutschland den Vortag.
 - Bezeichner im Code englisch, Texte der Oberfläche deutsch.
 - CI mit Node 22. Die Tests laufen vor jedem Deploy, bei Fehlern wird nicht veröffentlicht.

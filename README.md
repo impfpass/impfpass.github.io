@@ -10,6 +10,8 @@ ImpfPass läuft auf dem iPhone ab iOS 16.4 und in aktuellen Versionen von Chrome
 
 Adresse: https://impfpass.github.io/
 
+Für den PC gibt es eine zweite App unter https://impfpass.github.io/import/. Mit ihr lassen sich ältere Impfungen aus dem Papier-Impfpass übernehmen: Ein Chatbot liest die Seiten, das Ergebnis steht in einer Tabelle, die man prüft und korrigiert. Die Impfungen gehen dann per QR-Code, als Datei oder als Text aufs Handy. Auch die PC-App speichert alles nur im Browser.
+
 ## Entwicklung
 
 Voraussetzung ist Node.js 22 oder neuer.
