@@ -13,6 +13,7 @@ const DENIED =
 const MISSING =
   "Keine Kamera gefunden. Übertrag die Impfungen als Datei oder Text.";
 const HELP = "Halte die Kamera auf den Code am PC-Bildschirm.";
+const RETRY = "Noch einmal versuchen";
 
 function stubCamera(getUserMedia: unknown) {
   vi.stubGlobal("navigator", {
@@ -50,6 +51,7 @@ it.each([["NotAllowedError"], ["SecurityError"]])(
     render(<Scanner onCode={vi.fn()} onFallback={onFallback} />);
 
     expect((await screen.findByRole("alert")).textContent).toBe(DENIED);
+    expect(screen.getByRole("button", { name: RETRY })).toBeTruthy();
     await user.click(screen.getByRole("button", { name: "Datei öffnen" }));
     await user.click(screen.getByRole("button", { name: "Text einfügen" }));
     expect(onFallback.mock.calls).toEqual([["file"], ["text"]]);
@@ -62,6 +64,7 @@ it.each([["NotFoundError"], ["OverconstrainedError"]])(
     stubCamera(rejectWith(name));
     render(<Scanner onCode={vi.fn()} onFallback={vi.fn()} />);
     expect((await screen.findByRole("alert")).textContent).toBe(MISSING);
+    expect(screen.getByRole("button", { name: RETRY })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Text einfügen" })).toBeTruthy();
   },
@@ -79,6 +82,29 @@ it("andere Fehler melden, dass die Kamera nicht startet", async () => {
   expect((await screen.findByRole("alert")).textContent).toBe(
     "Die Kamera lässt sich nicht starten.",
   );
+});
+
+it("„Noch einmal versuchen“ fragt die Kamera erneut an", async () => {
+  const { stream, stops } = fakeStream();
+  const getUserMedia = vi
+    .fn()
+    .mockRejectedValueOnce(
+      Object.assign(new Error("NotAllowedError"), { name: "NotAllowedError" }),
+    )
+    .mockResolvedValueOnce(stream);
+  stubCamera(getUserMedia);
+  const user = userEvent.setup();
+  const { unmount } = render(<Scanner onCode={vi.fn()} onFallback={vi.fn()} />);
+  expect((await screen.findByRole("alert")).textContent).toBe(DENIED);
+
+  await user.click(screen.getByRole("button", { name: RETRY }));
+
+  expect(await screen.findByText(HELP)).toBeTruthy();
+  expect(getUserMedia).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.queryByRole("button", { name: RETRY })).toBeNull();
+  unmount();
+  expect(stops[0]).toHaveBeenCalledOnce();
 });
 
 it("fragt die Rückkamera an und zeigt Bild und Hilfetext", async () => {
@@ -258,6 +284,7 @@ describe("Scan-Schleife", () => {
     );
     expect(stops[0]).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: RETRY })).toBeTruthy();
     const calls = getImageData.mock.calls.length;
     act(() => vi.advanceTimersByTime(1000));
     expect(getImageData.mock.calls.length).toBe(calls);

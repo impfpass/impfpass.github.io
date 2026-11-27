@@ -33,6 +33,8 @@ export function Scanner({
   const video = useRef<HTMLVideoElement>(null);
   const onCodeRef = useRef(onCode);
   const [error, setError] = useState<string | null>(null);
+  // Jeder Versuch startet die Kamera neu, siehe „Noch einmal versuchen“.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     onCodeRef.current = onCode;
@@ -130,7 +132,12 @@ export function Scanner({
       document.removeEventListener("visibilitychange", onVisibility);
       stop();
     };
-  }, []);
+  }, [attempt]);
+
+  function retry() {
+    setError(null);
+    setAttempt((n) => n + 1);
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -152,6 +159,14 @@ export function Scanner({
             {error}
           </p>
           <div className="flex flex-wrap gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11"
+              onClick={retry}
+            >
+              {T.transfer.scanner.retry}
+            </Button>
             <Button
               type="button"
               variant="outline"

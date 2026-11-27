@@ -571,6 +571,7 @@ So füllst du die Felder:
       missing:
         "Keine Kamera gefunden. Übertrag die Impfungen als Datei oder Text.",
       failed: "Die Kamera lässt sich nicht starten.",
+      retry: "Noch einmal versuchen",
     },
     preview: {
       label: "Gefundene Impfungen",
