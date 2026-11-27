@@ -66,7 +66,7 @@ describe("mmrRule", () => {
       dueDate: null,
       dose: { number: 1, of: 2 },
       reason: { kind: "indication", indication: "job" },
-      source: { page: 16, section: "Tab. 2, MMR, B" },
+      source: { page: 16, section: "Tab. 2, MMR, Kategorie B" },
     });
     // Eine Dosis als Erwachsener reicht im Beruf nicht.
     const vs = [shot("2026-10-27", "priorix")];

@@ -14,7 +14,7 @@ describe("zosterRule", () => {
       status: "due",
       dueDate: "2027-03-01",
       dose: { number: 1, of: 2 },
-      source: { page: 13, section: "Tab. 2, Herpes zoster, S" },
+      source: { page: 13, section: "Tab. 2, Herpes zoster, Kategorie S" },
     });
     expect(run(zosterRule, { person: p, today: "2026-08-31" })).toMatchObject({
       status: "future",

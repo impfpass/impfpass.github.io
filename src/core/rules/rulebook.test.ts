@@ -72,3 +72,18 @@ describe("RULEBOOK", () => {
     });
   });
 });
+
+const ruleSources = import.meta.glob<string>(
+  ["./recommendations/*.ts", "!./recommendations/*.test.ts"],
+  { query: "?raw", import: "default", eager: true },
+);
+
+it("Fundstellen schreiben die STIKO-Kategorie aus („Kategorie S“ statt nur „S“)", () => {
+  // Sonst liest sich die Anzeige als „RSV, S, S. 18“.
+  const bare = /"[^"]*, [SBI]"/g;
+  const offenders = Object.entries(ruleSources).flatMap(([file, code]) =>
+    (code.match(bare) ?? []).map((m) => `${file}: ${m}`),
+  );
+  expect(Object.keys(ruleSources).length).toBeGreaterThan(10);
+  expect(offenders).toEqual([]);
+});

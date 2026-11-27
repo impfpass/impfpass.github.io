@@ -11,7 +11,7 @@ describe("pneumococcalRule", () => {
       status: "future",
       dueDate: "2026-11-27",
       reason: { kind: "age", age: 60 },
-      source: { page: 17, section: "Tab. 2, Pneumokokken, S" },
+      source: { page: 17, section: "Tab. 2, Pneumokokken, Kategorie S" },
     });
     expect(
       run(pneumococcalRule, { person: p, today: "2026-11-27", leadMonths: 0 }),
@@ -83,7 +83,7 @@ describe("pneumococcalRule", () => {
       status: "future",
       dueDate: "2028-03-10",
       reason: { kind: "after_dose", lastDate: "2022-03-10", intervalYears: 6 },
-      source: { page: 17, section: "Tab. 2, Pneumokokken, S" },
+      source: { page: 17, section: "Tab. 2, Pneumokokken, Kategorie S" },
     });
   });
 

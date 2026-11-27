@@ -19,7 +19,7 @@ describe("influenzaRule", () => {
       dueDate: "2026-09-01",
       timing: "season",
       reason: { kind: "season", label: "2026/27" },
-      source: { page: 14, section: "Tab. 2, Influenza, S" },
+      source: { page: 14, section: "Tab. 2, Influenza, Kategorie S" },
     });
     expect(
       run(influenzaRule, {
@@ -44,7 +44,7 @@ describe("influenzaRule", () => {
         status: "due",
         timing: "season",
         reason: { kind: "season", label: "2026/27" },
-        source: { page: 15, section: "Tab. 2, Influenza, B" },
+        source: { page: 15, section: "Tab. 2, Influenza, Kategorie B" },
       });
     }
     expect(

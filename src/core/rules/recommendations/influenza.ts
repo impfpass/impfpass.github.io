@@ -4,9 +4,9 @@ import { seasonResult } from "../season";
 import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 
-const SOURCE = eb4(14, "Tab. 2, Influenza, S");
+const SOURCE = eb4(14, "Tab. 2, Influenza, Kategorie S");
 const DISCUSS_SOURCE = eb4(14, "Tab. 2, Influenza, Kategorie I");
-const JOB_SOURCE = eb4(15, "Tab. 2, Influenza, B");
+const JOB_SOURCE = eb4(15, "Tab. 2, Influenza, Kategorie B");
 const AGE = 60;
 
 export const influenzaRule: Rule = {

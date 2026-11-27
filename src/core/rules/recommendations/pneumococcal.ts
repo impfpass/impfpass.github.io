@@ -3,7 +3,7 @@ import { ageOrDoctor } from "../ageOrDoctor";
 import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 
-const SOURCE = eb4(17, "Tab. 2, Pneumokokken, S");
+const SOURCE = eb4(17, "Tab. 2, Pneumokokken, Kategorie S");
 const DISCUSS_SOURCE = eb4(31, "Kap. 3.2, Pneumokokken, Indikationsimpfung");
 const AGE = 60;
 

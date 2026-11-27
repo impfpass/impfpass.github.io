@@ -4,7 +4,7 @@ import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 import { eb45 } from "./eb45";
 
-const SOURCE = eb4(13, "Tab. 2, Herpes zoster, S");
+const SOURCE = eb4(13, "Tab. 2, Herpes zoster, Kategorie S");
 const SERIES_SOURCE = eb4(68, "Tab. 11E, Fußnote c");
 const DISCUSS_SOURCE = eb45(4, "Beschluss – Empfehlung");
 const AGE = 60;

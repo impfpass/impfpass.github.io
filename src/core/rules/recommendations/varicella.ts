@@ -2,7 +2,7 @@ import { dosesOf, nextInSeries } from "../helpers";
 import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 
-const SOURCE = eb4(19, "Tab. 2, Varizellen, B");
+const SOURCE = eb4(19, "Tab. 2, Varizellen, Kategorie B");
 const INTERVAL_SOURCE = eb4(68, "Text zu Tab. 11E");
 
 /** 2 Dosen im Abstand von 4 bis 6 Wochen (S. 68). */

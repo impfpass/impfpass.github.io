@@ -98,7 +98,7 @@ describe("pertussisRule", () => {
       latestDate: null,
       dose: null,
       reason: { kind: "indication", indication: "job" },
-      source: { page: 17, section: "Tab. 2, Pertussis, B" },
+      source: { page: 17, section: "Tab. 2, Pertussis, Kategorie B" },
     });
   });
 

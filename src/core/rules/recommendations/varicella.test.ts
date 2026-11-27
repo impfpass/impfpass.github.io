@@ -26,7 +26,7 @@ describe("varicellaRule", () => {
     );
     expect(varicellaRule.source).toMatchObject({
       page: 19,
-      section: "Tab. 2, Varizellen, B",
+      section: "Tab. 2, Varizellen, Kategorie B",
     });
   });
 

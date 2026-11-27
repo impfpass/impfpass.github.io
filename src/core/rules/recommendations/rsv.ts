@@ -3,7 +3,7 @@ import { dosesOf } from "../helpers";
 import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 
-const SOURCE = eb4(18, "Tab. 2, RSV, S");
+const SOURCE = eb4(18, "Tab. 2, RSV, Kategorie S");
 const DISCUSS_SOURCE = eb4(18, "Tab. 2, RSV, Kategorie I");
 const AGE = 75;
 

@@ -19,7 +19,7 @@ describe("rsvRule", () => {
       dueDate: "2026-11-27",
       timing: "normal",
       reason: { kind: "age", age: 75 },
-      source: { page: 18, section: "Tab. 2, RSV, S" },
+      source: { page: 18, section: "Tab. 2, RSV, Kategorie S" },
     });
     expect(
       run(rsvRule, {

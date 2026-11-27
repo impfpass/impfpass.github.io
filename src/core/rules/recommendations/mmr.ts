@@ -4,7 +4,7 @@ import type { Rule, RuleResult } from "../types";
 import { eb4 } from "./eb4";
 
 const SOURCE = eb4(15, "Tab. 2, Masern");
-const JOB_SOURCE = eb4(16, "Tab. 2, MMR, B");
+const JOB_SOURCE = eb4(16, "Tab. 2, MMR, Kategorie B");
 
 /** Beruf: insgesamt 2 Dosen, die 2. mindestens 1 Monat nach der 1. (S. 68, Tab. 11E, Zeile Röteln: Auslegung). */
 const JOB_STEPS = [{ min: { months: 1 } }];

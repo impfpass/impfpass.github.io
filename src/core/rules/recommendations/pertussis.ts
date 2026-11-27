@@ -5,7 +5,7 @@ import { eb4 } from "./eb4";
 import { tdNextDate } from "./td";
 
 const SOURCE = eb4(16, "Tab. 2, Pertussis");
-const JOB_SOURCE = eb4(17, "Tab. 2, Pertussis, B");
+const JOB_SOURCE = eb4(17, "Tab. 2, Pertussis, Kategorie B");
 
 export const pertussisRule: Rule = {
   id: "pertussis",
