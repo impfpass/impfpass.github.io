@@ -32,6 +32,8 @@ export const pwaOptions: Partial<VitePWAOptions> = {
   workbox: {
     globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
     cleanupOutdatedCaches: true,
+    // Die PC-App (Plan 3) liegt unter /import/ und hat eine eigene Seite.
+    navigateFallbackDenylist: [/^\/import\//],
     // Neue Version sofort aktivieren und die offenen Seiten übernehmen. Mit
     // injectRegister "script" setzt das Plugin das nicht selbst. Unbedenklich,
     // weil der Build ein einziges JS-Bündel ohne nachgeladene Teile ist.
