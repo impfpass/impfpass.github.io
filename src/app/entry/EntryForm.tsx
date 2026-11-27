@@ -52,10 +52,13 @@ function ErrorText({ id, text }: { id: string; text?: string }) {
 export function EntryForm({
   existing,
   onAddAnother,
+  onSaved,
 }: {
   existing?: Vaccination;
   /** Nach dem Speichern ein leeres Formular für die nächste Impfung. */
   onAddAnother?: () => void;
+  /** Nach erfolgreichem Speichern, wenn die Bestätigung erscheint. */
+  onSaved?: () => void;
 }) {
   const { person, actions } = useAppData();
   const initialDate = existing?.date ?? todayISO();
@@ -167,6 +170,7 @@ export function EntryForm({
     try {
       await actions.saveVaccination(v);
       setSaved(v);
+      onSaved?.();
     } catch {
       setFailed(true);
     } finally {

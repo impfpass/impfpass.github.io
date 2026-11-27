@@ -14,10 +14,27 @@ import { Shell } from "./Shell";
 import { StorageError } from "./StorageError";
 import { T } from "./texts";
 
-function NewEntry() {
+/**
+ * Formular für eine neue Impfung. `reselect` zählt, wie oft der Tab
+ * „Neue Impfung“ erneut angetippt wurde: Nach dem Speichern öffnet das ein
+ * leeres Formular, während der Eingabe bleibt alles stehen.
+ */
+function NewEntry({ reselect }: { reselect: number }) {
   // Neuer Schlüssel = leeres Formular für die nächste Impfung
   const [round, setRound] = useState(0);
-  return <EntryForm key={round} onAddAnother={() => setRound((n) => n + 1)} />;
+  const [saved, setSaved] = useState(false);
+  const [seenReselect, setSeenReselect] = useState(reselect);
+  const next = () => {
+    setRound((n) => n + 1);
+    setSaved(false);
+  };
+  if (reselect !== seenReselect) {
+    setSeenReselect(reselect);
+    if (saved) next();
+  }
+  return (
+    <EntryForm key={round} onAddAnother={next} onSaved={() => setSaved(true)} />
+  );
 }
 
 function EditEntry({ id }: { id: string }) {
@@ -29,6 +46,7 @@ function EditEntry({ id }: { id: string }) {
 
 function Screens() {
   const { status, person } = useAppData();
+  const [reselectNew, setReselectNew] = useState(0);
 
   if (status === "loading") {
     return (
@@ -41,7 +59,11 @@ function Screens() {
   if (!person) return <SetupScreen />;
 
   return (
-    <Shell>
+    <Shell
+      onReselect={(href) => {
+        if (href === "/impfungen/neu") setReselectNew((n) => n + 1);
+      }}
+    >
       <Switch>
         <Route path="/">
           <OverviewScreen />
@@ -50,7 +72,7 @@ function Screens() {
           <ListScreen />
         </Route>
         <Route path="/impfungen/neu">
-          <NewEntry />
+          <NewEntry reselect={reselectNew} />
         </Route>
         <Route path="/impfungen/:id/bearbeiten">
           {(params) => <EditEntry id={params.id} />}

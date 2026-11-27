@@ -114,6 +114,25 @@ it("gespeicherte Sortierung älterer Versionen wird beim Öffnen verwendet", asy
   expect(screen.getAllByText("Boostrix Polio")).toHaveLength(4);
 });
 
+it("fehlgeschlagenes Speichern der Sortierung wird gemeldet", async () => {
+  await seed({ vaccinations: [testVaccination()] });
+  const user = userEvent.setup();
+  await renderWithData(<ListScreen />, "/impfungen");
+  const put = vi
+    .spyOn(IDBObjectStore.prototype, "put")
+    .mockImplementation(() => {
+      throw new DOMException("voll", "QuotaExceededError");
+    });
+  try {
+    await user.click(screen.getByRole("button", { name: "Krankheit" }));
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Speichern hat nicht geklappt",
+    );
+  } finally {
+    put.mockRestore();
+  }
+});
+
 it("leere Liste lädt zum Eintragen ein", async () => {
   await seed({});
   await renderWithData(<ListScreen />, "/impfungen");

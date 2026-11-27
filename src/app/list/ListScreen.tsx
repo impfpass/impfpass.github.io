@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import type { ListSort, Vaccination } from "@/core/model";
@@ -37,9 +38,13 @@ export function ListScreen() {
   const { vaccinations, settings, actions } = useAppData();
   const sort = settings.listSort;
   const { key: sortKey, dir } = splitSort(sort);
+  const [saveFailed, setSaveFailed] = useState(false);
 
   function choose(key: SortKey) {
-    void actions.saveSettings({ ...settings, listSort: nextSort(sort, key) });
+    actions.saveSettings({ ...settings, listSort: nextSort(sort, key) }).then(
+      () => setSaveFailed(false),
+      () => setSaveFailed(true),
+    );
   }
 
   let content;
@@ -95,6 +100,11 @@ export function ListScreen() {
         <p role="status" className="text-muted-foreground">
           {directionText(sort)}. {T.list.sort.flipHint}
         </p>
+        {saveFailed && (
+          <p role="alert" className="text-destructive">
+            {T.common.saveFailed}
+          </p>
+        )}
       </div>
       {content}
     </div>

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { createBackup, serializeBackup } from "@/core/formats/backup";
 import { DEFAULT_SETTINGS } from "@/core/model";
 import { StorageUnavailableError } from "@/core/storage/repository";
-import { testPerson, testVaccination } from "@/test/helpers";
+import { seed, testPerson, testVaccination } from "@/test/helpers";
 import { App } from "./App";
 
 it("zeigt den App-Namen", async () => {
@@ -49,6 +49,37 @@ it("die Ersteinrichtung bietet das Wiederherstellen einer Sicherung an", async (
     await screen.findByRole("heading", { name: "Übersicht" }),
   ).toBeTruthy();
   expect(screen.getByText("Tetanus")).toBeTruthy();
+});
+
+it("„Neue Impfung“ nach dem Speichern öffnet ein leeres Formular", async () => {
+  await seed({});
+  window.history.replaceState(null, "", "/#/impfungen/neu");
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(await screen.findByLabelText("Impfstoff"), "Boostrix Polio");
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+  await screen.findByText("Die Impfung ist gespeichert.");
+
+  await user.click(screen.getByRole("link", { name: "Neue Impfung" }));
+
+  expect(screen.queryByText("Die Impfung ist gespeichert.")).toBeNull();
+  expect((screen.getByLabelText("Impfstoff") as HTMLInputElement).value).toBe(
+    "",
+  );
+});
+
+it("„Neue Impfung“ während der Eingabe lässt die Eingabe stehen", async () => {
+  await seed({});
+  window.history.replaceState(null, "", "/#/impfungen/neu");
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(await screen.findByLabelText("Impfstoff"), "Boos");
+
+  await user.click(screen.getByRole("link", { name: "Neue Impfung" }));
+
+  expect((screen.getByLabelText("Impfstoff") as HTMLInputElement).value).toBe(
+    "Boos",
+  );
 });
 
 it("die angelegte Person bleibt nach einem Neustart erhalten", async () => {

@@ -31,8 +31,17 @@ const ITEMS = [
   },
 ];
 
-/** Rahmen mit Kopf und unterer Navigation. */
-export function Shell({ children }: { children: ReactNode }) {
+/**
+ * Rahmen mit Kopf und unterer Navigation. `onReselect` meldet das Antippen
+ * des Tabs, der schon gewählt ist.
+ */
+export function Shell({
+  children,
+  onReselect,
+}: {
+  children: ReactNode;
+  onReselect?: (href: string) => void;
+}) {
   const [location] = useLocation();
   return (
     <div className="flex min-h-dvh flex-col">
@@ -54,6 +63,9 @@ export function Shell({ children }: { children: ReactNode }) {
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
+                  onClick={() => {
+                    if (active) onReselect?.(href);
+                  }}
                   className={cn(
                     "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-sm",
                     active

@@ -25,6 +25,22 @@ it("Wegklicken merkt sich die Entscheidung", async () => {
   expect(screen.queryByText(/Zum Home-Bildschirm/)).toBeNull();
 });
 
+it("fehlgeschlagenes Speichern beim Ausblenden wird gemeldet", async () => {
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(iphone);
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<InstallHint />);
+  vi.spyOn(IDBObjectStore.prototype, "put").mockImplementation(() => {
+    throw new DOMException("voll", "QuotaExceededError");
+  });
+
+  await user.click(screen.getByRole("button", { name: "Hinweis ausblenden" }));
+
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Speichern hat nicht geklappt",
+  );
+});
+
 it("erscheint nicht am PC", async () => {
   await seed({});
   await renderWithData(<InstallHint />);
