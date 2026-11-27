@@ -289,3 +289,19 @@ it("Name ändern lässt die Blutgruppe unverändert", async () => {
   await waitFor(() => expect(data().person?.name).toBe("Christa M."));
   expect(data().person?.bloodGroup).toBe("AB");
 });
+
+it("Blutgruppe: Hinweis zum Aufheben der Auswahl, Hinweis bezieht sich auf die Blutgruppe", async () => {
+  await seed({ persons: [testPerson()] });
+  await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(
+    screen.getByText("Noch einmal tippen hebt die Auswahl auf."),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/Die Angaben zur Blutgruppe sind zum Nachschauen/),
+  ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("radiogroup", { name: "Blutgruppe" })
+      .getAttribute("aria-describedby"),
+  ).toBeTruthy();
+});

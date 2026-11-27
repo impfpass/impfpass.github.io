@@ -96,7 +96,8 @@ describe("hepatitisARule", () => {
     ).toMatchObject({
       dueDate: "2027-01-01",
       dose: { number: 4, of: 4 },
-      reason: { kind: "started", given: 3, total: 4 },
+      reason: { kind: "rapid" },
+      source: { page: 62, section: "Kap. 5.6.6 Impfschemata, Tab. 6" },
     });
   });
 
@@ -162,5 +163,37 @@ describe("hepatitisARule", () => {
         shot("2026-01-22", "twinrix", "month"),
       ]),
     ).toMatchObject({ dueDate: "2027-01-01", dose: { number: 4, of: 4 } });
+  });
+
+  it("Hepatitis A: Twinrix und Havrix am selben Tag zählen als Einzelimpfstoff, egal in welcher Reihenfolge (Epid Bull 27/2026, S. 61)", () => {
+    for (const order of [
+      [shot("2026-03-27", "twinrix"), shot("2026-03-27", "havrix")],
+      [shot("2026-03-27", "havrix"), shot("2026-03-27", "twinrix")],
+    ]) {
+      expect(check(order)).toMatchObject({
+        dose: { number: 2, of: 2 },
+        dueDate: "2026-09-27",
+      });
+    }
+  });
+
+  it("Hepatitis A: Havrix 720 oder 360 aus den 1990er-Jahren braucht 3 Dosen (Epid Bull 27/2026, S. 61)", () => {
+    const old = (date: string, label: string) => ({
+      ...shot(date, "havrix"),
+      label,
+    });
+    expect(
+      check([old("1995-01-01", "Havrix 720"), old("1995-08-01", "Havrix 720")]),
+    ).toMatchObject({ status: "due", dose: { number: 3, of: 3 } });
+    expect(
+      check([old("1996-01-01", "Havrix 360"), old("1996-02-01", "Havrix 360")])
+        .status,
+    ).toBe("due");
+    expect(
+      check([
+        old("2010-01-01", "Havrix 720 Kinder"),
+        old("2010-08-01", "Havrix 720 Kinder"),
+      ]).status,
+    ).toBe("protected");
   });
 });

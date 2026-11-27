@@ -287,6 +287,27 @@ it("eine vollständige Hepatitis A nennt den langen Schutz", async () => {
   ).toBeTruthy();
 });
 
+it("die 4. Dosis nach einem Schnellschema erklärt das Schnellschema", async () => {
+  const engerix = (id: string, date: string) =>
+    testVaccination({
+      id,
+      date,
+      productId: "engerix-b",
+      label: "Engerix-B",
+      diseases: ["hepatitis_b"],
+    });
+  await seed({
+    persons: [testPerson({ birthDate: "1990-05-10" })],
+    vaccinations: [
+      engerix("hb1", "2026-01-01"),
+      engerix("hb2", "2026-02-01"),
+      engerix("hb3", "2026-03-01"),
+    ],
+  });
+  await open("hepatitis_b");
+  expect(screen.getByText(/Schnellschema/)).toBeTruthy();
+});
+
 it("ohne Statuszeile steht unter der Überschrift kein leerer Absatz", async () => {
   await seed({
     persons: [

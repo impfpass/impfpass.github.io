@@ -126,15 +126,15 @@ export const T = {
     others: "Weitere Impfungen",
     otherHints: {
       rabiesComplete:
-        "Grundimmunisierung vollständig, für Reisen ist keine Auffrischung nötig. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus trotzdem sofort zum Arzt.",
+        "Grundimmunisierung vollständig. Für Reisen ist bei gesundem Immunsystem keine Auffrischung nötig. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus trotzdem sofort zum Arzt.",
       rabiesTwo:
-        "2 von 3 Dosen. Besteht weiter ein Risiko, empfiehlt die STIKO die 3. innerhalb eines Jahres. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus sofort zum Arzt.",
+        "2 Dosen, bei gesundem Immunsystem ein anerkanntes Schema. Besteht weiter ein Risiko, empfiehlt die STIKO spätestens ein Jahr nach der 2. Dosis eine 3. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus sofort zum Arzt.",
       rabiesOne:
         "Eine Dosis zählt noch nicht als Schutz. Nach einem Biss, Kratzer oder Kontakt mit einer Fledermaus sofort zum Arzt.",
       tuberculosis:
         "Die STIKO empfiehlt die BCG-Impfung nicht mehr. Eine Auffrischung gibt es nicht.",
       smallpox:
-        "Keine Auffrischung vorgesehen. Bei einer Mpox-Impfung zählt sie mit, dann reicht meist 1 Dosis.",
+        "Keine Auffrischung vorgesehen. Bei einer Mpox-Impfung zählt die frühere Pockenimpfung mit, dann reicht meist 1 Dosis.",
     },
     hidden: "Ausgeblendet",
     declined: "Möchte ich nicht",
@@ -258,6 +258,8 @@ export const T = {
         doctor: "Deine Ärztin oder dein Arzt empfiehlt sie dir.",
         complete:
           "Die Impfungen sind vollständig, eine Auffrischung ist nicht vorgesehen.",
+        rapid:
+          "Die ersten drei Impfungen lagen nah beieinander, das war ein Schnellschema. Für einen langen Schutz folgt eine 4. Impfung 12 Monate nach der ersten.",
         longProtection:
           "Die Impfungen sind vollständig. Die STIKO rechnet mit einem Schutz für mindestens 10 bis 20 Jahre. Ob später eine Auffrischung nötig wird, ist derzeit offen.",
         none: "Die STIKO empfiehlt diese Impfung für dich derzeit nicht.",
@@ -371,7 +373,8 @@ export const T = {
       negative: "negativ",
       formula: "Rhesusformel",
       formulaHelp: "So wie im Impfpass, zum Beispiel CcD.ee.",
-      hint: "Vor einer Bluttransfusion bestimmt die Klinik die Blutgruppe immer selbst. Die Angaben hier sind zum Nachschauen, etwa beim Blutspenden oder in der Schwangerschaft.",
+      clearHint: "Noch einmal tippen hebt die Auswahl auf.",
+      hint: "Vor einer Bluttransfusion bestimmt die Klinik die Blutgruppe immer selbst. Die Angaben zur Blutgruppe sind zum Nachschauen, etwa beim Blutspenden oder in der Schwangerschaft.",
     },
   },
   info: {

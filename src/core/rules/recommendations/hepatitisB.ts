@@ -5,12 +5,15 @@ import {
   rapidFourthDose,
 } from "../helpers";
 import type { Reason, Rule, RuleContext, RuleResult } from "../types";
+import { eb27 } from "./eb27";
 import { eb4 } from "./eb4";
 
 const SOURCE = eb4(13, "Tab. 2, Hepatitis B, Nr. 3");
 const DISCUSS_SOURCE = eb4(13, "Tab. 2, Hepatitis B, Nr. 1");
 // Eine unvollständige Serie wird komplettiert, nicht neu begonnen („Jede Impfung zählt!“).
 const STARTED_SOURCE = eb4(40, "Kap. 4.5 Impfabstände");
+const COMPLETE_SOURCE = eb4(13, "Tab. 2, Hepatitis B, Anmerkungen");
+const RAPID_SOURCE = eb27(66, "Kap. 5.7.6 Impfschemata, Tab. 7");
 
 // offen: Das Schema 0-1-6 Monate steht in EB 4/2026, S. 67 (Text zu Tab. 11D) und gilt dort für
 // 11- bis 17-Jährige; für Erwachsene sagt die STIKO es nicht ausdrücklich. Heplisav B nennt die
@@ -33,7 +36,8 @@ function seriesResult(
   const rapid = heplisavDone
     ? null
     : rapidFourthDose(doses, ctx.today, ctx.leadMonths);
-  if (rapid) return { ...rapid, reason: reasonFor(doses.length, 4) };
+  if (rapid)
+    return { ...rapid, reason: { kind: "rapid" }, source: RAPID_SOURCE };
   // Nach erfolgreicher Grundimmunisierung keine Auffrischung (S. 13, Anmerkungen).
   if (heplisavDone || doses.length >= TOTAL) {
     return {
@@ -43,6 +47,7 @@ function seriesResult(
       dose: null,
       timing: "normal",
       reason: { kind: "complete" },
+      source: COMPLETE_SOURCE,
     };
   }
   return {
@@ -86,8 +91,11 @@ export const hepatitisBRule: Rule = {
         given,
         total,
       }));
-      if (result.status !== "protected")
-        return { ...result, source: STARTED_SOURCE };
+      if (result.status !== "protected") {
+        return result.reason.kind === "started"
+          ? { ...result, source: STARTED_SOURCE }
+          : result;
+      }
       if (!chronicCard) return result;
     }
 

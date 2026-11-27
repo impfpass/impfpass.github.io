@@ -43,6 +43,8 @@ export type Reason =
   | { kind: "catch_up"; given: number; total: number }
   // Angefangene Serie ohne Indikation, wird zu Ende geführt (Hepatitis A und B)
   | { kind: "started"; given: number; total: number }
+  // 4. Dosis nach einem Schnellschema (3 Dosen nah beieinander)
+  | { kind: "rapid" }
   | { kind: "with_td" } // Keuchhusten mit der nächsten Td-Impfung
   | { kind: "season"; label: string } // label etwa '2026/27'
   | { kind: "indication"; indication: "job" | "tbe" | "doctor" }

@@ -25,14 +25,11 @@ export function BloodFields(props: {
   const groupId = `${idPrefix}-blood-group`;
   const rhesusId = `${idPrefix}-rhesus`;
   const formulaId = `${idPrefix}-rhesus-formula`;
+  const clearId = `${idPrefix}-blood-clear`;
 
   return (
     <div className="flex flex-col gap-4">
-      <div
-        role="group"
-        aria-labelledby={`${groupId}-label`}
-        className="flex flex-col gap-2"
-      >
+      <div className="flex flex-col gap-2">
         <p id={`${groupId}-label`} className="font-medium">
           {B.group}
         </p>
@@ -41,6 +38,8 @@ export function BloodFields(props: {
           variant="outline"
           spacing={1}
           value={props.group ?? ""}
+          aria-labelledby={`${groupId}-label`}
+          aria-describedby={clearId}
           onValueChange={(v) =>
             props.onGroup(v ? (v as BloodGroup) : undefined)
           }
@@ -53,11 +52,7 @@ export function BloodFields(props: {
           ))}
         </ToggleGroup>
       </div>
-      <div
-        role="group"
-        aria-labelledby={`${rhesusId}-label`}
-        className="flex flex-col gap-2"
-      >
+      <div className="flex flex-col gap-2">
         <p id={`${rhesusId}-label`} className="font-medium">
           {B.rhesus}
         </p>
@@ -66,6 +61,8 @@ export function BloodFields(props: {
           variant="outline"
           spacing={1}
           value={props.rhesus ?? ""}
+          aria-labelledby={`${rhesusId}-label`}
+          aria-describedby={clearId}
           onValueChange={(v) => props.onRhesus(v ? (v as Rhesus) : undefined)}
           className="grid w-full grid-cols-2"
         >
@@ -80,6 +77,9 @@ export function BloodFields(props: {
           ))}
         </ToggleGroup>
       </div>
+      <p id={clearId} className="text-muted-foreground">
+        {B.clearHint}
+      </p>
       <div className="flex flex-col gap-2">
         <Label htmlFor={formulaId}>{B.formula}</Label>
         <Input

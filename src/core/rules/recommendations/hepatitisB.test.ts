@@ -187,7 +187,8 @@ describe("hepatitisBRule", () => {
       status: "soon",
       dueDate: "2027-01-01",
       dose: { number: 4, of: 4 },
-      reason: { kind: "indication", indication: "job" },
+      reason: { kind: "rapid" },
+      source: { page: 66, section: "Kap. 5.7.6 Impfschemata, Tab. 7" },
     });
     expect(
       run(hepatitisBRule, {
@@ -263,5 +264,38 @@ describe("hepatitisBRule", () => {
         today: "2026-11-27",
       }).status,
     ).toBe("due");
+  });
+
+  it("Hepatitis B: vollständige Serie nennt die Anmerkung zu Auffrischungen (Epid Bull 4/2026, S. 13)", () => {
+    expect(
+      run(hepatitisBRule, {
+        person: person("1985-05-05"),
+        vaccinations: [
+          shot("2020-01-01", "engerix-b"),
+          shot("2020-02-01", "engerix-b"),
+          shot("2020-07-01", "engerix-b"),
+        ],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({
+      status: "protected",
+      source: { page: 13, section: "Tab. 2, Hepatitis B, Anmerkungen" },
+    });
+  });
+
+  it("Hepatitis B: angefangene Serie läuft auch nach „Trifft nicht zu“ weiter (Epid Bull 4/2026, S. 40)", () => {
+    for (const p of [
+      person("1985-05-05", { chronicIllness: true }),
+      person("1985-05-05"),
+    ]) {
+      expect(
+        run(hepatitisBRule, {
+          person: p,
+          vaccinations: [shot("2026-10-27", "engerix-b")],
+          decision: "doctor_not_applicable",
+          today: "2026-11-27",
+        }),
+      ).toMatchObject({ status: "due", reason: { kind: "started" } });
+    }
   });
 });

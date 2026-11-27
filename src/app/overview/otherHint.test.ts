@@ -46,3 +46,10 @@ it("Tollwut: der Satz nennt jeden möglichen Kontakt, nicht nur den Biss (Epid B
     expect(text).toContain("Biss, Kratzer oder Kontakt mit einer Fledermaus");
   }
 });
+
+it("Pocken und Tollwut: Sätze sind eindeutig und nennen die Voraussetzungen (Epid Bull 4/2026, S. 16, 60; Epid Bull 27/2026, S. 90, Tab. 14)", () => {
+  expect(H.smallpox).toContain("zählt die frühere Pockenimpfung mit");
+  expect(H.rabiesComplete).toContain("bei gesundem Immunsystem");
+  expect(H.rabiesTwo).not.toContain("2 von 3");
+  expect(H.rabiesTwo).toContain("spätestens ein Jahr nach der 2. Dosis");
+});
