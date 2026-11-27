@@ -538,6 +538,8 @@ So füllst du die Felder:
     title: "Impfungen übernehmen",
     intro:
       "Öffne am PC impfpass.github.io/import/, prüf dort deine Impfungen und übertrag sie dann hierher.",
+    waysLabel: "So übernimmst du die Impfungen",
+    scanCodes: "QR-Code scannen",
     openFile: "Datei öffnen",
     fileTooLarge: "Die Datei ist zu groß für eine Übertragung.",
     pasteText: "Text einfügen",
@@ -546,6 +548,15 @@ So füllst du die Felder:
     progress: (read: number, total: number, missing: readonly number[]) =>
       `${read} von ${total} Teilen gelesen. ${missing.length === 1 ? "Es fehlt" : "Es fehlen"} noch Teil ${joinNames(missing.map(String))}.`,
     restart: "Neu beginnen",
+    scanner: {
+      videoLabel: "Kamerabild",
+      help: "Halte die Kamera auf den Code am PC-Bildschirm.",
+      denied:
+        "ImpfPass darf die Kamera nicht benutzen. Erlaube den Zugriff in den Einstellungen des Handys, oder übertrag die Impfungen als Datei oder Text.",
+      missing:
+        "Keine Kamera gefunden. Übertrag die Impfungen als Datei oder Text.",
+      failed: "Die Kamera lässt sich nicht starten.",
+    },
     preview: {
       label: "Gefundene Impfungen",
       summary: (n: number, duplicates: number) =>

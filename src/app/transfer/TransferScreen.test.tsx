@@ -10,6 +10,29 @@ import { renderWithData, seed, testVaccination } from "@/test/helpers";
 import { packParts } from "@/test/transfer";
 import { TransferScreen } from "./TransferScreen";
 
+// Das Scannen braucht eine Kamera; der Ersatz liefert Zeilen auf Knopfdruck.
+vi.mock("./Scanner", () => ({
+  Scanner: ({
+    onCode,
+    onFallback,
+  }: {
+    onCode(text: string): void;
+    onFallback(way: "file" | "text"): void;
+  }) => (
+    <div data-testid="scanner">
+      <input
+        aria-label="Gescannter Text"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") onCode(e.currentTarget.value);
+        }}
+      />
+      <button type="button" onClick={() => onFallback("text")}>
+        Ersatz: Text
+      </button>
+    </div>
+  ),
+}));
+
 const CREATED_AT = "2026-11-27T10:00:00.000Z";
 
 const payload: TransferPayload = {
@@ -55,7 +78,24 @@ function partsOf(p: TransferPayload, n: number): string[] {
   return parts.map(toTextLine);
 }
 
-async function paste(user: ReturnType<typeof userEvent.setup>, text: string) {
+type User = ReturnType<typeof userEvent.setup>;
+
+async function chooseWay(user: User, name: string) {
+  await user.click(screen.getByRole("radio", { name }));
+}
+
+async function scan(user: User, line: string) {
+  const field = screen.getByLabelText("Gescannter Text");
+  await user.clear(field);
+  await user.click(field);
+  await user.paste(line);
+  await user.keyboard("{Enter}");
+}
+
+async function paste(user: User, text: string) {
+  if (!screen.queryByLabelText("Text einfügen")) {
+    await chooseWay(user, "Text einfügen");
+  }
   await user.click(screen.getByLabelText("Text einfügen"));
   await user.paste(text);
   await user.click(screen.getByRole("button", { name: "Einlesen" }));
@@ -64,8 +104,9 @@ async function paste(user: ReturnType<typeof userEvent.setup>, text: string) {
 const checkbox = (name: RegExp) =>
   screen.getByRole("checkbox", { name }) as HTMLInputElement;
 
-it("zeigt Überschrift, Anleitung und die Wege Datei und Text", async () => {
+it("zeigt Überschrift, Anleitung und als ersten Weg das Scannen", async () => {
   await seed({});
+  const user = userEvent.setup();
   await renderWithData(<TransferScreen />, "/uebernehmen");
   expect(
     screen.getByRole("heading", { name: "Impfungen übernehmen" }),
@@ -75,13 +116,85 @@ it("zeigt Überschrift, Anleitung und die Wege Datei und Text", async () => {
       "Öffne am PC impfpass.github.io/import/, prüf dort deine Impfungen und übertrag sie dann hierher.",
     ),
   ).toBeTruthy();
+  const ways = screen.getAllByRole("radio").map((r) => r.textContent);
+  expect(ways).toEqual(["QR-Code scannen", "Datei öffnen", "Text einfügen"]);
+  expect(
+    screen
+      .getByRole("radio", { name: "QR-Code scannen" })
+      .getAttribute("aria-checked"),
+  ).toBe("true");
+  expect(screen.getByTestId("scanner")).toBeTruthy();
+  expect(screen.queryByLabelText("Text einfügen")).toBeNull();
+  expect(screen.queryByRole("button", { name: "Datei öffnen" })).toBeNull();
+
+  await chooseWay(user, "Datei öffnen");
+  expect(screen.queryByTestId("scanner")).toBeNull();
   expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeTruthy();
   expect(screen.getByTestId("transfer-file").getAttribute("accept")).toBe(
     ".txt,text/plain",
   );
+
+  await chooseWay(user, "Text einfügen");
   const text = screen.getByLabelText("Text einfügen");
   expect(text.getAttribute("autocorrect")).toBe("off");
   expect(text.getAttribute("spellcheck")).toBe("false");
+  expect(screen.queryByTestId("transfer-file")).toBeNull();
+});
+
+it("gescannte Teile in umgekehrter Reihenfolge führen zur Vorschau", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first, second, third] = partsOf(payload, 3);
+
+  await scan(user, third);
+  expect(
+    await screen.findByText(
+      "1 von 3 Teilen gelesen. Es fehlen noch Teil 1 und 2.",
+    ),
+  ).toBeTruthy();
+  // Der Scanner bleibt unter dem Fortschritt sichtbar.
+  expect(screen.getByTestId("scanner")).toBeTruthy();
+
+  await scan(user, second);
+  expect(
+    await screen.findByText("2 von 3 Teilen gelesen. Es fehlt noch Teil 1."),
+  ).toBeTruthy();
+
+  await scan(user, first);
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  // Die Vorschau löst den Scanner ab, die Kamera stoppt.
+  expect(screen.queryByTestId("scanner")).toBeNull();
+});
+
+it("ein gescannter fremder Code zeigt den Fehler über dem Scanner", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+
+  await scan(user, "https://example.org");
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Das ist kein Code von ImpfPass.",
+  );
+  expect(screen.getByTestId("scanner")).toBeTruthy();
+});
+
+it("„Text einfügen“ und der Ausweg des Scanners lösen den Scanner ab", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+
+  await user.click(screen.getByRole("button", { name: "Ersatz: Text" }));
+  expect(screen.queryByTestId("scanner")).toBeNull();
+  expect(screen.getByLabelText("Text einfügen")).toBeTruthy();
+
+  await chooseWay(user, "QR-Code scannen");
+  expect(screen.getByTestId("scanner")).toBeTruthy();
+  await chooseWay(user, "Text einfügen");
+  expect(screen.queryByTestId("scanner")).toBeNull();
 });
 
 it("eingefügter Text zeigt die Vorschau, „Übernehmen“ speichert die gewählten Einträge", async () => {
@@ -162,6 +275,7 @@ it("eine Datei über „Datei öffnen“ zeigt ebenso die Vorschau", async () =>
   const user = userEvent.setup();
   await renderWithData(<TransferScreen />, "/uebernehmen");
 
+  await chooseWay(user, "Datei öffnen");
   await user.upload(
     screen.getByTestId("transfer-file"),
     new File([`${textOf(payload)}\n`], "impfpass-uebertragung-2026-11-27.txt", {
@@ -184,6 +298,7 @@ it("eine Datei über 1 MB wird nicht gelesen", async () => {
   Object.defineProperty(file, "size", { value: 1_000_001 });
   const read = vi.spyOn(file, "text");
 
+  await chooseWay(user, "Datei öffnen");
   await user.upload(screen.getByTestId("transfer-file"), file);
 
   expect((await screen.findByRole("alert")).textContent).toBe(
@@ -306,6 +421,7 @@ it("nach gescannten Teilen liest eine Datei die ganze Übertragung", async () =>
     "1 von 3 Teilen gelesen. Es fehlen noch Teil 1 und 3.",
   );
 
+  await chooseWay(user, "Datei öffnen");
   await user.upload(
     screen.getByTestId("transfer-file"),
     new File([`${textOf(payload)}\n`], "impfpass-uebertragung-2026-11-27.txt", {

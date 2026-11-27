@@ -2,6 +2,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   addPart,
   decodeCollected,
@@ -21,11 +22,20 @@ import { useAppData } from "../data/AppData";
 import { BackupHint } from "../entry/BackupHint";
 import { T } from "@/texts";
 import { ImportPreview } from "./ImportPreview";
+import { Scanner } from "./Scanner";
 
 type View =
   | { kind: "collect" }
   | { kind: "preview"; payload: TransferPayload; items: ImportItem[] }
   | { kind: "done"; count: number };
+
+type Way = "scan" | "file" | "text";
+
+const WAYS: { value: Way; label: string }[] = [
+  { value: "scan", label: T.transfer.scanCodes },
+  { value: "file", label: T.transfer.openFile },
+  { value: "text", label: T.transfer.pasteText },
+];
 
 interface Problem {
   message: string;
@@ -76,6 +86,7 @@ export function TransferScreen() {
   const latest = useRef<TransferCollector | null>(null);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [text, setText] = useState("");
+  const [way, setWay] = useState<Way>("scan");
   const fileInput = useRef<HTMLInputElement>(null);
 
   function setCollector(c: TransferCollector | null) {
@@ -255,44 +266,76 @@ export function TransferScreen() {
           )}
         </div>
       )}
-      <Button
-        type="button"
+      <ToggleGroup
+        type="single"
         variant="outline"
-        onClick={() => fileInput.current?.click()}
+        spacing={1}
+        aria-label={T.transfer.waysLabel}
+        value={way}
+        // Ein Klick auf den gewählten Weg wählt ihn nicht ab.
+        onValueChange={(v) => v && setWay(v as Way)}
+        className="grid w-full grid-cols-3"
       >
-        {T.transfer.openFile}
-      </Button>
-      <input
-        ref={fileInput}
-        type="file"
-        accept=".txt,text/plain"
-        className="hidden"
-        onChange={(e) => void onFile(e)}
-        data-testid="transfer-file"
-      />
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="transfer-text">{T.transfer.pasteText}</Label>
-        <textarea
-          id="transfer-text"
-          rows={4}
-          className="rounded-md border border-input bg-transparent px-3 py-2 font-mono text-base"
-          // Base45 ist kein Text: nichts korrigieren oder großschreiben
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
+        {WAYS.map((w) => (
+          <ToggleGroupItem
+            key={w.value}
+            value={w.value}
+            className="h-auto min-h-11 w-full whitespace-normal"
+          >
+            {w.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      {way === "scan" && (
+        <Scanner
+          onCode={(line) => void onCode(line)}
+          onFallback={(w) => setWay(w)}
         />
-        <Button
-          type="button"
-          disabled={text.trim() === ""}
-          onClick={() => {
-            if (readText(text)) setText("");
-          }}
-        >
-          {T.transfer.read}
-        </Button>
-      </div>
+      )}
+      {way === "file" && (
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInput.current?.click()}
+          >
+            {T.transfer.openFile}
+          </Button>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".txt,text/plain"
+            className="hidden"
+            onChange={(e) => void onFile(e)}
+            data-testid="transfer-file"
+          />
+        </>
+      )}
+      {way === "text" && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="transfer-text">{T.transfer.pasteText}</Label>
+          <textarea
+            id="transfer-text"
+            rows={4}
+            className="rounded-md border border-input bg-transparent px-3 py-2 font-mono text-base"
+            // Base45 ist kein Text: nichts korrigieren oder großschreiben
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <Button
+            type="button"
+            disabled={text.trim() === ""}
+            onClick={() => {
+              if (readText(text)) setText("");
+            }}
+          >
+            {T.transfer.read}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
