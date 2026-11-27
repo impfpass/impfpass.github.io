@@ -35,3 +35,8 @@ it("andere Krankheiten ohne Satz", () => {
     otherHint("yellow_fever", [shot("2015-01-01", "stamaril")]),
   ).toBeNull();
 });
+
+it("Tollwut: drei Dosen mit nur bekanntem Monat zählen einzeln", () => {
+  const m = () => shot("2019-01-01", "rabipur", "month");
+  expect(otherHint("rabies", [m(), m(), m()])).toBe(H.rabiesComplete);
+});

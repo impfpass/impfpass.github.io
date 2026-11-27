@@ -115,3 +115,49 @@ describe("rapidFourthDose", () => {
     expect(rapidFourthDose(twinrix.slice(0, 2), "2026-11-27", 6)).toBeNull();
   });
 });
+
+describe("Schnellschema und ungenaue Daten", () => {
+  it("Schnellschema: 3. Dosis weniger als 4 Monate nach der 2. ergibt 4. Dosis (Epid Bull 4/2026, S. 40)", () => {
+    const late = [
+      shot("2026-01-10", "engerix-b"),
+      shot("2026-02-10", "engerix-b"),
+      shot("2026-03-12", "engerix-b"),
+    ];
+    expect(rapidFourthDose(late, "2026-11-27", 6)?.dueDate).toBe("2027-01-10");
+    const monthFirst = [
+      shot("2026-01-15", "engerix-b", "month"),
+      shot("2026-02-20", "engerix-b"),
+      shot("2026-03-20", "engerix-b"),
+    ];
+    expect(rapidFourthDose(monthFirst, "2026-11-27", 6)?.dueDate).toBe(
+      "2027-01-01",
+    );
+    const fourMonths = [
+      shot("2026-01-01", "engerix-b"),
+      shot("2026-02-01", "engerix-b"),
+      shot("2026-06-01", "engerix-b"),
+    ];
+    expect(rapidFourthDose(fourMonths, "2026-11-27", 6)).toBeNull();
+  });
+
+  it("Schnellschema: bei nur bekanntem Jahr ist der Abstand offen, kein Schnellschema", () => {
+    const years = [
+      shot("2019-01-01", "twinrix", "year"),
+      shot("2019-02-01", "twinrix", "year"),
+      shot("2019-07-01", "twinrix", "year"),
+    ];
+    expect(rapidFourthDose(years, "2026-11-27", 6)).toBeNull();
+  });
+
+  it("dosesOf mit keepImprecise: gleiche Tage nur bei taggenauen Einträgen zusammenfassen", () => {
+    const year = () => shot("2019-06-01", "rabipur", "year");
+    expect(dosesOf([year(), year(), year()], "rabies")).toHaveLength(1);
+    expect(
+      dosesOf([year(), year(), year()], "rabies", { keepImprecise: true }),
+    ).toHaveLength(3);
+    const day = () => shot("2019-06-01", "rabipur");
+    expect(
+      dosesOf([day(), day()], "rabies", { keepImprecise: true }),
+    ).toHaveLength(1);
+  });
+});

@@ -197,4 +197,71 @@ describe("hepatitisBRule", () => {
       }).status,
     ).toBe("protected");
   });
+
+  it("Hepatitis B: chronische Erkrankung mit vollständiger Serie behält die Karte (Epid Bull 4/2026, S. 13)", () => {
+    const p = person("1985-05-05", { chronicIllness: true });
+    const three = [
+      shot("2020-01-01", "engerix-b"),
+      shot("2020-02-01", "engerix-b"),
+      shot("2020-07-01", "engerix-b"),
+    ];
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: three,
+        today: "2026-11-27",
+      }).status,
+    ).toBe("discuss");
+    expect(
+      run(hepatitisBRule, {
+        person: p,
+        vaccinations: three,
+        decision: "doctor_not_applicable",
+        today: "2026-11-27",
+      }).status,
+    ).toBe("protected");
+  });
+
+  it("Hepatitis B: drei Dosen mit nur bekanntem Jahr zählen als vollständige Serie (Epid Bull 4/2026, S. 40)", () => {
+    expect(
+      run(hepatitisBRule, {
+        person: person("1985-05-05"),
+        vaccinations: [
+          shot("2019-03-01", "engerix-b", "year"),
+          shot("2019-04-01", "engerix-b", "year"),
+          shot("2019-09-01", "engerix-b", "year"),
+        ],
+        today: "2026-11-27",
+      }),
+    ).toMatchObject({ status: "protected", reason: { kind: "complete" } });
+  });
+
+  it("Hepatitis B: zwei Dosen Heplisav B mit mindestens 4 Wochen Abstand sind vollständig (Fachinformation Heplisav B, Epid Bull 4/2026, S. 69)", () => {
+    const two = [
+      shot("2026-01-01", "heplisav-b"),
+      shot("2026-02-01", "heplisav-b"),
+    ];
+    for (const p of [
+      person("1985-05-05"),
+      person("1985-05-05", { job: { bloodContact: true } }),
+    ]) {
+      expect(
+        run(hepatitisBRule, {
+          person: p,
+          vaccinations: two,
+          today: "2026-11-27",
+        }),
+      ).toMatchObject({ status: "protected", reason: { kind: "complete" } });
+    }
+    expect(
+      run(hepatitisBRule, {
+        person: person("1985-05-05"),
+        vaccinations: [
+          shot("2026-01-01", "heplisav-b"),
+          shot("2026-01-15", "heplisav-b"),
+        ],
+        today: "2026-11-27",
+      }).status,
+    ).toBe("due");
+  });
 });

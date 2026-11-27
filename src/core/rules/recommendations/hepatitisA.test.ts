@@ -140,4 +140,27 @@ describe("hepatitisARule", () => {
       dueDate: "2026-04-27",
     });
   });
+
+  it("Hepatitis A: Dosen mit nur bekanntem Jahr oder Monat zählen einzeln (Epid Bull 27/2026, S. 61)", () => {
+    expect(
+      check([
+        shot("2019-01-01", "havrix", "year"),
+        shot("2019-08-01", "havrix", "year"),
+      ]).status,
+    ).toBe("protected");
+    expect(
+      check([
+        shot("2019-01-01", "twinrix", "year"),
+        shot("2019-02-01", "twinrix", "year"),
+        shot("2019-07-01", "twinrix", "year"),
+      ]).status,
+    ).toBe("protected");
+    expect(
+      check([
+        shot("2026-01-01", "twinrix", "month"),
+        shot("2026-01-08", "twinrix", "month"),
+        shot("2026-01-22", "twinrix", "month"),
+      ]),
+    ).toMatchObject({ dueDate: "2027-01-01", dose: { number: 4, of: 4 } });
+  });
 });

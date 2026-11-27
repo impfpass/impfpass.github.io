@@ -17,7 +17,15 @@ export function addInterval(date: ISODate, i: Interval): ISODate {
 export function dosesOf(
   vs: Vaccination[],
   disease: DiseaseId,
-  opts: { exclude?: string[] } = {},
+  opts: {
+    exclude?: string[];
+    /**
+     * Gleiche Tage nur zusammenfassen, wenn beide Einträge taggenau sind.
+     * Einträge mit nur Monat oder Jahr liegen auf dem frühesten Tag und
+     * zählen einzeln (drei Impfungen „2019“ sind drei Dosen).
+     */
+    keepImprecise?: boolean;
+  } = {},
 ): Vaccination[] {
   const exclude = opts.exclude ?? [];
   const sorted = vs
@@ -27,7 +35,15 @@ export function dosesOf(
         !(v.productId !== null && exclude.includes(v.productId)),
     )
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
-  return sorted.filter((v, i) => i === 0 || v.date !== sorted[i - 1].date);
+  return sorted.filter((v, i) => {
+    if (i === 0) return true;
+    const prev = sorted[i - 1];
+    if (v.date !== prev.date) return true;
+    return (
+      opts.keepImprecise === true &&
+      (v.datePrecision !== "day" || prev.datePrecision !== "day")
+    );
+  });
 }
 
 export function startStatus(
@@ -96,9 +112,10 @@ export function nextInSeries(
 }
 
 /**
- * Schnellschema: Liegt die 3. Dosis höchstens 2 Monate nach der 1., folgt die
- * 4. Dosis 12 Monate nach der 1. (Twinrix 0, 7, 21 Tage; Hepatitis B 0, 1, 2
- * Monate). Sonst `null`.
+ * Schnellschema: Liegt die 3. Dosis weniger als 4 Monate nach der 2., fehlt der
+ * lange Abstand vor der letzten Dosis (Epid Bull 4/2026, S. 40), und die 4. Dosis
+ * folgt 12 Monate nach der 1. (Twinrix 0, 7, 21 Tage; Hepatitis B 0, 1, 2 Monate).
+ * Beim Standardschema 0, 1, 6 Monate und bei nur bekanntem Jahr `null`.
  */
 export function rapidFourthDose(
   doses: Vaccination[],
@@ -109,9 +126,12 @@ export function rapidFourthDose(
   "status" | "dueDate" | "latestDate" | "dose" | "timing"
 > | null {
   if (doses.length !== 3) return null;
-  const first = doses[0].date;
-  if (doses[2].date > addMonths(first, 2)) return null;
-  const due = addMonths(first, 12);
+  const [first, second, third] = doses;
+  // Mit nur bekanntem Jahr ist der Abstand zwischen 2. und 3. Dosis offen.
+  if (second.datePrecision === "year" || third.datePrecision === "year")
+    return null;
+  if (third.date >= addMonths(second.date, 4)) return null;
+  const due = addMonths(first.date, 12);
   return {
     status: nextDoseStatus(due, null, today, leadMonths),
     dueDate: due,

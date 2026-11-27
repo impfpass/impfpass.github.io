@@ -14,7 +14,7 @@ export function otherHint(
   const H = T.overview.otherHints;
   switch (disease) {
     case "rabies": {
-      const n = dosesOf(vaccinations, "rabies").length;
+      const n = dosesOf(vaccinations, "rabies", { keepImprecise: true }).length;
       if (n >= 3) return H.rabiesComplete;
       if (n === 2) return H.rabiesTwo;
       return n === 1 ? H.rabiesOne : null;

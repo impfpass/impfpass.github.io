@@ -32,7 +32,9 @@ export const hepatitisARule: Rule = {
   diseases: ["hepatitis_a"],
   source: SOURCE,
   evaluate(ctx): RuleResult {
-    const doses = dosesOf(ctx.vaccinations, "hepatitis_a");
+    const doses = dosesOf(ctx.vaccinations, "hepatitis_a", {
+      keepImprecise: true,
+    });
     if (doses.length === 0) {
       return {
         status: "not_applicable",
