@@ -348,6 +348,45 @@ describe("Empfehlungen und Regel-Stand", () => {
     expect(data().ruleState).toEqual(saves[1]);
   });
 
+  it("holt ein fehlgeschlagenes Speichern beim nächsten Abgleich nach", async () => {
+    await seed({});
+    let failNext = true;
+    const saves: RuleState[] = [];
+    const open = async (events?: DatabaseEvents) => {
+      const repo = await openRepository(events);
+      return {
+        ...repo,
+        saveRuleState: async (s: RuleState) => {
+          if (failNext) {
+            failNext = false;
+            throw new Error("Speichern fehlgeschlagen");
+          }
+          saves.push(s);
+          await repo.saveRuleState(s);
+        },
+      };
+    };
+    const data = renderProvider({ open, rulebook: V1, today: TODAY });
+    await waitFor(() => expect(data().ruleState).not.toBeNull());
+    expect(saves).toEqual([]);
+    expect(await (await openRepository()).getRuleState("p1")).toBeNull();
+
+    // Der Stand bleibt gleich, ist aber noch nicht gespeichert.
+    await act(() =>
+      data().actions.saveSettings({ ...data().settings, leadMonths: 3 }),
+    );
+    expect(saves).toEqual([data().ruleState]);
+    await expectStored(data().ruleState);
+
+    // Der Provider arbeitet danach normal weiter.
+    await act(() =>
+      data().actions.saveVaccination(testVaccination({ date: "2020-05-04" })),
+    );
+    expect(saves).toHaveLength(2);
+    expect(data().ruleState?.snapshot[0].dueDate).toBe("2030-05-04");
+    await expectStored(data().ruleState);
+  });
+
   it("createPerson übernimmt die Angaben zur Person", async () => {
     await seed({ persons: [] });
     const { data } = await renderWithData(null, "/", {

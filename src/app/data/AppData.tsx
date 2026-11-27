@@ -137,17 +137,41 @@ export function AppDataProvider(props: {
   // Der Abgleich unten baut auf ihm auf, ohne von `state.ruleState`
   // abzuhängen. Jede Zuweisung an `state.ruleState` setzt auch ihn.
   const ruleLatest = useRef<RuleState | null>(null);
+  // JSON des Stands, den die Datenbank hat oder gerade bekommt; undefined,
+  // wenn das letzte Speichern fehlgeschlagen ist.
+  const ruleStored = useRef<string | undefined>(undefined);
 
-  // Zeigt einen neuen Regel-Stand sofort und speichert ihn danach. Das
-  // Speichern ändert den Zustand nicht mehr, ein älteres kann also keinen
-  // neueren Stand überschreiben. In der Datenbank landet ebenfalls der
-  // neueste: IndexedDB führt Schreibvorgänge auf denselben Store in der
-  // Reihenfolge aus, in der sie beginnen, und saveRuleState beginnt sofort.
-  const commitRuleState = useCallback((r: Repository, next: RuleState) => {
-    ruleLatest.current = next;
-    setState((s) => ({ ...s, ruleState: next }));
-    return r.saveRuleState(next);
+  /** Übernimmt einen Stand, wie er in der Datenbank steht (null: keiner). */
+  const adoptStoredRuleState = useCallback((stored: RuleState | null) => {
+    ruleLatest.current = stored;
+    ruleStored.current = JSON.stringify(stored);
   }, []);
+
+  // Zeigt einen Regel-Stand sofort und speichert ihn, wenn die Datenbank ihn
+  // noch nicht hat. Ist ein Speichern fehlgeschlagen, holt der nächste Aufruf
+  // es nach, auch wenn sich der Stand nicht geändert hat. Das Speichern ändert
+  // den angezeigten Zustand nicht, ein älteres kann also keinen neueren Stand
+  // überschreiben. In der Datenbank landet ebenfalls der neueste: IndexedDB
+  // führt Schreibvorgänge auf denselben Store in der Reihenfolge aus, in der
+  // sie beginnen, und saveRuleState beginnt sofort.
+  const commitRuleState = useCallback(
+    async (r: Repository, next: RuleState) => {
+      const json = JSON.stringify(next);
+      if (json !== JSON.stringify(ruleLatest.current)) {
+        ruleLatest.current = next;
+        setState((s) => ({ ...s, ruleState: next }));
+      }
+      if (json === ruleStored.current) return;
+      ruleStored.current = json;
+      try {
+        await r.saveRuleState(next);
+      } catch (error) {
+        if (ruleStored.current === json) ruleStored.current = undefined;
+        throw error;
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -163,12 +187,12 @@ export function AppDataProvider(props: {
         });
         const loaded = await loadAll(repo);
         if (!cancelled) {
-          ruleLatest.current = loaded.ruleState;
+          adoptStoredRuleState(loaded.ruleState);
           setState({ status: "ready", repo, ...loaded });
         }
       } catch {
         if (!cancelled) {
-          ruleLatest.current = null;
+          adoptStoredRuleState(null);
           setState({ ...INITIAL, status: "unavailable" });
         }
       }
@@ -177,7 +201,7 @@ export function AppDataProvider(props: {
     return () => {
       cancelled = true;
     };
-  }, [open, reload]);
+  }, [open, reload, adoptStoredRuleState]);
 
   const { status, repo, person, vaccinations, decisions, settings } = state;
   const { leadMonths, seasonDay } = settings;
@@ -202,9 +226,8 @@ export function AppDataProvider(props: {
     const latest = ruleLatest.current;
     const prev = latest?.personId === person.id ? latest : null;
     const next = nextRuleState(prev, person.id, recommendations, rulebook);
-    if (JSON.stringify(next) === JSON.stringify(prev)) return;
     commitRuleState(repo, next).catch(() => {
-      // Nicht gespeichert: Beim nächsten Laden entsteht der Stand neu.
+      // Nicht gespeichert: Der nächste Abgleich versucht es erneut.
     });
   }, [status, repo, person, recommendations, rulebook, commitRuleState]);
 
@@ -228,7 +251,7 @@ export function AppDataProvider(props: {
         createdAt: new Date().toISOString(),
       };
       await requireRepo().savePerson(person);
-      ruleLatest.current = null;
+      adoptStoredRuleState(null);
       setState((s) => ({
         ...s,
         person,
@@ -238,7 +261,7 @@ export function AppDataProvider(props: {
       }));
       void requestPersistence();
     },
-    [requireRepo],
+    [requireRepo, adoptStoredRuleState],
   );
 
   const updatePerson = useCallback(
@@ -340,10 +363,10 @@ export function AppDataProvider(props: {
       // replaceAll hat den Regel-Stand geleert (er gehört nicht in die
       // Sicherung); er entsteht danach ohne Hinweise neu.
       const loaded = await loadAll(r);
-      ruleLatest.current = loaded.ruleState;
+      adoptStoredRuleState(loaded.ruleState);
       setState((s) => ({ ...s, ...loaded }));
     },
-    [requireRepo],
+    [requireRepo, adoptStoredRuleState],
   );
 
   const exportData = useCallback(

@@ -44,6 +44,7 @@ export interface Repository {
   deleteDecision(personId: string, recommendationId: string): Promise<void>;
   /** null, wenn nichts gespeichert ist oder der Eintrag nicht lesbar ist. */
   getRuleState(personId: string): Promise<RuleState | null>;
+  /** Startet die Transaktion beim Aufruf, also in Aufrufreihenfolge. */
   saveRuleState(s: RuleState): Promise<void>;
   /** Voreinstellungen, wenn nichts gespeichert ist. */
   getSettings(): Promise<Settings>;
