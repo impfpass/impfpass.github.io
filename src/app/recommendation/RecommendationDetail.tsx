@@ -233,6 +233,12 @@ export function RecommendationDetail({ id }: { id: string }) {
     decision?.kind === "declined" || decision?.kind === "not_needed"
       ? decision
       : undefined;
+  // Ausblenden nur, wenn etwas ansteht: nicht bei grünen und grauen Einträgen.
+  const canHide =
+    rec.status === "overdue" ||
+    rec.status === "due" ||
+    rec.status === "soon" ||
+    rec.status === "discuss";
 
   const run = (fn: () => Promise<unknown>) => {
     setFailed(false);
@@ -301,69 +307,72 @@ export function RecommendationDetail({ id }: { id: string }) {
         )}
       </section>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold">{D.decisions}</h2>
-        {failed && (
-          <p role="alert" className="text-destructive">
-            {T.common.saveFailed}
-          </p>
-        )}
-        {hiddenDecision ? (
-          <>
-            <p>
-              {hiddenDecision.kind === "declined"
-                ? D.declinedText
-                : T.overview.notNeeded(hiddenDecision.reason)}
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              className="self-start"
-              onClick={() => run(() => actions.deleteDecision(rec.id))}
-            >
-              {D.showAgain}
-            </Button>
-          </>
-        ) : askReason ? (
-          <NotNeededForm
-            onCancel={() => setAskReason(false)}
-            onSave={(reason) => {
-              setAskReason(false);
-              run(() =>
-                actions.saveDecision({
-                  recommendationId: rec.id,
-                  kind: "not_needed",
-                  reason,
-                }),
-              );
-            }}
-          />
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
+      {(hiddenDecision || canHide) && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold">{D.decisions}</h2>
+          {hiddenDecision ? (
+            <>
+              <p>
+                {hiddenDecision.kind === "declined"
+                  ? D.declinedText
+                  : T.overview.notNeeded(hiddenDecision.reason)}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                className="self-start"
+                onClick={() => run(() => actions.deleteDecision(rec.id))}
+              >
+                {D.showAgain}
+              </Button>
+            </>
+          ) : askReason ? (
+            <NotNeededForm
+              onCancel={() => setAskReason(false)}
+              onSave={(reason) => {
+                setAskReason(false);
                 run(() =>
                   actions.saveDecision({
                     recommendationId: rec.id,
-                    kind: "declined",
+                    kind: "not_needed",
+                    reason,
                   }),
-                )
-              }
-            >
-              {D.wantNot}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAskReason(true)}
-            >
-              {D.notNeeded}
-            </Button>
-          </div>
-        )}
-      </section>
+                );
+              }}
+            />
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() =>
+                  run(() =>
+                    actions.saveDecision({
+                      recommendationId: rec.id,
+                      kind: "declined",
+                    }),
+                  )
+                }
+              >
+                {D.wantNot}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setAskReason(true)}
+              >
+                {D.notNeeded}
+              </Button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {failed && (
+        <p role="alert" className="text-destructive">
+          {T.common.saveFailed}
+        </p>
+      )}
     </div>
   );
 }

@@ -126,7 +126,9 @@ it("geänderte Angaben werden sofort gespeichert, ohne Knopf", async () => {
   await seed({});
   const user = userEvent.setup();
   const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
-  expect(screen.queryByRole("button", { name: "Angaben speichern" })).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Angaben speichern" }),
+  ).toBeNull();
 
   await user.click(
     screen.getByRole("switch", { name: "Ich habe eine chronische Erkrankung" }),

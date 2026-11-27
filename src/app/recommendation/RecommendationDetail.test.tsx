@@ -1,7 +1,11 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Router } from "wouter";
+import { useHashLocation } from "wouter/use-hash-location";
+import { AppDataProvider } from "@/app/data/AppData";
 import { DEFAULT_ANSWERS } from "@/core/model";
 import { RULEBOOK } from "@/core/rules/rulebook";
+import { openRepository } from "@/core/storage/repository";
 import {
   renderWithData,
   seed,
@@ -258,6 +262,131 @@ it("ohne Statuszeile steht unter der Überschrift kein leerer Absatz", async () 
   for (const p of header.querySelectorAll("p")) {
     expect(p.textContent).not.toBe("");
   }
+});
+
+/** Prüft, ob die Knöpfe zum Ausblenden in der Detailansicht stehen. */
+function hideButtonsShown() {
+  const wantNot = screen.queryByRole("button", { name: "Möchte ich nicht" });
+  const notNeeded = screen.queryByRole("button", { name: "Nicht nötig" });
+  return wantNot !== null && notNeeded !== null;
+}
+
+it("grüner Eintrag (geschützt) zeigt keine Knöpfe zum Ausblenden", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1960-05-10" })],
+    vaccinations: [
+      td("a", "1980-01-01"),
+      td("b", "1981-01-01"),
+      td("c", "2020-03-01"),
+    ],
+  });
+  const { data } = await open("td");
+  expect(data().recommendations.find((r) => r.id === "td")!.status).toBe(
+    "protected",
+  );
+  expect(screen.queryByRole("button", { name: "Möchte ich nicht" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Nicht nötig" })).toBeNull();
+  expect(
+    screen.queryByRole("heading", { name: "Deine Entscheidung" }),
+  ).toBeNull();
+});
+
+it("grauer Eintrag (später) zeigt keine Knöpfe zum Ausblenden", async () => {
+  await seed({ persons: [testPerson()] });
+  const { data } = await open("rsv");
+  expect(data().recommendations.find((r) => r.id === "rsv")!.status).toBe(
+    "future",
+  );
+  expect(screen.queryByRole("button", { name: "Möchte ich nicht" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Nicht nötig" })).toBeNull();
+});
+
+it("gelber Eintrag (bald fällig) zeigt die Knöpfe zum Ausblenden", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1960-05-10" })],
+    vaccinations: [
+      td("a", "1980-01-01"),
+      td("b", "1981-01-01"),
+      td("c", "2017-03-01"),
+    ],
+  });
+  const { data } = await open("td");
+  expect(data().recommendations.find((r) => r.id === "td")!.status).toBe(
+    "soon",
+  );
+  expect(hideButtonsShown()).toBe(true);
+});
+
+it("Karte „Mit dem Arzt besprechen“ zeigt die Knöpfe zum Ausblenden", async () => {
+  await seed({
+    persons: [
+      testPerson({
+        birthDate: "1990-05-10",
+        answers: { ...DEFAULT_ANSWERS, chronicIllness: true },
+      }),
+    ],
+  });
+  await open("zoster");
+  expect(hideButtonsShown()).toBe(true);
+});
+
+it("ausgeblendeter Eintrag mit Impfschutz zeigt weiter „Wieder anzeigen“", async () => {
+  await seed({
+    persons: [testPerson({ birthDate: "1960-05-10" })],
+    vaccinations: [
+      td("a", "1980-01-01"),
+      td("b", "1981-01-01"),
+      td("c", "2020-03-01"),
+    ],
+    decisions: [
+      {
+        personId: "p1",
+        recommendationId: "td",
+        kind: "declined",
+        at: "2026-11-20T10:00:00.000Z",
+      },
+    ],
+  });
+  await open("td");
+  expect(screen.getByRole("button", { name: "Wieder anzeigen" })).toBeTruthy();
+});
+
+it("Arzt-Antwort zeigt einen Fehler, auch wenn keine Knöpfe zum Ausblenden da sind", async () => {
+  await seed({
+    persons: [
+      testPerson({
+        birthDate: "1990-05-10",
+        answers: { ...DEFAULT_ANSWERS, chronicIllness: true },
+      }),
+    ],
+    decisions: [
+      {
+        personId: "p1",
+        recommendationId: "zoster",
+        kind: "doctor_not_applicable",
+        at: "2026-11-20T10:00:00.000Z",
+      },
+    ],
+  });
+  window.location.hash = "/empfehlungen/zoster";
+  render(
+    <AppDataProvider
+      today={TODAY}
+      open={async (events) => ({
+        ...(await openRepository(events)),
+        deleteDecision: () => Promise.reject(new Error("kaputt")),
+      })}
+    >
+      <Router hook={useHashLocation}>
+        <RecommendationDetail id="zoster" />
+      </Router>
+    </AppDataProvider>,
+  );
+  const user = userEvent.setup();
+  await user.click(await screen.findByRole("button", { name: "Noch offen" }));
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
+  );
 });
 
 it("unbekannte Empfehlung", async () => {
