@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { T } from "@/app/texts";
+import { DISEASE_IDS } from "../catalog/diseases";
 import { todayISO } from "../dates";
 import type { BackupData } from "../storage/repository";
 import {
   decisionSchema,
   personSchema,
   settingsSchema,
+  timestampSchema,
   vaccinationSchema,
 } from "./schemas";
 
@@ -33,7 +35,7 @@ export class BackupError extends Error {
 const backupFileSchema = z.object({
   format: z.literal(BACKUP_FORMAT),
   version: z.literal(BACKUP_VERSION),
-  createdAt: z.string(),
+  createdAt: timestampSchema,
   persons: z.array(personSchema),
   vaccinations: z.array(vaccinationSchema),
   decisions: z.array(decisionSchema),
@@ -41,15 +43,32 @@ const backupFileSchema = z.object({
 });
 
 export function createBackup(data: BackupData, now: Date): BackupFile {
+  const createdAt = now.toISOString();
   return {
     format: BACKUP_FORMAT,
     version: BACKUP_VERSION,
-    createdAt: now.toISOString(),
+    createdAt,
     persons: data.persons,
     vaccinations: data.vaccinations,
     decisions: data.decisions,
-    settings: data.settings,
+    // Wer die Datei wiederherstellt, hat genau den Stand dieser Sicherung.
+    settings: { ...data.settings, lastBackupAt: createdAt },
   };
+}
+
+const KNOWN_DISEASES: ReadonlySet<string> = new Set(DISEASE_IDS);
+
+/** Eine neuere App kennt Krankheiten, die diese Version noch nicht kennt. */
+function hasUnknownDisease(raw: object): boolean {
+  const vaccinations = (raw as { vaccinations?: unknown }).vaccinations;
+  if (!Array.isArray(vaccinations)) return false;
+  return vaccinations.some((v: unknown) => {
+    const diseases = (v as { diseases?: unknown } | null)?.diseases;
+    return (
+      Array.isArray(diseases) &&
+      diseases.some((d) => typeof d === "string" && !KNOWN_DISEASES.has(d))
+    );
+  });
 }
 
 export function serializeBackup(b: BackupFile): string {
@@ -71,7 +90,10 @@ export function parseBackup(text: string): BackupFile {
     throw new BackupError("notBackup");
   }
   const version = (raw as { version?: unknown }).version;
-  if (typeof version === "number" && version > BACKUP_VERSION) {
+  if (
+    (typeof version === "number" && version > BACKUP_VERSION) ||
+    hasUnknownDisease(raw)
+  ) {
     throw new BackupError("tooNew");
   }
   const result = backupFileSchema.safeParse(raw);

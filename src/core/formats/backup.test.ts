@@ -100,14 +100,40 @@ it("lehnt beschädigte Einträge ab", () => {
   expect(() => parseBackup(JSON.stringify(file))).toThrow("beschädigt");
 });
 
-it("lehnt ungültige Daten und unbekannte Krankheiten ab", () => {
+it("lehnt ungültige Daten ab", () => {
   const badDate = validFile();
   badDate.vaccinations[0].date = "2016-02-30";
   expect(() => parseBackup(JSON.stringify(badDate))).toThrow("beschädigt");
 
-  const badDisease = validFile();
-  badDisease.vaccinations[0].diseases = ["schnupfen"];
-  expect(() => parseBackup(JSON.stringify(badDisease))).toThrow("beschädigt");
+  const notAList = validFile();
+  notAList.vaccinations[0].diseases = "tetanus";
+  expect(() => parseBackup(JSON.stringify(notAList))).toThrow("beschädigt");
+});
+
+it("unbekannte Krankheit stammt aus einer neueren Version", () => {
+  const file = validFile();
+  file.vaccinations[0].diseases = ["tetanus", "neue_krankheit"];
+  expect(() => parseBackup(JSON.stringify(file))).toThrow("neueren Version");
+});
+
+it("lehnt Zeitstempel ab, die kein Zeitpunkt sind", () => {
+  const cases: ((f: ReturnType<typeof validFile>) => void)[] = [
+    (f) => (f.createdAt = "gestern"),
+    (f) => (f.persons[0].createdAt = ""),
+    (f) => (f.vaccinations[0].updatedAt = "2026-13-01T10:00:00.000Z"),
+    (f) => (f.settings.lastBackupAt = "bald"),
+  ];
+  for (const change of cases) {
+    const file = validFile();
+    change(file);
+    expect(() => parseBackup(JSON.stringify(file))).toThrow("beschädigt");
+  }
+});
+
+it("die Sicherung nennt sich selbst als letzte Sicherung", () => {
+  const backup = createBackup(data, now);
+  expect(backup.settings.lastBackupAt).toBe("2026-11-26T14:00:00.000Z");
+  expect(data.settings.lastBackupAt).toBe("2026-11-01T08:00:00.000Z");
 });
 
 it("lehnt eine Sicherung ohne Version ab", () => {

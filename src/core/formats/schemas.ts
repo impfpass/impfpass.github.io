@@ -19,6 +19,9 @@ z.config({ jitless: true });
 
 export const isoDateSchema = z.string().refine(isValidISODate);
 
+/** Zeitpunkt wie von `Date.toISOString()`, etwa `2026-11-26T14:00:00.000Z`. */
+export const timestampSchema = z.iso.datetime({ offset: true });
+
 export const diseaseIdSchema = z.enum(DISEASE_IDS);
 
 export const personAnswersSchema: z.ZodType<PersonAnswers> = z.object({
@@ -37,7 +40,7 @@ export const personSchema: z.ZodType<Person> = z.object({
   name: z.string(),
   birthDate: isoDateSchema,
   answers: personAnswersSchema,
-  createdAt: z.string(),
+  createdAt: timestampSchema,
 });
 
 export const vaccinationSchema: z.ZodType<Vaccination> = z.object({
@@ -53,8 +56,8 @@ export const vaccinationSchema: z.ZodType<Vaccination> = z.object({
   note: z.string().optional(),
   source: z.enum(["manual", "import"]),
   importId: z.string().optional(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  createdAt: timestampSchema,
+  updatedAt: timestampSchema,
 });
 
 export const decisionSchema: z.ZodType<Decision> = z.object({
@@ -67,7 +70,7 @@ export const decisionSchema: z.ZodType<Decision> = z.object({
     "doctor_not_applicable",
   ]),
   reason: z.string().optional(),
-  at: z.string(),
+  at: timestampSchema,
 });
 
 export const settingsSchema: z.ZodType<Settings> = z.object({
@@ -75,6 +78,6 @@ export const settingsSchema: z.ZodType<Settings> = z.object({
   seasonDay: z.string().regex(/^\d{2}-\d{2}$/),
   listSort: z.string().transform(normalizeListSort),
   gtdUrl: z.string().optional(),
-  lastBackupAt: z.string().optional(),
+  lastBackupAt: timestampSchema.optional(),
   installHintDismissed: z.boolean().optional(),
 });
