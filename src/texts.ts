@@ -379,6 +379,18 @@ export const T = {
   },
   pc: {
     title: "ImpfPass am PC",
+    notSaved:
+      "Dieser Browser erlaubt kein Speichern. Der Entwurf geht verloren, wenn du die Seite schließt.",
+    steps: {
+      label: "Schritte",
+      guide: "Anleitung",
+      table: "Tabelle prüfen",
+      transfer: "Übertragen",
+    },
+    footer: {
+      medical: "ImpfPass ersetzt keine ärztliche Beratung.",
+      local: "Der Entwurf bleibt in diesem Browser auf diesem PC.",
+    },
     prompt: `Auf den Fotos sind Seiten aus einem deutschen Impfpass. Lies alle Impfungen ab und gib sie als JSON in genau diesem Format zurück, in einem einzigen Codeblock:
 
 {"impfpass":"import","vaccinations":[{"date":"05.12.2016","name":"Boostrix Polio","batch":"AC52B123AB","doctor":"Praxis Dr. Muster, Hamburg","diseases":[],"unsure":[]}]}

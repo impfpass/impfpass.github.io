@@ -1,10 +1,82 @@
+import { useState } from "react";
+import type { DraftStore } from "@/core/storage/draftStore";
+import { openDraftStore } from "@/core/storage/draftStore";
 import { T } from "@/texts";
+import { useDraft } from "./useDraft";
+
+type Step = 1 | 2 | 3;
+
+const STEPS: { step: Step; label: string; heading: string }[] = [
+  { step: 1, label: `1 ${T.pc.steps.guide}`, heading: T.pc.steps.guide },
+  { step: 2, label: `2 ${T.pc.steps.table}`, heading: T.pc.steps.table },
+  { step: 3, label: `3 ${T.pc.steps.transfer}`, heading: T.pc.steps.transfer },
+];
 
 /** Wurzel der PC-App unter /import/. */
-export function ImportApp() {
+export function ImportApp({
+  openStore = openDraftStore,
+}: {
+  openStore?: () => Promise<DraftStore>;
+}) {
+  const { status, draft, persistent } = useDraft(openStore);
+  // null: noch nicht gewählt, dann entscheidet der geladene Entwurf.
+  const [chosen, setChosen] = useState<Step | null>(null);
+  const step: Step = chosen ?? (draft.rows.length > 0 ? 2 : 1);
+
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <h1 className="text-2xl font-semibold">{T.pc.title}</h1>
-    </main>
+    <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-6">
+      <header>
+        <h1 className="text-2xl font-semibold">{T.pc.title}</h1>
+      </header>
+      {!persistent && (
+        <p role="status" className="rounded-md border p-3">
+          {T.pc.notSaved}
+        </p>
+      )}
+      <main className="flex-1">
+        {status === "loading" ? (
+          <p>{T.app.loading}</p>
+        ) : (
+          <>
+            <nav aria-label={T.pc.steps.label}>
+              <ol className="flex flex-wrap gap-2">
+                {STEPS.map(({ step: n, label }) => (
+                  <li
+                    key={n}
+                    aria-current={n === step ? "step" : undefined}
+                    className={
+                      n === step ? "rounded-md border-2 font-semibold" : ""
+                    }
+                  >
+                    {n === 3 ? (
+                      <span className="inline-flex min-h-11 items-center px-3">
+                        {label}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="min-h-11 min-w-11 px-3"
+                        onClick={() => setChosen(n)}
+                      >
+                        {label}
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+            <section className="mt-6">
+              <h2 className="text-xl font-semibold">
+                {STEPS[step - 1].heading}
+              </h2>
+            </section>
+          </>
+        )}
+      </main>
+      <footer className="space-y-1 text-sm">
+        <p>{T.pc.footer.medical}</p>
+        <p>{T.pc.footer.local}</p>
+      </footer>
+    </div>
   );
 }
