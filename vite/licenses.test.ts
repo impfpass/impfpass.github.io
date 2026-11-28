@@ -6,6 +6,7 @@ import {
   EXTRA_PACKAGES,
   formatNotices,
   licenseFileKind,
+  licensesPlugin,
   type PackageNotice,
   packageRootFromId,
   projectsOf,
@@ -244,6 +245,97 @@ describe("summarizeNotices", () => {
   it("nennt alle Probleme auf einmal, je eines pro Zeile", () => {
     expect(() => summarizeNotices([notice("zod")], PROJECTS)).toThrow(
       /Paket ohne Projekt in der Lizenzübersicht: zod\n(.|\n)*Projekt ohne Paket im Build: R/,
+    );
+  });
+});
+
+/**
+ * Lässt das Plugin auf einem nachgebauten Bundle laufen, dessen Module in den
+ * echten Paketen unter node_modules liegen, und gibt die ausgegebenen Dateien
+ * zurück.
+ */
+function runPlugin(packages: string[]): Map<string, string> {
+  const plugin = licensesPlugin();
+  const emitted = new Map<string, string>();
+  const context = {
+    emitFile(file: { fileName: string; source: string }) {
+      emitted.set(file.fileName, file.source);
+      return file.fileName;
+    },
+    error(message: string): never {
+      throw new Error(message);
+    },
+  };
+  const modules = Object.fromEntries(
+    packages.map((name) => [
+      path.resolve("node_modules", name, "index.js"),
+      {},
+    ]),
+  );
+  (plugin.configResolved as (config: { root: string }) => void)({
+    root: process.cwd(),
+  });
+  (
+    plugin.generateBundle as (
+      this: typeof context,
+      options: unknown,
+      bundle: unknown,
+    ) => void
+  ).call(context, {}, { "main.js": { type: "chunk", modules } });
+  return emitted;
+}
+
+// Je ein Paket für jedes Projekt, das nicht schon über EXTRA_PACKAGES kommt.
+const ONE_PER_PROJECT = [
+  "react",
+  "@radix-ui/react-dialog",
+  "lucide-react",
+  "wouter",
+  "zod",
+  "idb",
+  "jsqr",
+  "qrcode",
+  "fflate",
+];
+
+describe("licensesPlugin", () => {
+  it("legt Lizenztexte und Übersicht als Dateien ab", () => {
+    const emitted = runPlugin(ONE_PER_PROJECT);
+    expect(emitted.get("third-party-licenses.txt")).toMatch(/^react \d/m);
+    const json = emitted.get("third-party-licenses.json")!;
+    expect(json.endsWith("}\n")).toBe(true);
+    const summary = JSON.parse(json) as {
+      packages: number;
+      projects: { name: string; licenses: string[] }[];
+    };
+    expect(summary.packages).toBe(
+      ONE_PER_PROJECT.length + EXTRA_PACKAGES.length,
+    );
+    expect(summary.projects.map((p) => p.name)).toEqual([
+      "fflate",
+      "idb",
+      "jsQR",
+      "Lucide",
+      "qrcode",
+      "Radix UI",
+      "React",
+      "shadcn/ui",
+      "Tailwind CSS",
+      "Workbox",
+      "wouter",
+      "Zod",
+    ]);
+    expect(summary.projects).toContainEqual({
+      name: "jsQR",
+      licenses: ["Apache-2.0"],
+    });
+  });
+
+  it("bricht ab, wenn die Projektliste nicht zum Build passt, und nennt die Datei", () => {
+    expect(() =>
+      runPlugin(ONE_PER_PROJECT.filter((name) => name !== "zod")),
+    ).toThrow(
+      "vite/licenseProjects.ts passt nicht zu den Paketen im Build:\nProjekt ohne Paket im Build: Zod",
     );
   });
 });
