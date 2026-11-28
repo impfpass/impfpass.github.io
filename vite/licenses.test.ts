@@ -1,12 +1,17 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
+import { LICENSE_PROJECTS, type LicenseProject } from "./licenseProjects";
 import {
+  EXTRA_PACKAGES,
   formatNotices,
   licenseFileKind,
+  type PackageNotice,
   packageRootFromId,
+  projectsOf,
   readPackageNotice,
   sortNotices,
+  summarizeNotices,
 } from "./licenses";
 
 describe("packageRootFromId", () => {
@@ -168,6 +173,81 @@ describe("readPackageNotice", () => {
   });
 });
 
+const notice = (
+  name: string,
+  license = "MIT",
+  version = "1.0.0",
+): PackageNotice => ({ name, version, license, texts: [] });
+const PROJECTS: LicenseProject[] = [
+  { name: "React", packages: ["react", "react-dom"] },
+  { name: "Radix UI", packages: ["tslib"], prefixes: ["@radix-ui/"] },
+];
+
+describe("summarizeNotices", () => {
+  it("fasst Pakete zu Projekten zusammen und sammelt deren Lizenzen", () => {
+    expect(
+      summarizeNotices(
+        [
+          notice("react"),
+          notice("react-dom"),
+          notice("@radix-ui/react-dialog"),
+          notice("tslib", "0BSD"),
+        ],
+        PROJECTS,
+      ),
+    ).toEqual({
+      packages: 4,
+      projects: [
+        { name: "Radix UI", licenses: ["0BSD", "MIT"] },
+        { name: "React", licenses: ["MIT"] },
+      ],
+    });
+  });
+
+  it("zählt ein Paket in zwei Versionen doppelt, ohne es als doppelt zugeordnet zu melden", () => {
+    const summary = summarizeNotices(
+      [
+        notice("react", "MIT", "18.3.1"),
+        notice("react", "MIT", "19.0.0"),
+        notice("tslib", "0BSD"),
+      ],
+      PROJECTS,
+    );
+    expect(summary.packages).toBe(3);
+  });
+
+  it("meldet ein Paket ohne Projekt", () => {
+    expect(() =>
+      summarizeNotices(
+        [notice("react"), notice("tslib"), notice("zod")],
+        PROJECTS,
+      ),
+    ).toThrow("Paket ohne Projekt in der Lizenzübersicht: zod");
+  });
+
+  it("meldet ein Paket in mehreren Projekten", () => {
+    const projects = [
+      { name: "A", packages: ["x"] },
+      { name: "B", prefixes: ["x"] },
+    ];
+    expect(() => summarizeNotices([notice("x")], projects)).toThrow(
+      "Paket in mehreren Projekten der Lizenzübersicht: x (A, B)",
+    );
+  });
+
+  it("meldet ein Projekt ohne Paket im Build", () => {
+    expect(() => summarizeNotices([notice("react")], PROJECTS)).toThrow(
+      "Projekt ohne Paket im Build: Radix UI",
+    );
+  });
+
+  it("nennt alle Probleme auf einmal, je eines pro Zeile", () => {
+    expect(() => summarizeNotices([notice("zod")], PROJECTS)).toThrow(
+      /Paket ohne Projekt in der Lizenzübersicht: zod\n(.|\n)*Projekt ohne Paket im Build: R/,
+    );
+  });
+});
+
 /** Alle Quelldateien unter src/ (ohne Tests, die importieren Hilfspakete). */
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
@@ -198,6 +278,15 @@ describe("Abhängigkeiten", () => {
       if (name) used.add(name);
     }
   }
+
+  it("jedes Paket aus dependencies und EXTRA_PACKAGES gehört zu genau einem Projekt", () => {
+    for (const name of [...dependencies, ...EXTRA_PACKAGES]) {
+      expect(
+        projectsOf(name, LICENSE_PROJECTS).map((p) => p.name),
+        name,
+      ).toHaveLength(1);
+    }
+  });
 
   it("die Suche nach importierten Paketen findet die bekannten", () => {
     expect([...used]).toEqual(

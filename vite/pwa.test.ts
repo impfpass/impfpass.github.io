@@ -46,3 +46,8 @@ it("die Lizenztexte (txt) stehen im Vorab-Cache und sind offline da", () => {
   const patterns = pwaOptions.workbox?.globPatterns ?? [];
   expect(patterns.some((p) => /\{[^}]*\btxt\b[^}]*\}/.test(p))).toBe(true);
 });
+
+it("die Lizenzübersicht (json) steht im Vorab-Cache und ist offline da", () => {
+  const patterns = pwaOptions.workbox?.globPatterns ?? [];
+  expect(patterns.some((p) => /\{[^}]*\bjson\b[^}]*\}/.test(p))).toBe(true);
+});

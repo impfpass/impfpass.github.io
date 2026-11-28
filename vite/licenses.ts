@@ -1,9 +1,12 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import type { Plugin } from "vite";
-
-/** Name der Datei im Build-Ergebnis, liegt an der Wurzel der Seite. */
-export const LICENSES_FILE = "third-party-licenses.txt";
+import {
+  LICENSES_SUMMARY_FILE,
+  LICENSES_TEXT_FILE,
+  type LicenseSummary,
+} from "../src/core/licenses.ts";
+import { LICENSE_PROJECTS, type LicenseProject } from "./licenseProjects.ts";
 
 /**
  * Pakete, die im Build-Ergebnis stecken, aber nicht als Modul in einem Chunk
@@ -138,9 +141,65 @@ export function formatNotices(notices: PackageNotice[]): string {
   return `${head}\n\n${blocks.join("\n\n")}\n`;
 }
 
+/** Alle Projekte, zu denen ein Paketname gehört. */
+export function projectsOf(
+  name: string,
+  projects: LicenseProject[],
+): LicenseProject[] {
+  return projects.filter(
+    (p) =>
+      (p.packages ?? []).includes(name) ||
+      (p.prefixes ?? []).some((prefix) => name.startsWith(prefix)),
+  );
+}
+
+/**
+ * Fasst die Pakete zu Projekten zusammen. Wirft einen Fehler, der jedes
+ * Problem in einer eigenen Zeile nennt: Paket ohne Projekt, Paket in mehreren
+ * Projekten, Projekt ohne Paket im Build.
+ */
+export function summarizeNotices(
+  notices: PackageNotice[],
+  projects: LicenseProject[],
+): LicenseSummary {
+  const problems: string[] = [];
+  const licenses = new Map<LicenseProject, Set<string>>(
+    projects.map((p) => [p, new Set<string>()]),
+  );
+  const used = new Set<LicenseProject>();
+  // Ein Paket in mehreren Versionen wird nur einmal gemeldet.
+  const reported = new Set<string>();
+  for (const n of notices) {
+    const found = projectsOf(n.name, projects);
+    for (const p of found) used.add(p);
+    if (found.length === 1) {
+      licenses.get(found[0])!.add(n.license);
+      continue;
+    }
+    if (reported.has(n.name)) continue;
+    reported.add(n.name);
+    problems.push(
+      found.length === 0
+        ? `Paket ohne Projekt in der Lizenzübersicht: ${n.name}`
+        : `Paket in mehreren Projekten der Lizenzübersicht: ${n.name} (${found.map((p) => p.name).join(", ")})`,
+    );
+  }
+  for (const p of projects) {
+    if (!used.has(p)) problems.push(`Projekt ohne Paket im Build: ${p.name}`);
+  }
+  if (problems.length > 0) throw new Error(problems.join("\n"));
+  return {
+    packages: notices.length,
+    projects: projects
+      .map((p) => ({ name: p.name, licenses: [...licenses.get(p)!].sort() }))
+      .sort((a, b) => a.name.localeCompare(b.name, "de")),
+  };
+}
+
 /**
  * Erzeugt beim Build `third-party-licenses.txt` aus den Paketen, deren Module
- * in einem Chunk stecken, plus EXTRA_PACKAGES.
+ * in einem Chunk stecken, plus EXTRA_PACKAGES, und daraus die Übersicht
+ * `third-party-licenses.json` nach LICENSE_PROJECTS.
  */
 export function licensesPlugin(): Plugin {
   let root = process.cwd();
@@ -170,10 +229,24 @@ export function licensesPlugin(): Plugin {
         }
         notices.push(notice);
       }
+      const sorted = sortNotices(notices);
+      let summary: LicenseSummary;
+      try {
+        summary = summarizeNotices(sorted, LICENSE_PROJECTS);
+      } catch (e) {
+        this.error(
+          `vite/licenseProjects.ts passt nicht zu den Paketen im Build:\n${(e as Error).message}`,
+        );
+      }
       this.emitFile({
         type: "asset",
-        fileName: LICENSES_FILE,
-        source: formatNotices(sortNotices(notices)),
+        fileName: LICENSES_TEXT_FILE,
+        source: formatNotices(sorted),
+      });
+      this.emitFile({
+        type: "asset",
+        fileName: LICENSES_SUMMARY_FILE,
+        source: `${JSON.stringify(summary, null, 2)}\n`,
       });
     },
   };
