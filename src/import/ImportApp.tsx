@@ -143,6 +143,8 @@ export function ImportApp({
           {T.licenses.text}{" "}
           <a
             href="/third-party-licenses.txt"
+            target="_blank"
+            rel="noopener"
             className="inline-flex min-h-11 items-center underline"
           >
             {T.licenses.link}

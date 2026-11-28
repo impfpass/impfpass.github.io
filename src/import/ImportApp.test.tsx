@@ -37,6 +37,8 @@ it("der Fuß verweist auf die Lizenztexte der verwendeten Software", async () =>
   render(<ImportApp />);
   const link = await screen.findByRole("link", { name: "Lizenztexte ansehen" });
   expect(link.getAttribute("href")).toBe("/third-party-licenses.txt");
+  expect(link.getAttribute("target")).toBe("_blank");
+  expect(link.getAttribute("rel")).toBe("noopener");
   expect(link.closest("footer")).toBeTruthy();
 });
 

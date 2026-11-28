@@ -12,11 +12,11 @@ it("verweist auf die Lizenztexte der verwendeten Software", async () => {
   expect(
     screen.getByText(/Deren Lizenztexte stehen in einer eigenen Datei/),
   ).toBeTruthy();
-  expect(
-    screen
-      .getByRole("link", { name: "Lizenztexte ansehen" })
-      .getAttribute("href"),
-  ).toBe("/third-party-licenses.txt");
+  const link = screen.getByRole("link", { name: "Lizenztexte ansehen" });
+  expect(link.getAttribute("href")).toBe("/third-party-licenses.txt");
+  // Eine eigene Seite: In der App vom Home-Bildschirm gibt es keinen Zurück-Knopf.
+  expect(link.getAttribute("target")).toBe("_blank");
+  expect(link.getAttribute("rel")).toBe("noopener");
 });
 
 it("nennt STIKO-Stand, Regelwerk-Version und Quellen", async () => {

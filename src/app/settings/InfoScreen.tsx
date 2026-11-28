@@ -43,6 +43,8 @@ export function InfoScreen() {
         <p>{T.licenses.text}</p>
         <a
           href="/third-party-licenses.txt"
+          target="_blank"
+          rel="noopener"
           className="inline-flex min-h-11 items-center self-start underline"
         >
           {T.licenses.link}
