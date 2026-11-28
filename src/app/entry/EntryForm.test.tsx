@@ -1,4 +1,5 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
+import { DEFAULT_SETTINGS } from "@/core/model";
 import userEvent from "@testing-library/user-event";
 import { openRepository } from "@/core/storage/repository";
 import {
@@ -256,4 +257,27 @@ it("„Arzt oder Praxis“ ohne bisherige Ärzte zeigt keine Vorschläge", async
   await seed({ persons: [testPerson()], vaccinations: [testVaccination()] });
   await renderWithData(<EntryForm />, "/impfungen/neu");
   expect(screen.queryByText("Bisher eingetragen")).toBeNull();
+});
+
+it("nach dem Speichern bietet die App die GTD-Übergabe an, wenn sich Erinnerungen ändern", async () => {
+  await seed({
+    persons: [testPerson()],
+    settings: { ...DEFAULT_SETTINGS, gtdUrl: "https://gtd.example/x" },
+  });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<EntryForm />, "/impfungen/neu");
+  await act(() => data().actions.markHandedOver(data().gtd.changes));
+  expect(screen.queryByText(/noch nicht im GTD/)).toBeNull();
+
+  await user.type(screen.getByLabelText("Impfstoff"), "Boos");
+  await user.click(screen.getByRole("button", { name: "Boostrix Polio" }));
+  await user.click(screen.getByRole("button", { name: "Speichern" }));
+
+  expect(await screen.findByText("Sicherung speichern?")).toBeTruthy();
+  expect(screen.getByText(/Erinnerungen? noch nicht im GTD/)).toBeTruthy();
+  expect(
+    screen
+      .getByRole("link", { name: "Ins GTD übernehmen" })
+      .getAttribute("href"),
+  ).toBe("#/gtd");
 });

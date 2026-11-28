@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DEFAULT_ANSWERS, type Vaccination } from "@/core/model";
 import { RULEBOOK } from "@/core/rules/rulebook";
@@ -308,4 +308,43 @@ it("„Möchte ich nicht“ bei Hepatitis A: ausgeblendet und nicht unter „Wei
     .getByRole("heading", { name: "Weitere Impfungen" })
     .closest("section")!;
   expect(within(others).queryByText("Hepatitis A")).toBeNull();
+});
+
+describe("Hinweis auf die GTD-Übergabe", () => {
+  const withAddress = {
+    leadMonths: 6,
+    seasonDay: "09-01",
+    listSort: "date-desc" as const,
+    gtdUrl: "https://gtd.example/de/impfpass",
+  };
+
+  it("zeigt mit Adresse die Zahl der offenen Erinnerungen und führt zur Übergabe", async () => {
+    await seed({ settings: withAddress });
+    const { data } = await renderWithData(<OverviewScreen />, "/", {
+      today: TODAY,
+    });
+    const { upserts, cancels } = data().gtd.changes;
+    const n = upserts.length + cancels.length;
+    expect(n).toBeGreaterThan(1);
+    expect(
+      screen.getByText(`${n} Erinnerungen noch nicht im GTD`),
+    ).toBeTruthy();
+    expect(
+      screen
+        .getByRole("link", { name: "Ins GTD übernehmen" })
+        .getAttribute("href"),
+    ).toBe("#/gtd");
+
+    await act(() => data().actions.markHandedOver(data().gtd.changes));
+    expect(screen.queryByText(/noch nicht im GTD/)).toBeNull();
+  });
+
+  it("fehlt ohne Adresse", async () => {
+    await seed({});
+    await renderWithData(<OverviewScreen />, "/", { today: TODAY });
+    expect(screen.queryByText(/noch nicht im GTD/)).toBeNull();
+    expect(
+      screen.queryByRole("link", { name: "Ins GTD übernehmen" }),
+    ).toBeNull();
+  });
 });

@@ -19,6 +19,7 @@ import type { DatePrecision, Vaccination } from "@/core/model";
 import { validateEntry, type EntryErrors } from "@/core/validation";
 import { useAppData } from "../data/AppData";
 import { T } from "@/texts";
+import { GtdBanner } from "../gtd/GtdBanner";
 import { BackupHint } from "./BackupHint";
 import { CHOICE_ITEM_CLASS } from "../styles";
 
@@ -201,6 +202,7 @@ export function EntryForm({
         <h1 className="text-2xl font-semibold">{title}</h1>
         <p role="status">{T.entry.saved}</p>
         <BackupHint />
+        <GtdBanner />
         <div className="flex flex-col gap-3">
           <Button asChild variant="outline">
             <Link href={`/impfungen/${saved.id}`}>{T.entry.toEntry}</Link>

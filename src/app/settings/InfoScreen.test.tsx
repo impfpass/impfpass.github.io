@@ -38,3 +38,13 @@ it("nennt STIKO-Stand, Regelwerk-Version und Quellen", async () => {
     screen.getByText(/selbst aus den Empfehlungen der STIKO/),
   ).toBeTruthy();
 });
+
+it("Datenschutz nennt die Übergabe ans GTD als Weg aus dem Gerät", async () => {
+  await seed({});
+  await renderWithData(<InfoScreen />);
+  expect(
+    screen.getByText(
+      "Deine Daten bleiben auf diesem Gerät. ImpfPass schickt nichts ins Internet. Daten verlassen das Gerät nur, wenn du es selbst auslöst, zum Beispiel beim Speichern einer Sicherung oder bei der Übergabe ans GTD.",
+    ),
+  ).toBeTruthy();
+});

@@ -390,7 +390,7 @@ export const T = {
     notMedicalAdvice:
       "ImpfPass ersetzt keine ärztliche Beratung. Sprich vor einer Impfung mit deiner Ärztin oder deinem Arzt.",
     privacy:
-      "Deine Daten bleiben auf diesem Gerät. ImpfPass schickt nichts ins Internet. Daten verlassen das Gerät nur, wenn du es selbst auslöst, zum Beispiel beim Speichern einer Sicherung.",
+      "Deine Daten bleiben auf diesem Gerät. ImpfPass schickt nichts ins Internet. Daten verlassen das Gerät nur, wenn du es selbst auslöst, zum Beispiel beim Speichern einer Sicherung oder bei der Übergabe ans GTD.",
     backup: "Die Sicherung enthält deine Impfdaten. Bewahre sie sicher auf.",
     version: (v: string) => `Version ${v}`,
     rules: "Empfehlungen",
@@ -686,6 +686,11 @@ So füllst du die Felder:
   },
   // Erinnerungen für die GTD-App (Spec 9). Die Texte der Aktionen landen im GTD.
   gtd: {
+    pending: (n: number) =>
+      n === 1
+        ? "1 Erinnerung noch nicht im GTD"
+        : `${n} Erinnerungen noch nicht im GTD`,
+    open: "Ins GTD übernehmen",
     items: {
       title: (name: string, detail: string) =>
         `Impfung gegen ${name}${detail}: Termin beim Arzt ausmachen`,

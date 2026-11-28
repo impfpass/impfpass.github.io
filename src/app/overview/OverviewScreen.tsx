@@ -7,6 +7,7 @@ import { needsTbeQuestion } from "@/core/rules/questions";
 import { RULEBOOK } from "@/core/rules/rulebook";
 import { T } from "@/texts";
 import { useAppData } from "../data/AppData";
+import { GtdBanner } from "../gtd/GtdBanner";
 import { InstallHint } from "../InstallHint";
 import { DiscussCard } from "./DiscussCard";
 import { groupForOverview, type Light } from "./lights";
@@ -32,6 +33,7 @@ export function OverviewScreen() {
       <h1 className="text-2xl font-semibold">{T.overview.title}</h1>
       <InstallHint />
       <NoticeBanner notices={notices} />
+      <GtdBanner />
       {showTbe && <TbeQuestion />}
       {under18 ? (
         <p>{T.overview.under18}</p>
