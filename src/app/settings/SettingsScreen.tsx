@@ -3,7 +3,9 @@ import { flushSync } from "react-dom";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { formatDate, todayISO } from "@/core/dates";
+import { normalizeGtdAddress } from "@/core/formats/gtd";
 import type { Person, PersonAnswers } from "@/core/model";
 import { AnswersFields } from "../answers/AnswersFields";
 import { BloodFields } from "./BloodFields";
@@ -190,6 +192,75 @@ function RemindersSection() {
   );
 }
 
+function GtdSection() {
+  const { settings, actions } = useAppData();
+  const [address, setAddress] = useState(settings.gtdUrl ?? "");
+  const [invalid, setInvalid] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setMessage(null);
+    const normalized = normalizeGtdAddress(address);
+    if (normalized === "invalid") {
+      setInvalid(true);
+      return;
+    }
+    setInvalid(false);
+    // Ohne Adresse fehlt das Feld ganz, statt leer zu sein.
+    const next = { ...settings };
+    if (normalized === null) delete next.gtdUrl;
+    else next.gtdUrl = normalized;
+    try {
+      await actions.saveSettings(next);
+      setAddress(normalized ?? "");
+      setMessage(T.settings.saved);
+    } catch {
+      setMessage(T.common.saveFailed);
+    }
+  }
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="settings-gtd">{T.settings.gtdAddress}</Label>
+        <Input
+          id="settings-gtd"
+          type="url"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={
+            invalid ? "settings-gtd-error" : "settings-gtd-help"
+          }
+        />
+        {invalid && (
+          <p id="settings-gtd-error" className="text-destructive">
+            {T.settings.gtdInvalid}
+          </p>
+        )}
+        <p id="settings-gtd-help" className="text-muted-foreground">
+          {T.settings.gtdHelp}
+        </p>
+      </div>
+      <Button type="submit" variant="outline">
+        {T.settings.gtdSave}
+      </Button>
+      {message && <p role="status">{message}</p>}
+      {settings.gtdUrl && (
+        <Link href="/gtd" className={LINK_CLASS}>
+          {T.settings.gtdOpen}
+          <ChevronRight aria-hidden="true" className="size-5" />
+        </Link>
+      )}
+    </form>
+  );
+}
+
 function BackupSection() {
   const { settings } = useAppData();
   const { save, busy, failed } = useSaveBackup();
@@ -218,7 +289,7 @@ const LINK_CLASS =
   "flex min-h-12 items-center justify-between rounded-md border px-4";
 
 export function SettingsScreen() {
-  const { person, restoreCount } = useAppData();
+  const { status, person, restoreCount } = useAppData();
   // Neu aufbauen, wenn nach einer Wiederherstellung andere Angaben da sind,
   // auch bei derselben Person. Eigenes Speichern baut nichts neu auf.
   const formKey = person ? `${person.id}-${restoreCount}` : "";
@@ -251,6 +322,16 @@ export function SettingsScreen() {
           {T.settings.reminders}
         </h2>
         <RemindersSection />
+      </section>
+      <section
+        aria-labelledby="settings-gtd-title"
+        className="flex flex-col gap-4"
+      >
+        <h2 id="settings-gtd-title" className="text-lg font-semibold">
+          {T.settings.gtd}
+        </h2>
+        {/* Erst nach dem Laden, sonst stünde die gespeicherte Adresse nicht im Feld. */}
+        {status === "ready" && <GtdSection key={restoreCount} />}
       </section>
       <section
         aria-labelledby="settings-transfer"

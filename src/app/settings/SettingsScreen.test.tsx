@@ -379,3 +379,62 @@ it("eine Angabe zur Person lässt einen noch nicht gespeicherten Namen stehen", 
     "Christa M.",
   );
 });
+
+describe("GTD-Übergabe", () => {
+  it("speichert die Adresse ohne Leerzeichen und verlinkt dann die Übergabe", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+    expect(
+      screen.queryByRole("link", { name: "Ins GTD übernehmen" }),
+    ).toBeNull();
+
+    await user.type(
+      screen.getByLabelText("Adresse der Übernahmeseite"),
+      "  https://gtd.example/de/impfpass ",
+    );
+    await user.click(screen.getByRole("button", { name: "Adresse speichern" }));
+
+    await waitFor(() =>
+      expect(data().settings.gtdUrl).toBe("https://gtd.example/de/impfpass"),
+    );
+    expect(
+      screen
+        .getByRole("link", { name: "Ins GTD übernehmen" })
+        .getAttribute("href"),
+    ).toBe("#/gtd");
+  });
+
+  it("Review Focus 3: eine unvollständige Adresse wird nicht gespeichert", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+
+    const field = screen.getByLabelText("Adresse der Übernahmeseite");
+    await user.type(field, "gtd.example");
+    await user.click(screen.getByRole("button", { name: "Adresse speichern" }));
+
+    const error = await screen.findByText(
+      "Bitte gib eine vollständige Adresse ein, die mit https:// beginnt.",
+    );
+    expect(field.getAttribute("aria-invalid")).toBe("true");
+    expect(field.getAttribute("aria-describedby")).toBe(error.id);
+    expect(data().settings.gtdUrl).toBeUndefined();
+  });
+
+  it("ein leeres Feld schaltet die Übergabe aus", async () => {
+    await seed({
+      settings: { ...DEFAULT_SETTINGS, gtdUrl: "https://gtd.example/x" },
+    });
+    const user = userEvent.setup();
+    const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+
+    const field = screen.getByLabelText("Adresse der Übernahmeseite");
+    expect((field as HTMLInputElement).value).toBe("https://gtd.example/x");
+    await user.clear(field);
+    await user.click(screen.getByRole("button", { name: "Adresse speichern" }));
+
+    await waitFor(() => expect("gtdUrl" in data().settings).toBe(false));
+    expect(await screen.findByText("Gespeichert.")).toBeTruthy();
+  });
+});

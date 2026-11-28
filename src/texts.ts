@@ -360,6 +360,14 @@ export const T = {
     },
     seasonDayHelp:
       "Ab diesem Tag werden die jährlichen Impfungen im Herbst gelb, etwa gegen Grippe.",
+    gtd: "GTD-Übergabe",
+    gtdAddress: "Adresse der Übernahmeseite",
+    gtdHelp:
+      "Die Adresse der Seite in deiner GTD-App, die Erinnerungen von ImpfPass übernimmt. Ohne Adresse ist die Übergabe ausgeschaltet.",
+    gtdInvalid:
+      "Bitte gib eine vollständige Adresse ein, die mit https:// beginnt.",
+    gtdSave: "Adresse speichern",
+    gtdOpen: "Ins GTD übernehmen",
     transfer: "Impfungen übernehmen",
     transferText: "Alte Impfungen vom PC holen, per QR-Code, Datei oder Text.",
     backup: "Datensicherung",
