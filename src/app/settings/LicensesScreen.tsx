@@ -1,14 +1,11 @@
 import { ChevronLeft } from "lucide-react";
-import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import type { LicenseSummary } from "@/core/licenses";
 import { T } from "@/texts";
 import { loadLicenseSummary } from "./licenseData";
+import { useLoaded } from "./useLoaded";
 
-type State =
-  | { status: "loading" }
-  | { status: "failed" }
-  | { status: "ready"; summary: LicenseSummary };
+const LINK_CLASS = "inline-flex min-h-11 items-center self-start underline";
 
 /** Übersicht der verwendeten Software nach Projekten, mit ihren Lizenzen. */
 export function LicensesScreen({
@@ -16,23 +13,7 @@ export function LicensesScreen({
 }: {
   load?: () => Promise<LicenseSummary>;
 }) {
-  const [state, setState] = useState<State>({ status: "loading" });
-
-  useEffect(() => {
-    let active = true;
-    load().then(
-      (summary) => {
-        if (active) setState({ status: "ready", summary });
-      },
-      () => {
-        if (active) setState({ status: "failed" });
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [load]);
-
+  const state = useLoaded(load);
   return (
     <div className="flex flex-col gap-6">
       <Link
@@ -51,12 +32,12 @@ export function LicensesScreen({
         <>
           <p>
             {T.licenseScreen.intro(
-              state.summary.packages,
-              state.summary.projects.length,
+              state.value.packages,
+              state.value.projects.length,
             )}
           </p>
           <dl className="flex flex-col">
-            {state.summary.projects.map((p) => (
+            {state.value.projects.map((p) => (
               <div
                 key={p.name}
                 className="flex justify-between gap-4 border-b py-1"
@@ -68,12 +49,21 @@ export function LicensesScreen({
               </div>
             ))}
           </dl>
-          <Link
-            href="/einstellungen/info/lizenzen/texte"
-            className="inline-flex min-h-11 items-center self-start underline"
-          >
-            {T.licenseScreen.textsLink}
-          </Link>
+          {/* Erst die kurze Erklärung, dann die vollständigen Texte. */}
+          <div className="flex flex-col">
+            <Link
+              href="/einstellungen/info/lizenzen/erklaert"
+              className={LINK_CLASS}
+            >
+              {T.licenseScreen.explainedLink}
+            </Link>
+            <Link
+              href="/einstellungen/info/lizenzen/texte"
+              className={LINK_CLASS}
+            >
+              {T.licenseScreen.textsLink}
+            </Link>
+          </div>
         </>
       )}
     </div>

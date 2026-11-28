@@ -1,25 +1,7 @@
-import { ChevronLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link } from "wouter";
 import { T } from "@/texts";
+import { BackToSummary } from "./BackToSummary";
 import { loadLicenseTexts } from "./licenseData";
-
-type State =
-  | { status: "loading" }
-  | { status: "failed" }
-  | { status: "ready"; text: string };
-
-function BackToSummary() {
-  return (
-    <Link
-      href="/einstellungen/info/lizenzen"
-      className="flex min-h-11 items-center gap-1 self-start text-muted-foreground"
-    >
-      <ChevronLeft aria-hidden="true" className="size-5" />
-      {T.licenseScreen.title}
-    </Link>
-  );
-}
+import { useLoaded } from "./useLoaded";
 
 /** Die vollständigen Lizenztexte aller Pakete, wie sie der Build erzeugt. */
 export function LicenseTextsScreen({
@@ -27,23 +9,7 @@ export function LicenseTextsScreen({
 }: {
   load?: () => Promise<string>;
 }) {
-  const [state, setState] = useState<State>({ status: "loading" });
-
-  useEffect(() => {
-    let active = true;
-    load().then(
-      (text) => {
-        if (active) setState({ status: "ready", text });
-      },
-      () => {
-        if (active) setState({ status: "failed" });
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [load]);
-
+  const state = useLoaded(load);
   return (
     <div className="flex flex-col gap-6">
       <BackToSummary />
@@ -54,7 +20,7 @@ export function LicenseTextsScreen({
       )}
       {state.status === "ready" && (
         <pre className="whitespace-pre-wrap break-words text-sm">
-          {state.text}
+          {state.value}
         </pre>
       )}
       {/* Der Text ist lang, der Weg zurück steht auch am Ende. */}

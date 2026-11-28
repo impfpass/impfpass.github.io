@@ -43,6 +43,24 @@ it("führt zu den Lizenztexten und zurück zur Info-Seite", async () => {
   );
 });
 
+it("führt vor den Lizenztexten zu den kurzen Erklärungen", async () => {
+  await seed({});
+  await renderWithData(<LicensesScreen load={async () => SUMMARY} />, ROUTE);
+  const explained = await screen.findByRole("link", {
+    name: "Alle Lizenzen kurz erklärt",
+  });
+  expect(explained.getAttribute("href")).toBe(
+    "#/einstellungen/info/lizenzen/erklaert",
+  );
+  const texts = screen.getByRole("link", {
+    name: "Lizenztexte aller Pakete ansehen",
+  });
+  // Erst die kurze Erklärung, dann die vollständigen Texte.
+  expect(
+    explained.compareDocumentPosition(texts) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
 it("zeigt beim Laden einen Hinweis", async () => {
   await seed({});
   await renderWithData(

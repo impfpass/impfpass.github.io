@@ -350,4 +350,24 @@ it("die Lizenzseiten behalten die untere Navigation und führen zurück", async 
       name: "Verwendete Software",
     }),
   ).toBeTruthy();
+  await user.click(
+    await screen.findByRole("link", { name: "Alle Lizenzen kurz erklärt" }),
+  );
+  expect(
+    await screen.findByRole("heading", {
+      level: 1,
+      name: "Lizenzen kurz erklärt",
+    }),
+  ).toBeTruthy();
+  expect(
+    await screen.findByRole("heading", { level: 2, name: "MIT" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("navigation")).toBeTruthy();
+  await user.click(screen.getByRole("link", { name: "Verwendete Software" }));
+  expect(
+    await screen.findByRole("heading", {
+      level: 1,
+      name: "Verwendete Software",
+    }),
+  ).toBeTruthy();
 });

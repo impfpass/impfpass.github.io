@@ -9,6 +9,7 @@ import { ListScreen } from "./list/ListScreen";
 import { OverviewScreen } from "./overview/OverviewScreen";
 import { RecommendationDetail } from "./recommendation/RecommendationDetail";
 import { InfoScreen } from "./settings/InfoScreen";
+import { LicenseExplanationsScreen } from "./settings/LicenseExplanationsScreen";
 import { LicensesScreen } from "./settings/LicensesScreen";
 import { LicenseTextsScreen } from "./settings/LicenseTextsScreen";
 import { SettingsScreen } from "./settings/SettingsScreen";
@@ -98,6 +99,9 @@ function Screens() {
         </Route>
         <Route path="/einstellungen/info/lizenzen/texte">
           <LicenseTextsScreen />
+        </Route>
+        <Route path="/einstellungen/info/lizenzen/erklaert">
+          <LicenseExplanationsScreen />
         </Route>
         <Route path="/uebernehmen">
           <TransferScreen />
