@@ -27,17 +27,12 @@ export function ImportPreview({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const summaryRef = useRef<HTMLParagraphElement>(null);
-  const failedRef = useRef<HTMLParagraphElement>(null);
 
   // Die Vorschau löst das Sammeln ab: Der Fokus geht auf die Zusammenfassung,
   // damit Screenreader sie vorlesen.
   useEffect(() => {
     summaryRef.current?.focus();
   }, []);
-
-  useEffect(() => {
-    if (failed) failedRef.current?.focus();
-  }, [failed]);
   const count = chosen.filter(Boolean).length;
   const duplicates = items.filter((item) => item.duplicateOf).length;
   const targets = replacementTargets(items.filter((_, i) => chosen[i]));
@@ -132,12 +127,7 @@ export function ImportPreview({
         })}
       </ul>
       {failed && (
-        <p
-          ref={failedRef}
-          role="alert"
-          tabIndex={-1}
-          className="text-destructive outline-none"
-        >
+        <p role="alert" className="text-destructive">
           {T.common.saveFailed}
         </p>
       )}

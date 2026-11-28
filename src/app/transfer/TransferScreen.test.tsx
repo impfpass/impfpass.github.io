@@ -881,8 +881,8 @@ it("scheitert das Übernehmen, bleibt die Vorschau mit einem Hinweis", async () 
   expect(alert.textContent).toBe(
     "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
   );
-  // Der Fokus geht auf die Meldung, sie wird vorgelesen.
-  expect(document.activeElement).toBe(alert);
+  // Die Meldung wird als Alert vorgelesen, der Fokus bleibt.
+  expect(document.activeElement).not.toBe(alert);
   expect(addVaccinations).toHaveBeenCalledOnce();
   expect(addVaccinations.mock.calls[0][0]).toHaveLength(3);
   expect(
@@ -959,38 +959,51 @@ describe("Fokus und Statusmeldungen", () => {
     expect(document.activeElement).toBe(heading());
   });
 
-  it("ein Fehler bekommt den Fokus, auch wenn er gleich lautet wie der vorige", async () => {
+  /** Wie der Scanner: liefert eine Zeile, ohne den Fokus zu bewegen. */
+  function scanQuietly(line: string) {
+    const field = screen.getByLabelText("Gescannter Text") as HTMLInputElement;
+    field.value = line;
+    fireEvent.keyDown(field, { key: "Enter" });
+  }
+
+  it("ein Fehler nimmt den Fokus nicht, er steht in einem Alert", async () => {
     await seed({});
     const user = userEvent.setup();
     await renderWithData(<TransferScreen />, "/uebernehmen");
 
     await scan(user, "https://example.org");
-    const alert = await screen.findByRole("alert");
-    expect(document.activeElement).toBe(alert);
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Das ist kein Code von ImpfPass.",
+    );
+    expect(document.activeElement).toBe(
+      screen.getByLabelText("Gescannter Text"),
+    );
 
-    await user.click(screen.getByLabelText("Gescannter Text"));
-    await scan(user, "https://example.org");
-    expect(document.activeElement).toBe(screen.getByRole("alert"));
+    await paste(user, "Hallo, hier sind meine Impfungen.");
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Das ist kein Code von ImpfPass.",
+    );
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Einlesen" }),
+    );
   });
 
-  it("verschwindet der Fehler mit dem Fokus, geht der Fokus auf die Überschrift", async () => {
+  it("liest der Scanner nach einem Fehler weiter, bleibt der Fokus, wo er ist", async () => {
     await seed({});
-    const user = userEvent.setup();
     await renderWithData(<TransferScreen />, "/uebernehmen");
     const [first] = partsOf(payload, 3);
-    await scan(user, "https://example.org");
-    expect(document.activeElement).toBe(await screen.findByRole("alert"));
+    expect(document.activeElement).toBe(document.body);
 
-    // Der Scanner liest weiter, ohne dass sich der Fokus bewegt.
-    const field = screen.getByLabelText("Gescannter Text") as HTMLInputElement;
-    field.value = first;
-    fireEvent.keyDown(field, { key: "Enter" });
+    scanQuietly("https://example.org");
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(document.activeElement).toBe(document.body);
 
+    scanQuietly(first);
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByRole("status").textContent).toBe(
       "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
     );
-    expect(document.activeElement).toBe(heading());
+    expect(document.activeElement).toBe(document.body);
   });
 
   it("nach „Neu beginnen“ und „Von vorn beginnen“ fällt der Fokus nicht auf body", async () => {

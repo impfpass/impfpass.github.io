@@ -116,22 +116,25 @@ export function TransferScreen() {
   const [way, setWay] = useState<Way>("scan");
   const fileInput = useRef<HTMLInputElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const problemRef = useRef<HTMLParagraphElement>(null);
   const doneRef = useRef<HTMLParagraphElement>(null);
+  // „Neu beginnen“ oder „Von vorn beginnen“ wurde gedrückt; der Knopf
+  // verschwindet danach oft.
+  const pressed = useRef(false);
 
-  // Wechselt die Ansicht oder kommt ein Fehler, geht der Fokus dorthin, damit
-  // Screenreader es vorlesen. Die Vorschau setzt ihn selbst. Verschwindet ein
-  // Fehler samt fokussiertem Knopf, geht der Fokus auf die Überschrift.
-  const shown = useRef({ kind: view.kind, problem });
+  // Wechselt die Ansicht, geht der Fokus dorthin, damit Screenreader sie
+  // vorlesen; die Vorschau setzt ihn selbst. Fehler nehmen den Fokus nicht,
+  // sie sind Alerts. Ist der gedrückte Knopf verschwunden, geht der Fokus auf
+  // die Überschrift statt auf body.
+  const shownKind = useRef(view.kind);
   useEffect(() => {
-    const before = shown.current;
-    shown.current = { kind: view.kind, problem };
-    if (view.kind !== before.kind) {
+    const kindChanged = view.kind !== shownKind.current;
+    shownKind.current = view.kind;
+    const afterButton = pressed.current;
+    pressed.current = false;
+    if (kindChanged) {
       if (view.kind === "done") doneRef.current?.focus();
       if (view.kind === "collect") headingRef.current?.focus();
-    } else if (problem && problem !== before.problem) {
-      problemRef.current?.focus();
-    } else if (!problem && before.problem && focusLost()) {
+    } else if (afterButton && focusLost()) {
       headingRef.current?.focus();
     }
   }, [view.kind, problem]);
@@ -224,6 +227,7 @@ export function TransferScreen() {
 
   /** Eine neue Übertragung mit den Zeilen ab der ersten unpassenden. */
   function restart({ lines, pasted }: Rest) {
+    pressed.current = true;
     setCollector(null);
     // Gelesener Text verschwindet aus dem Feld wie nach „Einlesen“, sofern
     // es inzwischen nicht geändert wurde.
@@ -233,6 +237,7 @@ export function TransferScreen() {
   }
 
   function startOver() {
+    pressed.current = true;
     setCollector(null);
     setProblem(null);
   }
@@ -345,12 +350,7 @@ export function TransferScreen() {
       </p>
       {problem && (
         <div className="flex flex-col gap-3">
-          <p
-            ref={problemRef}
-            role="alert"
-            tabIndex={-1}
-            className="text-destructive outline-none"
-          >
+          <p role="alert" className="text-destructive">
             {problem.message}
           </p>
           {restartWith !== undefined && (
