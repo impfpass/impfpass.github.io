@@ -454,6 +454,34 @@ Gruß`);
     ).toBe("corrupt");
   });
 
+  it("eine abgeschnittene Zeile über der vollständigen Übertragung wird übergangen", () => {
+    const [line] = encodeTransfer(typical(2), Infinity);
+    const cut = "IP:1:1/1:ABCDEF:QED8W";
+    expect(readTransferText([cut, line].join("\n"))).toEqual({
+      payload: typical(2),
+    });
+    expect(readTransferText([line, cut].join("\n"))).toEqual({
+      payload: typical(2),
+    });
+  });
+
+  it("eine abgeschnittene Zeile ohne weitere Teile ist beschädigt, nicht keine Übertragung", () => {
+    expect(
+      errorCode(() => readTransferText("IP:1:1/1:ABCDEF:QED8W\nGruß")),
+    ).toBe("corrupt");
+  });
+
+  it("eine abgeschnittene Zeile neben unvollständigen Teilen ist beschädigt", () => {
+    const lines = encodeTransfer(typical(50), 200);
+    expect(lines.length).toBeGreaterThan(2);
+    const cut = "IP:1:1/1:ABCDEF:QED8W";
+    expect(errorCode(() => readTransferText([lines[0], cut].join("\n")))).toBe(
+      "corrupt",
+    );
+    // Ohne beschädigte Zeile bleibt es bei den fehlenden Teilen.
+    expect("missing" in readTransferText(lines[0])).toBe(true);
+  });
+
   it("Version 2 stammt aus einer neueren App", () => {
     const [line] = packParts(
       { i: "TEST01", c: CREATED_AT, e: [] },

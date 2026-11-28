@@ -526,6 +526,20 @@ it("„Neu beginnen“ liest auch die folgenden Zeilen des eingefügten Texts", 
   ).toBe("");
 });
 
+it("eine abgeschnittene Zeile über der vollständigen Zeile im selben Text öffnet die Vorschau", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const line = textOf(payload);
+
+  await paste(user, ["IP:1:1/1:ABCDEF:QED8W", line].join("\n"));
+
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
 it("„Neu beginnen“ lässt geänderten Text im Feld stehen", async () => {
   await seed({});
   const user = userEvent.setup();
@@ -1024,5 +1038,41 @@ describe("Fokus und Statusmeldungen", () => {
     await scan(user, "https://example.org");
     await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
     expect(document.activeElement).toBe(heading());
+  });
+
+  it("bleibt nach „Neu beginnen“ ein Problem, geht der Fokus auf den Knopf, der nun dasteht", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    const [a1] = partsOf(payload, 3);
+    const [b1, b2, b3] = partsOf(
+      { ...payload, id: "B00002", entries: payload.entries },
+      3,
+    );
+    await scan(user, a1);
+    await paste(user, [b1, b2.slice(0, 20), b3].join("\n"));
+    await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Die Übertragung ist beschädigt. Erzeuge sie am PC neu.",
+    );
+    const button = screen.getByRole("button", { name: "Von vorn beginnen" });
+    expect(document.activeElement).toBe(button);
+  });
+
+  it("zeigt Neu beginnen ein neues Problem mit „Neu beginnen“, bekommt dieser Knopf den Fokus", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    const [a1] = partsOf(payload, 3);
+    const [b1] = partsOf({ ...payload, id: "B00002" }, 2);
+    const [c1] = partsOf({ ...payload, id: "C00003" }, 2);
+    await scan(user, a1);
+    await paste(user, [b1, c1].join("\n"));
+    await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+
+    // B1 ist gesammelt, C1 passt nicht dazu: wieder „Neu beginnen“.
+    const button = await screen.findByRole("button", { name: "Neu beginnen" });
+    await waitFor(() => expect(document.activeElement).toBe(button));
   });
 });

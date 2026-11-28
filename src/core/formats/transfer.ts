@@ -367,7 +367,9 @@ export function joinWrappedLines(lines: readonly string[]): string[] {
 /**
  * Liest eingefügten Text oder eine Datei mit einer oder mehreren Teilzeilen.
  * Leerzeilen und fremde Zeilen, etwa aus einer E-Mail, werden übersprungen,
- * umgebrochene Teilzeilen verbunden.
+ * umgebrochene Teilzeilen verbunden. Beschädigte Zeilen werden ebenfalls
+ * übersprungen und gemerkt: Sie zählen nur, wenn keine Übertragung vollständig
+ * wird.
  */
 export function readTransferText(
   text: string,
@@ -375,17 +377,25 @@ export function readTransferText(
   | { payload: TransferPayload }
   | { collector: TransferCollector; missing: number[] } {
   let collector: TransferCollector | null = null;
+  let damaged = false;
   for (const line of joinWrappedLines(text.split(/\r\n|\r|\n/))) {
     try {
       collector = addPart(collector, line).collector;
     } catch (e) {
       if (e instanceof TransferError && e.code === "notTransfer") continue;
+      if (e instanceof TransferError && e.code === "corrupt") {
+        damaged = true;
+        continue;
+      }
       throw e;
     }
   }
-  if (!collector) throw new TransferError("notTransfer");
+  if (!collector) throw new TransferError(damaged ? "corrupt" : "notTransfer");
   const missing = missingParts(collector);
-  if (missing.length > 0) return { collector, missing };
+  if (missing.length > 0) {
+    if (damaged) throw new TransferError("corrupt");
+    return { collector, missing };
+  }
   return { payload: decodeCollected(collector) };
 }
 

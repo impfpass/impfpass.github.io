@@ -116,6 +116,7 @@ export function TransferScreen() {
   const [way, setWay] = useState<Way>("scan");
   const fileInput = useRef<HTMLInputElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const problemRef = useRef<HTMLDivElement>(null);
   const doneRef = useRef<HTMLParagraphElement>(null);
   // „Neu beginnen“ oder „Von vorn beginnen“ wurde gedrückt; der Knopf
   // verschwindet danach oft.
@@ -124,7 +125,8 @@ export function TransferScreen() {
   // Wechselt die Ansicht, geht der Fokus dorthin, damit Screenreader sie
   // vorlesen; die Vorschau setzt ihn selbst. Fehler nehmen den Fokus nicht,
   // sie sind Alerts. Ist der gedrückte Knopf verschwunden, geht der Fokus auf
-  // die Überschrift statt auf body.
+  // den Knopf, der das noch angezeigte Problem löst, sonst auf die Überschrift
+  // statt auf body.
   const shownKind = useRef(view.kind);
   useEffect(() => {
     const kindChanged = view.kind !== shownKind.current;
@@ -135,7 +137,8 @@ export function TransferScreen() {
       if (view.kind === "done") doneRef.current?.focus();
       if (view.kind === "collect") headingRef.current?.focus();
     } else if (afterButton && focusLost()) {
-      headingRef.current?.focus();
+      const recovery = problemRef.current?.querySelector("button");
+      (recovery ?? headingRef.current)?.focus();
     }
   }, [view.kind, problem]);
 
@@ -349,7 +352,7 @@ export function TransferScreen() {
           : ""}
       </p>
       {problem && (
-        <div className="flex flex-col gap-3">
+        <div ref={problemRef} className="flex flex-col gap-3">
           <p role="alert" className="text-destructive">
             {problem.message}
           </p>
