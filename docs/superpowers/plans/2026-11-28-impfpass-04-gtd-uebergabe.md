@@ -260,6 +260,11 @@ Aufbau: Überschrift `Ins GTD übernehmen`. Ohne Adresse: `Trag in den Einstellu
 
 Die Übernahme selbst prüft Plan 5. Hier geht es um die ImpfPass-Seite. Schritt 1 läuft lokal, Schritt 2 erst nach dem Push, und gepusht wird nur nach ausdrücklichem Ja des Nutzers.
 
-- [ ] **Step 1:** Am PC (`npm run preview`): Adresse eintragen, Hinweis auf der Übersicht, Seite öffnen, `Link öffnen` landet auf der Adresse mit `#impfpass=…`, der Hinweis ist weg. Eine Impfung eintragen, Hinweis erscheint wieder mit den geänderten Erinnerungen.
-- [ ] **Step 2:** Auf dem iPhone in der App vom Home-Bildschirm: `Text kopieren` klappt, in Notizen eingefügt beginnt der Text mit `IMPFPASS-GTD:1:`. `Link öffnen` öffnet Safari. Schriftgröße und Bedienflächen passen.
-- [ ] **Step 3:** Ergebnis hier abhaken und mit `docs: plan 4 checks on the iPhone` committen.
+- [x] **Step 1:** Am PC (`npm run preview`): Adresse eintragen, Hinweis auf der Übersicht, Seite öffnen, `Link öffnen` landet auf der Adresse mit `#impfpass=…`, der Hinweis ist weg. Eine Impfung eintragen, Hinweis erscheint wieder mit den geänderten Erinnerungen.
+- [x] **Step 2:** Auf dem iPhone in der App vom Home-Bildschirm: `Text kopieren` klappt, in Notizen eingefügt beginnt der Text mit `IMPFPASS-GTD:1:`. `Link öffnen` öffnet Safari. Schriftgröße und Bedienflächen passen.
+- [x] **Step 3:** Ergebnis hier abhaken und mit `docs: plan 4 checks on the iPhone` committen.
+
+Ergebnis vom 28.11.2026:
+
+- Am PC (Stand bc3edda, Testprofil, Testadresse auf `localhost`): Eine Adresse ohne `https://` zeigt den Fehler am Feld. Mit Adresse meldet die Übersicht 12 Erinnerungen, die Seite listet sie, und die Daten im Link ergeben mit `inflateRawSync` wieder 12 Einträge. Nach `Link öffnen` ist der Hinweis weg. Das Eintragen einer Impfung mit erneutem Hinweis lief nur im Test aus Task 7, nicht von Hand.
+- Auf dem iPhone (Stand e3f0eeb, live): Der Nutzer hat bestätigt, dass alles wie beschrieben klappt. Fehler bei unvollständiger Adresse, Hinweis auf der Übersicht, kopierter Text beginnt in Notizen mit `IMPFPASS-GTD:1:`, `Link öffnen` öffnet Safari, danach meldet die Seite den aktuellen Stand und bietet die erneute Übergabe an. Die gesperrte Zwischenablage war nicht Teil der Prüfung, sie deckt der Test aus Task 6 ab. Schriftgröße und Bedienflächen hat der Nutzer nicht eigens gemeldet.
