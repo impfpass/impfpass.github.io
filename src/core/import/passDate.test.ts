@@ -33,8 +33,19 @@ describe("parsePassDate", () => {
     expect(p("01.01.27")).toEqual({ date: "1927-01-01", precision: "day" });
   });
 
-  it.each(["31.02.2016", "13.2016", "Dezember 2016"])("lehnt %j ab", (raw) => {
+  it.each([
+    "31.02.2016",
+    "13.2016",
+    "Dezember 2016",
+    "05.??.2016",
+    "12.16",
+    "05/12/2016",
+  ])("lehnt %j ab", (raw) => {
     expect(p(raw)).toBe("invalid");
+  });
+
+  it("liest einen halb unleserlichen Tag als Monat", () => {
+    expect(p("1?.12.2016")).toEqual({ date: "2016-12-01", precision: "month" });
   });
 
   it("meldet leere Eingaben", () => {

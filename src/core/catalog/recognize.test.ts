@@ -1,3 +1,4 @@
+import { DISEASE_IDS, DISEASES } from "./diseases";
 import { PRODUCTS } from "./products";
 import {
   normalizeLabel,
@@ -20,6 +21,14 @@ it("normalisierte Namen und Aliase sind über alle Impfstoffe eindeutig", () => 
       const key = normalizeLabel(n);
       expect(seen.get(key) ?? p.id).toBe(p.id);
       seen.set(key, p.id);
+    }
+  }
+});
+
+it("normalisierte IDs, Namen und Aliase sind über alle Krankheiten eindeutig", () => {
+  for (const id of DISEASE_IDS) {
+    for (const n of [id, DISEASES[id].name, ...DISEASES[id].aliases]) {
+      expect(recognizeDisease(n), n).toBe(id);
     }
   }
 });

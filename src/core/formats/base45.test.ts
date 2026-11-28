@@ -41,3 +41,12 @@ it("übersteht Hin und zurück für die Grenzwerte 0 und 255", () => {
   const input = Uint8Array.from([0, 0, 255, 255, 0, 255, 255]);
   expect([...decodeBase45(encodeBase45(input))]).toEqual([...input]);
 });
+
+it("liegt bei den Grenzen genau richtig", () => {
+  // Drei Zeichen: FGW = 65535 ist erlaubt, GGW = 65536 nicht.
+  expect([...decodeBase45("FGW")]).toEqual([255, 255]);
+  expect(() => decodeBase45("GGW")).toThrow();
+  // Zwei Zeichen: U5 = 255 ist erlaubt, V5 = 256 nicht.
+  expect([...decodeBase45("U5")]).toEqual([255]);
+  expect(() => decodeBase45("V5")).toThrow();
+});
