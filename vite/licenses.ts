@@ -237,21 +237,36 @@ export function summarizeNotices(
   };
 }
 
-/** Lizenzen der Übersicht ohne Erklärung, jede einmal, sortiert. */
+/**
+ * Lizenzen ohne Erklärung, jede einmal und sortiert, mit den Paketen, die sie
+ * mitbringen: „WTFPL (a-paket, b-paket)“.
+ */
 export function unexplainedLicenses(
-  summary: LicenseSummary,
+  notices: PackageNotice[],
   explained: readonly string[],
 ): string[] {
-  const used = new Set(summary.projects.flatMap((p) => p.licenses));
-  return [...used].filter((id) => !explained.includes(id)).sort();
+  const packages = new Map<string, Set<string>>();
+  for (const n of notices) {
+    if (explained.includes(n.license)) continue;
+    if (!packages.has(n.license)) packages.set(n.license, new Set());
+    packages.get(n.license)!.add(n.name);
+  }
+  return [...packages.keys()]
+    .sort()
+    .map((id) => `${id} (${[...packages.get(id)!].sort().join(", ")})`);
 }
 
 /**
  * Erzeugt beim Build `third-party-licenses.txt` aus den Paketen, deren Module
  * in einem Chunk stecken, plus EXTRA_PACKAGES, und daraus die Übersicht
  * `third-party-licenses.json` nach LICENSE_PROJECTS.
+ *
+ * `explanations` sind die Lizenzen mit Erklärung; Tests setzen sie, um den
+ * Abbruch zu prüfen.
  */
-export function licensesPlugin(): Plugin {
+export function licensesPlugin({
+  explanations = Object.keys(T.licenseScreen.explanations),
+}: { explanations?: readonly string[] } = {}): Plugin {
   let root = process.cwd();
   return {
     name: "impfpass-licenses",
@@ -298,10 +313,7 @@ export function licensesPlugin(): Plugin {
         );
       }
       // Die Seite „Lizenzen kurz erklärt“ soll jede vorkommende Lizenz erklären.
-      const unexplained = unexplainedLicenses(
-        summary,
-        Object.keys(T.licenseScreen.explanations),
-      );
+      const unexplained = unexplainedLicenses(sorted, explanations);
       if (unexplained.length > 0) {
         this.error(
           `Lizenz ohne Erklärung in src/texts.ts (T.licenseScreen.explanations): ${unexplained.join(", ")}`,

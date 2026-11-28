@@ -1,3 +1,4 @@
+import { Link } from "wouter";
 import type { LicenseSummary } from "@/core/licenses";
 import { T } from "@/texts";
 import { BackToSummary } from "./BackToSummary";
@@ -54,6 +55,12 @@ export function LicenseExplanationsScreen({
             </section>
           ))}
           <p>{T.licenseScreen.explainedOutro}</p>
+          <Link
+            href="/einstellungen/info/lizenzen/texte"
+            className="inline-flex min-h-11 items-center self-start underline"
+          >
+            {T.licenseScreen.textsLink}
+          </Link>
         </>
       )}
     </div>

@@ -311,22 +311,27 @@ describe("Pakete ohne Lizenzdatei", () => {
 
 describe("unexplainedLicenses", () => {
   it("ist leer, wenn jede vorkommende Lizenz erklärt ist", () => {
-    const summary = {
-      packages: 2,
-      projects: [{ name: "React", licenses: ["MIT"] }],
-    };
-    expect(unexplainedLicenses(summary, ["MIT", "ISC"])).toEqual([]);
+    expect(
+      unexplainedLicenses(
+        [notice("react"), notice("idb", "ISC")],
+        ["MIT", "ISC"],
+      ),
+    ).toEqual([]);
   });
 
-  it("nennt jede Lizenz ohne Erklärung einmal, sortiert", () => {
-    const summary = {
-      packages: 3,
-      projects: [
-        { name: "A", licenses: ["MIT", "WTFPL"] },
-        { name: "B", licenses: ["GPL-3.0", "WTFPL"] },
-      ],
-    };
-    expect(unexplainedLicenses(summary, ["MIT"])).toEqual(["GPL-3.0", "WTFPL"]);
+  it("nennt jede Lizenz ohne Erklärung einmal, sortiert, mit ihren Paketen", () => {
+    expect(
+      unexplainedLicenses(
+        [
+          notice("react"),
+          notice("b-paket", "WTFPL"),
+          notice("gpl-paket", "GPL-3.0"),
+          notice("a-paket", "WTFPL"),
+          notice("a-paket", "WTFPL", "2.0.0"),
+        ],
+        ["MIT"],
+      ),
+    ).toEqual(["GPL-3.0 (gpl-paket)", "WTFPL (a-paket, b-paket)"]);
   });
 });
 
@@ -335,8 +340,11 @@ describe("unexplainedLicenses", () => {
  * echten Paketen unter node_modules liegen, und gibt die ausgegebenen Dateien
  * zurück.
  */
-function runPlugin(packages: string[]): Map<string, string> {
-  const plugin = licensesPlugin();
+function runPlugin(
+  packages: string[],
+  options?: Parameters<typeof licensesPlugin>[0],
+): Map<string, string> {
+  const plugin = licensesPlugin(options);
   const emitted = new Map<string, string>();
   const context = {
     emitFile(file: { fileName: string; source: string }) {
@@ -379,6 +387,8 @@ const ONE_PER_PROJECT = [
   "fflate",
   // MIT ohne eigene Lizenzdatei
   "react-remove-scroll-bar",
+  // das einzige Paket unter 0BSD
+  "tslib",
 ];
 
 describe("licensesPlugin", () => {
@@ -416,6 +426,16 @@ describe("licensesPlugin", () => {
       name: "jsQR",
       licenses: ["Apache-2.0"],
     });
+  });
+
+  it("bricht ab, wenn eine Lizenz keine Erklärung hat, und nennt Datei und Pakete", () => {
+    expect(() =>
+      runPlugin(ONE_PER_PROJECT, {
+        explanations: ["MIT", "Apache-2.0", "0BSD", "Unlicense"],
+      }),
+    ).toThrow(
+      "Lizenz ohne Erklärung in src/texts.ts (T.licenseScreen.explanations): ISC (idb, lucide-react)",
+    );
   });
 
   it("bricht ab, wenn die Projektliste nicht zum Build passt, und nennt die Datei", () => {

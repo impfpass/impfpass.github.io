@@ -75,6 +75,24 @@ it("führt zurück zur Übersicht", async () => {
   ).toBe("#/einstellungen/info/lizenzen");
 });
 
+it("führt am Ende zu den Lizenztexten, auf die der Schlusssatz verweist", async () => {
+  await seed({});
+  await renderWithData(
+    <LicenseExplanationsScreen load={async () => SUMMARY} />,
+    ROUTE,
+  );
+  const texts = await screen.findByRole("link", {
+    name: "Lizenztexte aller Pakete ansehen",
+  });
+  expect(texts.getAttribute("href")).toBe(
+    "#/einstellungen/info/lizenzen/texte",
+  );
+  const outro = screen.getByText(T.licenseScreen.explainedOutro);
+  expect(
+    outro.compareDocumentPosition(texts) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
 it("meldet, wenn die Angaben nicht geladen werden können", async () => {
   await seed({});
   await renderWithData(
