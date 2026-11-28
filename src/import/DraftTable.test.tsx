@@ -380,7 +380,61 @@ describe("Zeilen hinzufügen und löschen", () => {
     expect(bodyRows()).toHaveLength(3);
     expect(input("Datum, Zeile 2").value).toBe("05.12.2016");
     expect(state.draft.rows[1]).toBe(rows[1]);
-    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("die Statusmeldung zum Löschen ist schon vor dem Löschen da", async () => {
+    setup([row("01.02.2010"), row("05.12.2016")]);
+    const region = screen.getByRole("status");
+    expect(region.textContent).toBe("");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Löschen, Zeile 1" }),
+    );
+    expect(screen.getByRole("status")).toBe(region);
+    expect(region.textContent).toContain("Zeile 1 gelöscht.");
+  });
+
+  it("setzt den Fokus nach dem Löschen auf „Rückgängig“ und nach dem Zurückholen auf „Löschen“ der Zeile", async () => {
+    setup([row("01.02.2010"), row("05.12.2016"), row("03.04.2018")]);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Löschen, Zeile 2" }),
+    );
+    const undo = screen.getByRole("button", { name: "Rückgängig" });
+    expect(document.activeElement).toBe(undo);
+
+    await userEvent.keyboard("{Enter}");
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Löschen, Zeile 2" }),
+    );
+  });
+
+  it("setzt den Fokus auch nach dem Löschen der letzten Zeile auf „Rückgängig“", async () => {
+    setup([row()]);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Löschen, Zeile 1" }),
+    );
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Rückgängig" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Rückgängig" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("button", { name: "Löschen, Zeile 1" }),
+    );
+  });
+
+  it("„Rückgängig“ behält Änderungen an anderen Zeilen", async () => {
+    const rows = [row("01.02.2010"), row("05.12.2016"), row("03.04.2018")];
+    const { state } = setup(rows);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Löschen, Zeile 2" }),
+    );
+    const batch = input("Charge, Zeile 1");
+    await userEvent.type(batch, "AB12");
+    await userEvent.click(screen.getByRole("button", { name: "Rückgängig" }));
+    expect(state.draft.rows).toHaveLength(3);
+    expect(state.draft.rows[0].batch).toBe("AB12");
+    expect(state.draft.rows[1]).toBe(rows[1]);
+    expect(state.draft.rows[2]).toBe(rows[2]);
   });
 
   it("kann nur die letzte Löschung rückgängig machen", async () => {
@@ -495,5 +549,21 @@ describe("Weiter zum Übertragen", () => {
     await userEvent.click(nextButton());
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("lange Arztangaben", () => {
+  const stamp = "Praxis Dr. med. Musterfrau-Beispiel, Hamburg";
+
+  it("zeigen den ganzen Text als Tooltip am Feld", () => {
+    setup([row("05.12.2016", "Boostrix Polio", { doctor: stamp })]);
+    const doctor = input("Arzt oder Praxis, Zeile 1");
+    expect(doctor.value).toBe(stamp);
+    expect(doctor.title).toBe(stamp);
+  });
+
+  it("haben ohne Angabe keinen Tooltip", () => {
+    setup([row()]);
+    expect(input("Arzt oder Praxis, Zeile 1").getAttribute("title")).toBeNull();
   });
 });

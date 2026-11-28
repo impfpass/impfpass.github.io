@@ -1,5 +1,5 @@
 import { CircleAlert, Info, Plus, Trash2 } from "lucide-react";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -99,6 +99,17 @@ export function DraftTable({
   const [confirming, setConfirming] = useState(false);
   // Zeile, deren Datumsfeld nach dem Einfügen den Fokus bekommt.
   const focusRow = useRef<string | null>(null);
+  // Fokusziele nach „Löschen“ und „Rückgängig“, damit der Fokus nie auf body fällt.
+  const undoRef = useRef<HTMLButtonElement>(null);
+  const focusUndo = useRef(false);
+  const focusRemove = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (removed && focusUndo.current) {
+      focusUndo.current = false;
+      undoRef.current?.focus();
+    }
+  }, [removed]);
 
   const issuesOf = (row: DraftRow) => issues.get(row.id) ?? [];
   const withErrors = draft.rows.filter((r) =>
@@ -125,6 +136,7 @@ export function DraftTable({
   }
 
   function removeRow(row: DraftRow, index: number) {
+    focusUndo.current = true;
     setRows((rows) => rows.filter((r) => r.id !== row.id));
     setRemoved({ row, index });
   }
@@ -132,6 +144,7 @@ export function DraftTable({
   function undo() {
     if (!removed) return;
     const { row, index } = removed;
+    focusRemove.current = row.id;
     setRows((rows) => [...rows.slice(0, index), row, ...rows.slice(index)]);
     setRemoved(null);
   }
@@ -145,6 +158,13 @@ export function DraftTable({
   function focusIfNew(id: string, el: HTMLInputElement | null) {
     if (el && focusRow.current === id) {
       focusRow.current = null;
+      el.focus();
+    }
+  }
+
+  function focusRemoveIfRestored(id: string, el: HTMLButtonElement | null) {
+    if (el && focusRemove.current === id) {
+      focusRemove.current = null;
       el.focus();
     }
   }
@@ -167,7 +187,7 @@ export function DraftTable({
           <div className="overflow-x-auto">
             <table
               aria-label={t.label}
-              className="w-full min-w-[75rem] table-fixed border-collapse"
+              className="w-full min-w-[80rem] table-fixed border-collapse"
             >
               <thead>
                 <tr className="border-b text-left">
@@ -186,7 +206,7 @@ export function DraftTable({
                   <th scope="col" className="w-32 p-2">
                     {c.batch}
                   </th>
-                  <th scope="col" className="w-40 p-2">
+                  <th scope="col" className="w-80 p-2">
                     {c.doctor}
                   </th>
                   <th scope="col" className="w-28 p-2">
@@ -211,6 +231,7 @@ export function DraftTable({
                     onChange={(fn) => changeRow(row.id, fn)}
                     onRemove={() => removeRow(row, index)}
                     dateRef={(el) => focusIfNew(row.id, el)}
+                    removeRef={(el) => focusRemoveIfRestored(row.id, el)}
                   />
                 ))}
               </tbody>
@@ -232,17 +253,29 @@ export function DraftTable({
         <DeleteDraftButton onConfirm={onClear} />
       </div>
 
-      {removed && (
-        <p
-          role="status"
-          className="sticky bottom-4 flex flex-wrap items-center gap-3 rounded-md border bg-background p-3 shadow-md"
-        >
-          {t.removed(removed.index + 1)}
-          <Button type="button" variant="outline" onClick={undo}>
-            {t.undo}
-          </Button>
-        </p>
-      )}
+      {/* Der Bereich steht immer im DOM, nur sein Inhalt kommt und geht. */}
+      <div
+        role="status"
+        className={
+          removed
+            ? "sticky bottom-4 flex flex-wrap items-center gap-3 rounded-md border bg-background p-3 shadow-md"
+            : "sr-only"
+        }
+      >
+        {removed && (
+          <>
+            {t.removed(removed.index + 1)}
+            <Button
+              ref={undoRef}
+              type="button"
+              variant="outline"
+              onClick={undo}
+            >
+              {t.undo}
+            </Button>
+          </>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center gap-3 border-t pt-4">
         <Button
@@ -292,6 +325,7 @@ function RowView({
   onChange,
   onRemove,
   dateRef,
+  removeRef,
 }: {
   row: DraftRow;
   number: number;
@@ -300,6 +334,7 @@ function RowView({
   onChange(fn: (r: DraftRow) => DraftRow): void;
   onRemove(): void;
   dateRef(el: HTMLInputElement | null): void;
+  removeRef(el: HTMLButtonElement | null): void;
 }) {
   const ids = useId();
   const t = T.pc.table;
@@ -388,6 +423,7 @@ function RowView({
         <Input
           {...VERBATIM_INPUT}
           aria-label={field(c.doctor)}
+          title={row.doctor || undefined}
           aria-invalid={invalid("doctor")}
           value={row.doctor}
           onChange={(e) => {
@@ -434,6 +470,7 @@ function RowView({
       </td>
       <td className="p-1 py-2">
         <Button
+          ref={removeRef}
           type="button"
           variant="ghost"
           size="icon"
