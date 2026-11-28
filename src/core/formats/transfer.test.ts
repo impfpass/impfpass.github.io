@@ -402,6 +402,11 @@ describe("addPart, missingParts und decodeCollected", () => {
       "Hallo",
       "IP:1:3/2:ABCDEF:QED8WEX0:12345678",
       "IP:1:0/2:ABCDEF:QED8WEX0:12345678",
+      // `IP:` ohne Version ist etwas anderes, etwa eine Adresse
+      "IP:",
+      "IP: 192.168.0.1",
+      "IP:192.168.0.1",
+      "IP:x:1/1:ABCDEF:QED8WEX0:12345678",
     ]) {
       expect(
         errorCode(() => addPart(null, line)),
@@ -412,13 +417,11 @@ describe("addPart, missingParts und decodeCollected", () => {
 
   it("eine Zeile mit IP:, die nicht zum Aufbau passt, ist beschädigt", () => {
     for (const line of [
-      "IP:",
       "IP:1:1/1:ABC:QED8WEX0:12345678",
       "IP:1:1/100:ABCDEF:QED8WEX0:12345678",
       "IP:1:1/1:ABCDEF::12345678",
       "IP:1:1/1:ABCDEF:QED8WEX0:1234567",
       "IP:1:1/1:abcdef:QED8WEX0:12345678",
-      "IP:x:1/1:ABCDEF:QED8WEX0:12345678",
       "IP:0:1/1:ABCDEF:QED8WEX0:12345678",
       // abgeschnitten
       "IP:1:1/1:ABCDEF:QED8W",
@@ -427,6 +430,17 @@ describe("addPart, missingParts und decodeCollected", () => {
         errorCode(() => addPart(null, line)),
         line,
       ).toBe("corrupt");
+    }
+  });
+
+  it("Zeilen mit IP: ohne Version im Text bleiben fremde Zeilen", () => {
+    const [line] = encodeTransfer(typical(2), Infinity);
+    for (const foreign of ["IP: 192.168.0.1", "IP:192.168.0.1"]) {
+      const result = readTransferText(`Hallo
+${foreign}
+${line}
+Gruß`);
+      expect("payload" in result, foreign).toBe(true);
     }
   });
 
