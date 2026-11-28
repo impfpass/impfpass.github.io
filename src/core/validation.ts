@@ -1,5 +1,9 @@
 import { T } from "@/texts";
-import { isValidISODate, normalizeToPrecision } from "./dates";
+import {
+  isValidISODate,
+  normalizeToPrecision,
+  SIGNIFICANT_LENGTH,
+} from "./dates";
 import type { DatePrecision, DiseaseId, ISODate } from "./model";
 
 export interface EntryInput {
@@ -15,13 +19,6 @@ export interface EntryInput {
 
 export type EntryErrors = Partial<Record<"date" | "product", string>>;
 
-/** Länge des Datums-Strings, die bei dieser Genauigkeit zählt. */
-const SIGNIFICANT: Record<DatePrecision, number> = {
-  year: 4, // YYYY
-  month: 7, // YYYY-MM
-  day: 10, // YYYY-MM-DD
-};
-
 /**
  * Liegt ein gültiges Datum in der Zukunft oder vor dem Geburtsdatum? Verglichen
  * wird auf der Ebene der bekannten Genauigkeit: Ist nur das Jahr bekannt, zählt
@@ -33,7 +30,7 @@ export function dateRangeIssue(
   birthDate: ISODate | null,
   today: ISODate,
 ): "future" | "beforeBirth" | null {
-  const n = SIGNIFICANT[datePrecision];
+  const n = SIGNIFICANT_LENGTH[datePrecision];
   const known = normalizeToPrecision(date, datePrecision).slice(0, n);
   if (known > today.slice(0, n)) return "future";
   if (birthDate !== null && known < birthDate.slice(0, n)) return "beforeBirth";

@@ -3,7 +3,12 @@ import { z } from "zod";
 import { T } from "@/texts";
 import { DISEASE_IDS, diseaseLabel } from "../catalog/diseases";
 import { getProduct } from "../catalog/products";
-import { isValidISODate, normalizeToPrecision, todayISO } from "../dates";
+import {
+  isValidISODate,
+  normalizeToPrecision,
+  SIGNIFICANT_LENGTH,
+  todayISO,
+} from "../dates";
 import type { DatePrecision, TransferEntry, TransferPayload } from "../model";
 import { decodeBase45, encodeBase45 } from "./base45";
 import { crc32 } from "./crc32";
@@ -62,16 +67,11 @@ export interface TransferCollector {
 }
 
 // Das Datum trägt seine Genauigkeit über die Länge: 2016, 2016-12, 2016-12-05.
-const WIRE_DATE_LENGTH: Record<DatePrecision, number> = {
-  year: 4,
-  month: 7,
-  day: 10,
-};
 const WIRE_DATE = /^\d{4}(-\d{2}(-\d{2})?)?$/;
 
 function precisionOf(wireDate: string): DatePrecision {
-  if (wireDate.length === WIRE_DATE_LENGTH.year) return "year";
-  if (wireDate.length === WIRE_DATE_LENGTH.month) return "month";
+  if (wireDate.length === SIGNIFICANT_LENGTH.year) return "year";
+  if (wireDate.length === SIGNIFICANT_LENGTH.month) return "month";
   return "day";
 }
 
@@ -112,7 +112,7 @@ function toWire(e: TransferEntry): WireValue[] {
     product.diseases.every((d, i) => d === e.diseases[i]);
   const defaultLabel = product ? product.name : diseaseLabel(e.diseases);
   const wire: WireValue[] = [
-    e.date.slice(0, WIRE_DATE_LENGTH[e.datePrecision]),
+    e.date.slice(0, SIGNIFICANT_LENGTH[e.datePrecision]),
     e.productId || 0,
     // Eine leere Bezeichnung bekommt beim Lesen ebenfalls die Voreinstellung.
     e.label === defaultLabel || e.label === "" ? 0 : e.label,
@@ -223,7 +223,7 @@ export function encodeTransfer(
     chunks.push(data.slice(start, start + maxChars));
   }
   if (chunks.length > MAX_PARTS) {
-    throw new RangeError(`Zu viele Teile: ${chunks.length}`);
+    throw new RangeError(`Too many parts: ${chunks.length}`);
   }
   return chunks.map(
     (chunk, i) =>
@@ -315,7 +315,7 @@ function unpack(c: TransferCollector): unknown {
 export function decodeCollected(c: TransferCollector): TransferPayload {
   const missing = missingParts(c);
   if (missing.length > 0) {
-    throw new Error(`Übertragung unvollständig, es fehlt Teil ${missing}`);
+    throw new Error(`Transfer incomplete, missing parts: ${missing}`);
   }
   const raw = unpack(c);
   if (hasUnknownIds(raw)) throw new TransferError("tooNew");

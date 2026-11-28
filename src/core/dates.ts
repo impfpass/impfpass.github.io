@@ -25,6 +25,16 @@ export function isValidISODate(s: string): boolean {
   return day <= daysInMonth;
 }
 
+/**
+ * Länge des Datums-Strings, die bei dieser Genauigkeit zählt: `YYYY`,
+ * `YYYY-MM`, `YYYY-MM-DD`. Auch die Übertragung kürzt das Datum so.
+ */
+export const SIGNIFICANT_LENGTH: Readonly<Record<DatePrecision, number>> = {
+  year: 4,
+  month: 7,
+  day: 10,
+};
+
 export function normalizeToPrecision(date: ISODate, p: DatePrecision): ISODate {
   if (p === "year") return `${date.slice(0, 4)}-01-01`;
   if (p === "month") return `${date.slice(0, 7)}-01`;

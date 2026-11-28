@@ -1,8 +1,9 @@
 import { T } from "@/texts";
 import { DISEASE_IDS, type DiseaseId } from "../catalog/diseases";
 import { recognizeDisease } from "../catalog/recognize";
+import type { RowField } from "../model";
 
-export type RowField = "date" | "label" | "batch" | "doctor" | "diseases";
+export type { RowField };
 
 export interface ParsedRow {
   date: string;

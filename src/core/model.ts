@@ -166,3 +166,31 @@ export interface RuleState {
   snapshot: SnapshotEntry[];
   notices: Notice[];
 }
+
+/** Felder einer Zeile des PC-Imports, bei denen der Chatbot unsicher sein kann. */
+export type RowField = "date" | "label" | "batch" | "doctor" | "diseases";
+
+/** Eine Zeile des Entwurfs der PC-App (Plan 3). */
+export interface DraftRow {
+  id: string;
+  /** So wie eingegeben, etwa `05.12.2016`. */
+  date: string;
+  label: string;
+  productId: string | null;
+  diseases: DiseaseId[];
+  batch: string;
+  doctor: string;
+  note: string;
+  unsure: RowField[];
+  hints: string[];
+  reviewed: boolean;
+}
+
+/** Entwurf der PC-App, liegt in der Datenbank `impfpass-import`. */
+export interface Draft {
+  version: 1;
+  /** So wie eingegeben. Nur zur Prüfung, wird nicht übertragen. */
+  birthDate: string;
+  rows: DraftRow[];
+  updatedAt: string;
+}

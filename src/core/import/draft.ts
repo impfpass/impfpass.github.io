@@ -1,35 +1,21 @@
 import { diseaseLabel, type DiseaseId } from "../catalog/diseases";
 import { getProduct } from "../catalog/products";
 import { recognizeProduct } from "../catalog/recognize";
-import { normalizeToPrecision } from "../dates";
 import { MAX_TEXT_LENGTH, MAX_TRANSFER_ENTRIES } from "../formats/transfer";
-import type { DatePrecision, ISODate, TransferEntry } from "../model";
-import type { ParsedRow, RowField } from "./chatbot";
+import type {
+  Draft,
+  DraftRow,
+  ISODate,
+  RowField,
+  TransferEntry,
+} from "../model";
+import { dateRangeIssue } from "../validation";
+import type { ParsedRow } from "./chatbot";
 import { isPossibleDuplicate } from "./duplicates";
 import { parsePassDate } from "./passDate";
 
-export interface DraftRow {
-  id: string;
-  /** So wie eingegeben, etwa `05.12.2016`. */
-  date: string;
-  label: string;
-  productId: string | null;
-  diseases: DiseaseId[];
-  batch: string;
-  doctor: string;
-  note: string;
-  unsure: RowField[];
-  hints: string[];
-  reviewed: boolean;
-}
-
-export interface Draft {
-  version: 1;
-  /** So wie eingegeben. Nur zur Prüfung, wird nicht übertragen. */
-  birthDate: string;
-  rows: DraftRow[];
-  updatedAt: string;
-}
+// Die Typen liegen in `core/model.ts`, damit Formate und Speicher nicht aus `core/import` lesen.
+export type { Draft, DraftRow };
 
 export type TextField = "label" | "batch" | "doctor" | "note";
 
@@ -134,47 +120,40 @@ export function rowFromParsed(p: ParsedRow, id: string): DraftRow {
   );
 }
 
+type BirthCheck =
+  { state: "empty" | "invalid" | "future" } | { state: "ok"; date: ISODate };
+
 /** Das Geburtsdatum gilt nur mit Tag. */
+function checkBirth(raw: string, today: ISODate): BirthCheck {
+  const d = parsePassDate(raw, today);
+  if (d === "empty" || d === "invalid") return { state: d };
+  if (d.precision !== "day") return { state: "invalid" };
+  return d.date > today ? { state: "future" } : { state: "ok", date: d.date };
+}
+
 export function checkBirthDate(
   raw: string,
   today: ISODate,
 ): "ok" | "empty" | "invalid" | "future" {
-  const d = parsePassDate(raw, today);
-  if (d === "empty" || d === "invalid") return d;
-  if (d.precision !== "day") return "invalid";
-  return d.date > today ? "future" : "ok";
-}
-
-/** Länge des Datums-Strings, die bei dieser Genauigkeit zählt. */
-const SIGNIFICANT: Record<DatePrecision, number> = {
-  year: 4,
-  month: 7,
-  day: 10,
-};
-
-function parsedBirth(raw: string, today: ISODate): ISODate | null {
-  if (checkBirthDate(raw, today) !== "ok") return null;
-  const d = parsePassDate(raw, today);
-  return typeof d === "object" ? d.date : null;
+  return checkBirth(raw, today).state;
 }
 
 function rowIssues(
   row: DraftRow,
+  date: ReturnType<typeof parsePassDate>,
   today: ISODate,
   birth: ISODate | null,
 ): RowIssue[] {
   const issues: RowIssue[] = [];
 
-  const date = parsePassDate(row.date, today);
   if (date === "empty") issues.push({ kind: "dateMissing", blocking: true });
   else if (date === "invalid") {
     issues.push({ kind: "dateInvalid", blocking: true });
   } else {
-    const n = SIGNIFICANT[date.precision];
-    const day = normalizeToPrecision(date.date, date.precision).slice(0, n);
-    if (day > today.slice(0, n)) {
+    const range = dateRangeIssue(date.date, date.precision, birth, today);
+    if (range === "future") {
       issues.push({ kind: "dateFuture", blocking: true });
-    } else if (birth && day < birth.slice(0, n)) {
+    } else if (range === "beforeBirth") {
       issues.push({ kind: "dateBeforeBirth", blocking: true });
     }
   }
@@ -235,11 +214,12 @@ export function checkDraft(
   draft: Draft,
   today: ISODate,
 ): Map<string, RowIssue[]> {
-  const birth = parsedBirth(draft.birthDate, today);
+  const b = checkBirth(draft.birthDate, today);
+  const birth = b.state === "ok" ? b.date : null;
   const result = new Map<string, RowIssue[]>();
   const dated = draft.rows.map((row) => {
-    result.set(row.id, rowIssues(row, today, birth));
     const d = parsePassDate(row.date, today);
+    result.set(row.id, rowIssues(row, d, today, birth));
     return typeof d === "object"
       ? { date: d.date, datePrecision: d.precision, diseases: row.diseases }
       : null;
@@ -286,18 +266,18 @@ function entryLabel(row: DraftRow): string {
 export function draftToEntries(draft: Draft, today: ISODate): TransferEntry[] {
   if (draft.rows.length > MAX_TRANSFER_ENTRIES) {
     throw new Error(
-      `Zu viele Zeilen: ${draft.rows.length}, höchstens ${MAX_TRANSFER_ENTRIES}.`,
+      `Too many rows: ${draft.rows.length}, at most ${MAX_TRANSFER_ENTRIES}.`,
     );
   }
   const issues = checkDraft(draft, today);
   const blocked = draft.rows.some((r) =>
     issues.get(r.id)?.some((i) => i.blocking),
   );
-  if (blocked) throw new Error("Der Entwurf hat noch Fehler.");
+  if (blocked) throw new Error("Draft still has blocking errors.");
 
   return draft.rows.map((row) => {
     const date = parsePassDate(row.date, today);
-    if (typeof date !== "object") throw new Error("Datum fehlt.");
+    if (typeof date !== "object") throw new Error("Row has no valid date.");
     const entry: TransferEntry = {
       date: date.date,
       datePrecision: date.precision,

@@ -3,13 +3,13 @@ import { DISEASE_IDS } from "../catalog/diseases";
 import { isValidISODate } from "../dates";
 import type {
   Decision,
+  Draft,
   Person,
   PersonAnswers,
   RuleState,
   Settings,
   Vaccination,
 } from "../model";
-import type { Draft } from "../import/draft";
 import { BLOOD_GROUPS, normalizeListSort } from "../model";
 
 /** zod-Schemata für die Datensicherung, in Plan 3 auch für den Import. */

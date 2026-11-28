@@ -414,7 +414,7 @@ describe("draftToEntries", () => {
     const rows = Array.from({ length: MAX_TRANSFER_ENTRIES + 1 }, (_, i) =>
       row(`r${i}`, "05.12.2016"),
     );
-    expect(() => draftToEntries(draftOf(rows), today)).toThrow(/Zu viele/);
+    expect(() => draftToEntries(draftOf(rows), today)).toThrow(/Too many rows/);
   });
 });
 

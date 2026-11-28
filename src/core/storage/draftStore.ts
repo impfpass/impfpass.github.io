@@ -1,6 +1,6 @@
 import { openDB, type IDBPDatabase } from "idb";
 import { draftSchema } from "../formats/schemas";
-import type { Draft } from "../import/draft";
+import type { Draft } from "../model";
 import { StorageUnavailableError } from "./repository";
 
 export const DRAFT_DB_NAME = "impfpass-import";
