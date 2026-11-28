@@ -627,6 +627,8 @@ So füllst du die Felder:
       label: "Gefundene Impfungen",
       summary: (n: number, duplicates: number) =>
         `${vaccinationCount(n)} gefunden, davon ${duplicates} schon eingetragen.`,
+      newestOf: (createdAt: string) =>
+        `Im Text standen mehrere Übertragungen. Gezeigt wird die neueste vollständige vom ${createdAt}.`,
       duplicate: (label: string, date: string) =>
         `Schon eingetragen: ${label}, ${date}.`,
       replaceHint:

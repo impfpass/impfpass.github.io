@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { todayISO } from "@/core/dates";
+import { formatDate, todayISO } from "@/core/dates";
 import {
   addPart,
   decodeCollected,
@@ -29,7 +29,12 @@ import { CHOICE_ITEM_CLASS } from "../styles";
 
 type View =
   | { kind: "collect" }
-  | { kind: "preview"; payload: TransferPayload; items: ImportItem[] }
+  | {
+      kind: "preview";
+      payload: TransferPayload;
+      items: ImportItem[];
+      notice: string | null;
+    }
   | { kind: "done"; count: number; replaced: number };
 
 type Way = "scan" | "file" | "text";
@@ -86,16 +91,29 @@ function focusLost(): boolean {
 }
 
 /**
- * Die ganze Übertragung, wenn der Text sie allein enthält, wie Datei und Text
- * vom PC. Sonst `null`; Fehler meldet dann das Sammeln Zeile für Zeile.
+ * Die neueste vollständige Übertragung im Text, wie Datei und Text vom PC,
+ * mit der Zahl der übrigen. Sonst `null`; Fehler meldet dann das Sammeln
+ * Zeile für Zeile.
  */
-function wholeTransfer(content: string): TransferPayload | null {
+function wholeTransfer(
+  content: string,
+): { payload: TransferPayload; skipped?: number } | null {
   try {
     const result = readTransferText(content);
-    return "payload" in result ? result.payload : null;
+    return "payload" in result ? result : null;
   } catch {
     return null;
   }
+}
+
+/** Zeitpunkt einer Übertragung, etwa „27.11.2026, 12:00 Uhr“. */
+function createdAtText(iso: string): string {
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${formatDate(todayISO(d), "day")}, ${time} Uhr`;
 }
 
 /**
@@ -148,10 +166,11 @@ export function TransferScreen() {
     setCollectorState(c);
   }
 
-  function showPreview(payload: TransferPayload) {
+  function showPreview(payload: TransferPayload, notice: string | null = null) {
     setView({
       kind: "preview",
       payload,
+      notice,
       items: planImport(
         vaccinations,
         payload.entries,
@@ -212,7 +231,12 @@ export function TransferScreen() {
     if (whole) {
       setCollector(null);
       setProblem(null);
-      showPreview(whole);
+      showPreview(
+        whole.payload,
+        whole.skipped
+          ? T.transfer.preview.newestOf(createdAtText(whole.payload.createdAt))
+          : null,
+      );
       return true;
     }
     const lines = joinWrappedLines(content.split(/\r\n|\r|\n/)).filter(
@@ -312,6 +336,7 @@ export function TransferScreen() {
         {heading}
         <ImportPreview
           items={view.items}
+          notice={view.notice ?? undefined}
           onImport={importEntries}
           onCancel={cancel}
         />

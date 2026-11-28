@@ -370,17 +370,23 @@ export function joinWrappedLines(lines: readonly string[]): string[] {
  * umgebrochene Teilzeilen verbunden. Beschädigte Zeilen werden ebenfalls
  * übersprungen und gemerkt: Sie zählen nur, wenn keine Übertragung vollständig
  * wird.
+ *
+ * Stehen mehrere Übertragungen im Text, etwa nach zweimaligem Senden, gilt die
+ * neueste vollständige; bei gleichem Zeitpunkt die spätere im Text. `skipped`
+ * zählt dann die übrigen, vollständig oder nicht. Ist keine vollständig, bleibt
+ * es beim Fehler „andere Übertragung“.
  */
 export function readTransferText(
   text: string,
 ):
-  | { payload: TransferPayload }
+  | { payload: TransferPayload; skipped?: number }
   | { collector: TransferCollector; missing: number[] } {
-  let collector: TransferCollector | null = null;
+  const collectors = new Map<string, TransferCollector>();
   let damaged = false;
   for (const line of joinWrappedLines(text.split(/\r\n|\r|\n/))) {
     try {
-      collector = addPart(collector, line).collector;
+      const { id } = parsePart(line);
+      collectors.set(id, addPart(collectors.get(id) ?? null, line).collector);
     } catch (e) {
       if (e instanceof TransferError && e.code === "notTransfer") continue;
       if (e instanceof TransferError && e.code === "corrupt") {
@@ -390,13 +396,29 @@ export function readTransferText(
       throw e;
     }
   }
-  if (!collector) throw new TransferError(damaged ? "corrupt" : "notTransfer");
-  const missing = missingParts(collector);
-  if (missing.length > 0) {
+  const all = [...collectors.values()];
+  const complete = all.filter((c) => missingParts(c).length === 0);
+  if (complete.length === 0) {
+    if (all.length === 0) {
+      throw new TransferError(damaged ? "corrupt" : "notTransfer");
+    }
     if (damaged) throw new TransferError("corrupt");
-    return { collector, missing };
+    if (all.length > 1) throw new TransferError("otherTransfer");
+    return { collector: all[0], missing: missingParts(all[0]) };
   }
-  return { payload: decodeCollected(collector) };
+  let newest: TransferPayload | null = null;
+  let failure: unknown = null;
+  for (const c of complete) {
+    try {
+      const payload = decodeCollected(c);
+      if (!newest || payload.createdAt >= newest.createdAt) newest = payload;
+    } catch (e) {
+      failure ??= e;
+    }
+  }
+  if (!newest) throw failure;
+  const skipped = all.length - 1;
+  return skipped > 0 ? { payload: newest, skipped } : { payload: newest };
 }
 
 /** Dateiname mit dem lokalen Datum, etwa `impfpass-uebertragung-2026-11-27.txt`. */

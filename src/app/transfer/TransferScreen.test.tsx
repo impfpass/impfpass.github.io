@@ -504,10 +504,7 @@ it("„Neu beginnen“ liest auch die folgenden Zeilen des eingefügten Texts", 
   const user = userEvent.setup();
   await renderWithData(<TransferScreen />, "/uebernehmen");
   const [a1] = partsOf(payload, 3);
-  const [b1, b2] = partsOf(
-    { ...payload, id: "B00002", entries: payload.entries.slice(0, 2) },
-    2,
-  );
+  const [b1, b2] = partsOf({ ...payload, id: "B00002" }, 3);
 
   await paste(user, ["Hallo,", a1, b1, b2, "Viele Grüße"].join("\n"));
 
@@ -517,10 +514,9 @@ it("„Neu beginnen“ liest auch die folgenden Zeilen des eingefügten Texts", 
   await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
 
   expect(
-    await screen.findByText("2 Impfungen gefunden, davon 0 schon eingetragen."),
+    await screen.findByText("2 von 3 Teilen gelesen. Es fehlt noch Teil 3."),
   ).toBeTruthy();
   // Der Text ist gelesen und steht danach nicht mehr im Feld.
-  await user.click(screen.getByRole("button", { name: "Abbrechen" }));
   expect(
     (screen.getByLabelText("Text einfügen") as HTMLTextAreaElement).value,
   ).toBe("");
@@ -540,23 +536,75 @@ it("eine abgeschnittene Zeile über der vollständigen Zeile im selben Text öff
   expect(screen.queryByRole("alert")).toBeNull();
 });
 
+it("von zwei vollständigen Übertragungen im Text zeigt die Vorschau die neueste mit Hinweis", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const newer = {
+    ...payload,
+    id: "B00002",
+    createdAt: "2026-11-27T11:00:00.000Z",
+    entries: payload.entries.slice(0, 2),
+  };
+
+  await paste(user, [textOf(newer), "Viele Grüße", textOf(payload)].join("\n"));
+
+  expect(
+    await screen.findByText("2 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      "Im Text standen mehrere Übertragungen. Gezeigt wird die neueste vollständige vom 27.11.2026, 12:00 Uhr.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("ein Bruchstück einer anderen Übertragung vor einer vollständigen öffnet die Vorschau mit Hinweis", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [a1] = partsOf(payload, 3);
+  const [b1, b2] = partsOf(
+    { ...payload, id: "B00002", entries: payload.entries.slice(0, 2) },
+    2,
+  );
+
+  await paste(user, ["Hallo,", a1, b1, b2].join("\n"));
+
+  expect(
+    await screen.findByText("2 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/^Im Text standen mehrere Übertragungen\./),
+  ).toBeTruthy();
+});
+
+it("eine einzelne Übertragung zeigt keinen Hinweis auf weitere", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  await paste(user, textOf(payload));
+  await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen.");
+  expect(screen.queryByText(/mehrere Übertragungen/)).toBeNull();
+});
+
 it("„Neu beginnen“ lässt geänderten Text im Feld stehen", async () => {
   await seed({});
   const user = userEvent.setup();
   await renderWithData(<TransferScreen />, "/uebernehmen");
   const [a1] = partsOf(payload, 3);
-  const [b1, b2] = partsOf({ ...payload, id: "B00002" }, 2);
-  await paste(user, [a1, b1, b2].join("\n"));
+  const [b1] = partsOf({ ...payload, id: "B00002" }, 2);
+  await paste(user, [a1, b1].join("\n"));
   await screen.findByRole("alert");
 
   await user.type(screen.getByLabelText("Text einfügen"), " neu");
   await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
-  await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen.");
-  await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+  await screen.findByText("1 von 2 Teilen gelesen. Es fehlt noch Teil 2.");
 
   expect(
     (screen.getByLabelText("Text einfügen") as HTMLTextAreaElement).value,
-  ).toBe(`${[a1, b1, b2].join("\n")} neu`);
+  ).toBe(`${[a1, b1].join("\n")} neu`);
 });
 
 it("„Neu beginnen“ nach gesammelten Teilen liest alle Zeilen ab der ersten unpassenden", async () => {

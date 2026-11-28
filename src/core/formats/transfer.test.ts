@@ -233,6 +233,68 @@ describe("encodeTransfer und readTransferText", () => {
   });
 });
 
+describe("mehrere Übertragungen in einem Text", () => {
+  const older = {
+    ...typical(3, "OLDER1"),
+    createdAt: "2026-11-27T10:00:00.000Z",
+  };
+  const newer = {
+    ...typical(3, "NEWER1"),
+    createdAt: "2026-11-27T11:00:00.000Z",
+  };
+
+  it("nimmt von zwei vollständigen die neueste, egal in welcher Reihenfolge", () => {
+    const a = encodeTransfer(older);
+    const b = encodeTransfer(newer);
+    expect(readTransferText([...a, ...b].join("\n"))).toEqual({
+      payload: newer,
+      skipped: 1,
+    });
+    expect(readTransferText([...b, "Gruß", ...a].join("\n"))).toEqual({
+      payload: newer,
+      skipped: 1,
+    });
+  });
+
+  it("nimmt bei gleichem Zeitpunkt die spätere im Text", () => {
+    const twin = { ...older, id: "TWIN01" };
+    const text = [...encodeTransfer(older), ...encodeTransfer(twin)];
+    expect(readTransferText(text.join("\n"))).toEqual({
+      payload: twin,
+      skipped: 1,
+    });
+  });
+
+  it("nimmt die vollständige und zählt Teile einer unvollständigen mit", () => {
+    const big = { ...typical(50, "BIGONE"), createdAt: newer.createdAt };
+    const parts = encodeTransfer(big, 200);
+    expect(parts.length).toBeGreaterThan(1);
+    const text = [parts[0], ...encodeTransfer(older)];
+    expect(readTransferText(text.join("\n"))).toEqual({
+      payload: older,
+      skipped: 1,
+    });
+  });
+
+  it("eine beschädigte Zeile stört nicht, wenn eine Übertragung vollständig ist", () => {
+    const [line] = encodeTransfer(newer);
+    const cut = line.slice(0, -3);
+    const text = [cut, ...encodeTransfer(older), line];
+    expect(readTransferText(text.join("\n"))).toEqual({
+      payload: newer,
+      skipped: 1,
+    });
+  });
+
+  it("Teile zweier unvollständiger Übertragungen bleiben ein Fehler", () => {
+    const one = encodeTransfer(typical(50, "FIRST1"), 200);
+    const two = encodeTransfer(typical(50, "SECND2"), 200);
+    expect(errorCode(() => readTransferText([one[0], two[0]].join("\n")))).toBe(
+      "otherTransfer",
+    );
+  });
+});
+
 describe("toTextLine", () => {
   it("enthält kein Leerzeichen und wird wie die normale Zeile gelesen", () => {
     const p = typical(50);

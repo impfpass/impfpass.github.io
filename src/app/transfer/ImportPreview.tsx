@@ -13,10 +13,13 @@ import { T } from "@/texts";
  */
 export function ImportPreview({
   items,
+  notice,
   onImport,
   onCancel,
 }: {
   items: ImportItem[];
+  /** Hinweis unter der Zusammenfassung, etwa auf weitere Übertragungen im Text. */
+  notice?: string;
   onImport(chosen: ImportItem[]): Promise<void>;
   onCancel(): void;
 }) {
@@ -59,6 +62,7 @@ export function ImportPreview({
         <p ref={summaryRef} tabIndex={-1} className="outline-none">
           {T.transfer.preview.summary(items.length, duplicates)}
         </p>
+        {notice && <p>{notice}</p>}
         {duplicates > 0 && <p>{T.transfer.preview.replaceHint}</p>}
       </div>
       <ul aria-label={T.transfer.preview.label} className="flex flex-col gap-3">
