@@ -392,10 +392,23 @@ export const T = {
     derived:
       "Die Regeln sind selbst aus den Empfehlungen der STIKO abgeleitet. Bei Fragen zu deiner Impfung entscheidet deine Ärztin oder dein Arzt.",
   },
+  // Fuß der PC-App
   licenses: {
-    title: "Verwendete Software",
     text: "ImpfPass nutzt freie Bibliotheken. Deren Lizenztexte stehen in einer eigenen Datei.",
     link: "Lizenztexte ansehen",
+  },
+  // Info-Seite und Lizenzseiten der Handy-App
+  licenseScreen: {
+    title: "Verwendete Software",
+    infoText:
+      "ImpfPass nutzt freie Bibliotheken. Eine Übersicht zeigt, welche das sind und unter welchen Lizenzen sie stehen.",
+    infoLink: "Übersicht ansehen",
+    intro: (packages: number, projects: number) =>
+      `ImpfPass enthält freie Software von Dritten: ${packages} Pakete aus ${projects} Projekten.`,
+    textsLink: "Alle Lizenztexte ansehen",
+    textsTitle: "Lizenztexte",
+    loadFailed:
+      "Die Lizenzangaben konnten nicht geladen werden. Bitte versuche es später noch einmal.",
   },
   backup: {
     save: "Sicherung speichern",

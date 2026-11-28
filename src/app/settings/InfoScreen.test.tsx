@@ -3,20 +3,19 @@ import { RULEBOOK } from "@/core/rules/rulebook";
 import { renderWithData, seed } from "@/test/helpers";
 import { InfoScreen } from "./InfoScreen";
 
-it("verweist auf die Lizenztexte der verwendeten Software", async () => {
+it("verweist innerhalb der App auf die verwendete Software", async () => {
   await seed({});
   await renderWithData(<InfoScreen />);
   expect(
     screen.getByRole("heading", { level: 2, name: "Verwendete Software" }),
   ).toBeTruthy();
   expect(
-    screen.getByText(/Deren Lizenztexte stehen in einer eigenen Datei/),
+    screen.getByText(/Eine Übersicht zeigt, welche das sind/),
   ).toBeTruthy();
-  const link = screen.getByRole("link", { name: "Lizenztexte ansehen" });
-  expect(link.getAttribute("href")).toBe("/third-party-licenses.txt");
-  // Eine eigene Seite: In der App vom Home-Bildschirm gibt es keinen Zurück-Knopf.
-  expect(link.getAttribute("target")).toBe("_blank");
-  expect(link.getAttribute("rel")).toBe("noopener");
+  const link = screen.getByRole("link", { name: "Übersicht ansehen" });
+  expect(link.getAttribute("href")).toBe("#/einstellungen/info/lizenzen");
+  // Kein neues Fenster: In der App vom Home-Bildschirm käme man nicht zurück.
+  expect(link.getAttribute("target")).toBeNull();
 });
 
 it("nennt STIKO-Stand, Regelwerk-Version und Quellen", async () => {

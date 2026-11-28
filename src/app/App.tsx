@@ -9,6 +9,7 @@ import { ListScreen } from "./list/ListScreen";
 import { OverviewScreen } from "./overview/OverviewScreen";
 import { RecommendationDetail } from "./recommendation/RecommendationDetail";
 import { InfoScreen } from "./settings/InfoScreen";
+import { LicensesScreen } from "./settings/LicensesScreen";
 import { SettingsScreen } from "./settings/SettingsScreen";
 import { SetupScreen } from "./setup/SetupScreen";
 import { Shell } from "./Shell";
@@ -90,6 +91,9 @@ function Screens() {
         </Route>
         <Route path="/einstellungen/info">
           <InfoScreen />
+        </Route>
+        <Route path="/einstellungen/info/lizenzen">
+          <LicensesScreen />
         </Route>
         <Route path="/uebernehmen">
           <TransferScreen />

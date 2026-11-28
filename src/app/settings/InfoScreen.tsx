@@ -39,16 +39,16 @@ export function InfoScreen() {
         <p>{T.info.derived}</p>
       </section>
       <section className="flex flex-col gap-2">
-        <h2 className="text-xl font-semibold">{T.licenses.title}</h2>
-        <p>{T.licenses.text}</p>
-        <a
-          href="/third-party-licenses.txt"
-          target="_blank"
-          rel="noopener"
+        <h2 className="text-xl font-semibold">{T.licenseScreen.title}</h2>
+        <p>{T.licenseScreen.infoText}</p>
+        {/* Innerhalb der App: In der App vom Home-Bildschirm gibt es keinen
+            Zurück-Knopf, aus einer geöffneten Datei käme man nicht heraus. */}
+        <Link
+          href="/einstellungen/info/lizenzen"
           className="inline-flex min-h-11 items-center self-start underline"
         >
-          {T.licenses.link}
-        </a>
+          {T.licenseScreen.infoLink}
+        </Link>
       </section>
       <p className="text-muted-foreground">
         {T.info.version(import.meta.env.VITE_APP_VERSION)}
