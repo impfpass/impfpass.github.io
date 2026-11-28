@@ -66,8 +66,9 @@ export function Scanner({
         MAX_EDGE,
       );
       canvas ??= document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      // Jede Zuweisung leert die Leinwand und legt sie neu an.
+      if (canvas.width !== width) canvas.width = width;
+      if (canvas.height !== height) canvas.height = height;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) return;
       ctx.drawImage(el, 0, 0, width, height);
@@ -111,6 +112,8 @@ export function Scanner({
         }
         stream = s;
         if (video.current) video.current.srcObject = s;
+        // Auch nach der Rückkehr aus dem Hintergrund zählen die Fehler neu.
+        failures = 0;
         timer = setInterval(tick, SCAN_INTERVAL_MS);
         setError(null);
       } catch (e) {

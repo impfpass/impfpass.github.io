@@ -161,6 +161,23 @@ it("stoppt im Hintergrund und startet beim Zurückkehren neu", async () => {
   expect(second.stops[0]).toHaveBeenCalledOnce();
 });
 
+it("„visible“ bei laufender Kamera fragt nicht erneut an, „hidden“ löst das Bild", async () => {
+  const { stream } = fakeStream();
+  const getUserMedia = vi.fn().mockResolvedValue(stream);
+  stubCamera(getUserMedia);
+  render(<Scanner onCode={vi.fn()} onFallback={vi.fn()} />);
+  await screen.findByText(HELP);
+  const video = screen.getByLabelText("Kamerabild") as HTMLVideoElement;
+  expect(video.srcObject).toBe(stream);
+
+  await act(async () => setVisibility("visible"));
+  expect(getUserMedia).toHaveBeenCalledOnce();
+  expect(video.srcObject).toBe(stream);
+
+  act(() => setVisibility("hidden"));
+  expect(video.srcObject).toBeNull();
+});
+
 it("stoppt einen Stream, der erst nach dem Verlassen ankommt", async () => {
   const { stream, stops } = fakeStream();
   let resolve: (s: unknown) => void = () => {};
@@ -284,9 +301,39 @@ describe("Scan-Schleife", () => {
     );
     expect(stops[0]).toHaveBeenCalledOnce();
     expect(screen.getByRole("button", { name: "Datei öffnen" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Text einfügen" })).toBeTruthy();
     expect(screen.getByRole("button", { name: RETRY })).toBeTruthy();
     const calls = getImageData.mock.calls.length;
     act(() => vi.advanceTimersByTime(1000));
     expect(getImageData.mock.calls.length).toBe(calls);
+  });
+
+  it("nach der Rückkehr aus dem Hintergrund zählen die Fehler von vorn", async () => {
+    await startLoop();
+    getImageData.mockImplementation(() => {
+      throw new Error("kaputt");
+    });
+    act(() => vi.advanceTimersByTime(250 * 9));
+    act(() => setVisibility("hidden"));
+    await act(async () => setVisibility("visible"));
+
+    act(() => vi.advanceTimersByTime(250 * 9));
+    expect(screen.queryByRole("alert")).toBeNull();
+    act(() => vi.advanceTimersByTime(250));
+    expect(screen.getByRole("alert").textContent).toBe(
+      "Die Kamera lässt sich nicht starten.",
+    );
+  });
+
+  it("setzt die Größe der Leinwand nur, wenn sie sich ändert", async () => {
+    const width = vi.spyOn(HTMLCanvasElement.prototype, "width", "set");
+    const height = vi.spyOn(HTMLCanvasElement.prototype, "height", "set");
+    await startLoop();
+
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(drawImage).toHaveBeenCalledTimes(4);
+    expect(width.mock.calls).toEqual([[960]]);
+    expect(height.mock.calls).toEqual([[540]]);
   });
 });
