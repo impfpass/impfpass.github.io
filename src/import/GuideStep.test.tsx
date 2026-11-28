@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { emptyDraft, newRow, type Draft } from "@/core/import/draft";
@@ -87,11 +87,15 @@ it("kopiert die Anleitung in die Zwischenablage", async () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
   setClipboard({ writeText });
   setup();
+  // Der Bereich für die Meldung ist schon da, bevor Text darin steht.
+  const region = screen.getByRole("status");
+  expect(region.textContent).toBe("");
   await userEvent.click(
     screen.getByRole("button", { name: "Anleitung kopieren" }),
   );
   expect(writeText).toHaveBeenCalledWith(T.pc.prompt);
-  expect((await screen.findByRole("status")).textContent).toBe("Kopiert.");
+  expect(screen.getByRole("status")).toBe(region);
+  await waitFor(() => expect(region.textContent).toBe("Kopiert."));
 });
 
 it("zeigt den Ersatztext, wenn die Zwischenablage ablehnt", async () => {
@@ -100,8 +104,8 @@ it("zeigt den Ersatztext, wenn die Zwischenablage ablehnt", async () => {
   await userEvent.click(
     screen.getByRole("button", { name: "Anleitung kopieren" }),
   );
-  expect((await screen.findByRole("status")).textContent).toBe(
-    T.pc.guide.copyFailed,
+  await waitFor(() =>
+    expect(screen.getByRole("status").textContent).toBe(T.pc.guide.copyFailed),
   );
   const area = screen.getByLabelText(
     T.pc.guide.promptLabel,
@@ -265,5 +269,29 @@ describe("vorhandener Entwurf", () => {
     );
     expect(screen.queryByRole("alertdialog")).toBeNull();
     expect(draft().rows).toHaveLength(2);
+  });
+});
+
+describe("Fehler bei der Antwort", () => {
+  it("verknüpft das Feld mit der Fehlermeldung und löst das wieder", async () => {
+    setup();
+    const area = screen.getByLabelText(T.pc.guide.answerLabel);
+    expect(area.getAttribute("aria-invalid")).toBeNull();
+    expect(area.getAttribute("aria-describedby")).toBeNull();
+
+    await userEvent.type(area, "Das ist keine Liste");
+    await userEvent.click(screen.getByRole("button", { name: "Einlesen" }));
+    const alert = await screen.findByRole("alert");
+    expect(area.getAttribute("aria-invalid")).toBe("true");
+    expect(area.getAttribute("aria-describedby")).toBe(alert.id);
+    expect(alert.id).not.toBe("");
+
+    await userEvent.clear(area);
+    await userEvent.click(area);
+    await userEvent.paste(fixture);
+    await userEvent.click(screen.getByRole("button", { name: "Einlesen" }));
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(area.getAttribute("aria-invalid")).toBeNull();
+    expect(area.getAttribute("aria-describedby")).toBeNull();
   });
 });

@@ -116,9 +116,10 @@ export function GuideStep({
           <Button type="button" variant="outline" onClick={copy}>
             {g.copy}
           </Button>
-          {copied !== null && (
-            <p role="status">{copied ? g.copied : g.copyFailed}</p>
-          )}
+          {/* Der Bereich steht immer im DOM, damit die Meldung angesagt wird. */}
+          <p role="status" className={copied === null ? "sr-only" : undefined}>
+            {copied === null ? "" : copied ? g.copied : g.copyFailed}
+          </p>
         </div>
       </div>
 
@@ -148,10 +149,16 @@ export function GuideStep({
           rows={8}
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${ids}-answer-error` : undefined}
           className={TEXTAREA_CLASS}
         />
         {error && (
-          <p role="alert" className="text-destructive">
+          <p
+            id={`${ids}-answer-error`}
+            role="alert"
+            className="text-destructive"
+          >
             {error}
           </p>
         )}
