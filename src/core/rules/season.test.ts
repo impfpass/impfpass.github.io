@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { shot } from "@/test/rules";
-import { seasonResult } from "./season";
+import { seasonLabel, seasonResult } from "./season";
+
+describe("seasonLabel", () => {
+  it("nennt die Saison mit zweistelligem Folgejahr, auch über die Jahrhundertgrenze", () => {
+    expect(seasonLabel(2027)).toBe("2027/28");
+    expect(seasonLabel(2099)).toBe("2099/00");
+  });
+});
 
 describe("seasonResult", () => {
   it("vor dem Saison-Tag geimpft in der Vorsaison: geschützt bis zum Saison-Tag", () => {

@@ -676,4 +676,38 @@ So füllst du die Felder:
       corrupt: "Die Übertragung ist beschädigt. Erzeuge sie am PC neu.",
     },
   },
+  // Erinnerungen für die GTD-App (Spec 9). Die Texte der Aktionen landen im GTD.
+  gtd: {
+    items: {
+      title: (name: string, detail: string) =>
+        `Impfung gegen ${name}${detail}: Termin beim Arzt ausmachen`,
+      dose: (n: number) => `, ${n}. Dosis`,
+      booster: ", Auffrischung",
+      season: (label: string) => `, Saison ${label}`,
+      dueFrom: (date: string) => `Fällig ab ${date}`,
+      dueFromAge: (date: string, age: number) =>
+        `Fällig ab ${date} (${age}. Geburtstag)`,
+      dueNow: "Jetzt fällig",
+      earliest: (date: string) => `Frühestens ab ${date}`,
+      latest: (date: string) => `, spätestens bis ${date}`,
+      seasonYearly: (label: string) =>
+        `Jährliche Impfung für die Saison ${label}`,
+      seasonEarliest: (date: string) => `, frühestens ab ${date}`,
+      source: (edition: string) => ` laut STIKO, Stand ${edition}.`,
+      checklist: [
+        "Termin beim Arzt ausmachen",
+        "Termin als Kalender-Aktion eintragen, Impfpass mitnehmen",
+        "Nach der Impfung in ImpfPass eintragen",
+      ],
+    },
+    questions: {
+      title: "Beim nächsten Arztbesuch nach Impfungen fragen",
+      description:
+        "Die STIKO empfiehlt diese Impfungen bei manchen Erkrankungen früher oder zusätzlich. Ob das für dich gilt, entscheidet deine Ärztin oder dein Arzt.",
+      earlier: (name: string) => `${name} schon jetzt?`,
+      illness: (name: string) => `${name} wegen meiner Erkrankung?`,
+      serology: (name: string) => `${name}: Bluttest, ob ich geschützt bin?`,
+      answer: "Antworten in ImpfPass eintragen",
+    },
+  },
 } as const;

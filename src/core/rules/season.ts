@@ -12,7 +12,7 @@ type SeasonResult = Pick<
   "status" | "dueDate" | "latestDate" | "dose" | "timing" | "reason"
 >;
 
-function label(year: number): string {
+export function seasonLabel(year: number): string {
   return `${year}/${String((year + 1) % 100).padStart(2, "0")}`;
 }
 
@@ -41,7 +41,7 @@ export function seasonResult(
         ...base,
         status: "protected",
         dueDate: start(y + 1),
-        reason: { kind: "season", label: label(y) },
+        reason: { kind: "season", label: seasonLabel(y) },
       };
     }
   }
@@ -50,7 +50,7 @@ export function seasonResult(
       ...base,
       status: "future",
       dueDate: start(current + 1),
-      reason: { kind: "season", label: label(current + 1) },
+      reason: { kind: "season", label: seasonLabel(current + 1) },
     };
   }
   let dueDate = start(current);
@@ -65,6 +65,6 @@ export function seasonResult(
     ...base,
     status: today >= dueDate ? "due" : "soon",
     dueDate,
-    reason: { kind: "season", label: label(current) },
+    reason: { kind: "season", label: seasonLabel(current) },
   };
 }
