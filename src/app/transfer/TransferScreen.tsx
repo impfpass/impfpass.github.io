@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -78,6 +78,12 @@ function isForeignLine(line: string): boolean {
   }
 }
 
+/** Ist der Fokus verloren, etwa weil der fokussierte Knopf verschwunden ist? */
+function focusLost(): boolean {
+  const active = document.activeElement;
+  return active === null || active === document.body;
+}
+
 /**
  * Die ganze Übertragung, wenn der Text sie allein enthält, wie Datei und Text
  * vom PC. Sonst `null`; Fehler meldet dann das Sammeln Zeile für Zeile.
@@ -109,6 +115,26 @@ export function TransferScreen() {
   const [text, setText] = useState("");
   const [way, setWay] = useState<Way>("scan");
   const fileInput = useRef<HTMLInputElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const problemRef = useRef<HTMLParagraphElement>(null);
+  const doneRef = useRef<HTMLParagraphElement>(null);
+
+  // Wechselt die Ansicht oder kommt ein Fehler, geht der Fokus dorthin, damit
+  // Screenreader es vorlesen. Die Vorschau setzt ihn selbst. Verschwindet ein
+  // Fehler samt fokussiertem Knopf, geht der Fokus auf die Überschrift.
+  const shown = useRef({ kind: view.kind, problem });
+  useEffect(() => {
+    const before = shown.current;
+    shown.current = { kind: view.kind, problem };
+    if (view.kind !== before.kind) {
+      if (view.kind === "done") doneRef.current?.focus();
+      if (view.kind === "collect") headingRef.current?.focus();
+    } else if (problem && problem !== before.problem) {
+      problemRef.current?.focus();
+    } else if (!problem && before.problem && focusLost()) {
+      headingRef.current?.focus();
+    }
+  }, [view.kind, problem]);
 
   function setCollector(c: TransferCollector | null) {
     latest.current = c;
@@ -262,7 +288,13 @@ export function TransferScreen() {
   }
 
   const heading = (
-    <h1 className="text-2xl font-semibold">{T.transfer.title}</h1>
+    <h1
+      ref={headingRef}
+      tabIndex={-1}
+      className="text-2xl font-semibold outline-none"
+    >
+      {T.transfer.title}
+    </h1>
   );
 
   if (view.kind === "preview") {
@@ -282,7 +314,9 @@ export function TransferScreen() {
     return (
       <div className="flex flex-col gap-5">
         {heading}
-        <p role="status">{T.transfer.done(view.count, view.replaced)}</p>
+        <p ref={doneRef} tabIndex={-1} className="outline-none">
+          {T.transfer.done(view.count, view.replaced)}
+        </p>
         <BackupHint />
         <Button asChild variant="outline">
           <Link href="/impfungen">{T.transfer.toList}</Link>
@@ -299,18 +333,24 @@ export function TransferScreen() {
         {heading}
         <p>{T.transfer.intro}</p>
       </div>
-      {collector && (
-        <p role="status" className="font-semibold">
-          {T.transfer.progress(
-            collector.total - missing.length,
-            collector.total,
-            missing,
-          )}
-        </p>
-      )}
+      {/* Der Bereich steht immer im DOM, damit Screenreader den Fortschritt vorlesen. */}
+      <p role="status" className={collector ? "font-semibold" : "sr-only"}>
+        {collector
+          ? T.transfer.progress(
+              collector.total - missing.length,
+              collector.total,
+              missing,
+            )
+          : ""}
+      </p>
       {problem && (
         <div className="flex flex-col gap-3">
-          <p role="alert" className="text-destructive">
+          <p
+            ref={problemRef}
+            role="alert"
+            tabIndex={-1}
+            className="text-destructive outline-none"
+          >
             {problem.message}
           </p>
           {restartWith !== undefined && (
@@ -380,7 +420,7 @@ export function TransferScreen() {
           <textarea
             id="transfer-text"
             rows={4}
-            className="rounded-md border border-input bg-transparent px-3 py-2 font-mono text-base"
+            className="rounded-md border border-input bg-transparent px-3 py-2 font-mono text-base outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
             // Base45 ist kein Text: nichts korrigieren oder großschreiben
             autoCorrect="off"
             autoCapitalize="off"

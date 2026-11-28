@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { diseaseLabel } from "@/core/catalog/diseases";
 import { formatDate } from "@/core/dates";
@@ -26,6 +26,18 @@ export function ImportPreview({
   );
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
+  const summaryRef = useRef<HTMLParagraphElement>(null);
+  const failedRef = useRef<HTMLParagraphElement>(null);
+
+  // Die Vorschau löst das Sammeln ab: Der Fokus geht auf die Zusammenfassung,
+  // damit Screenreader sie vorlesen.
+  useEffect(() => {
+    summaryRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (failed) failedRef.current?.focus();
+  }, [failed]);
   const count = chosen.filter(Boolean).length;
   const duplicates = items.filter((item) => item.duplicateOf).length;
   const targets = replacementTargets(items.filter((_, i) => chosen[i]));
@@ -49,7 +61,9 @@ export function ImportPreview({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <p>{T.transfer.preview.summary(items.length, duplicates)}</p>
+        <p ref={summaryRef} tabIndex={-1} className="outline-none">
+          {T.transfer.preview.summary(items.length, duplicates)}
+        </p>
         {duplicates > 0 && <p>{T.transfer.preview.replaceHint}</p>}
       </div>
       <ul aria-label={T.transfer.preview.label} className="flex flex-col gap-3">
@@ -118,7 +132,12 @@ export function ImportPreview({
         })}
       </ul>
       {failed && (
-        <p role="alert" className="text-destructive">
+        <p
+          ref={failedRef}
+          role="alert"
+          tabIndex={-1}
+          className="text-destructive outline-none"
+        >
           {T.common.saveFailed}
         </p>
       )}

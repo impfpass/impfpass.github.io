@@ -1,4 +1,10 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
@@ -138,6 +144,10 @@ it("zeigt Überschrift, Anleitung und als ersten Weg das Scannen", async () => {
   const text = screen.getByLabelText("Text einfügen");
   expect(text.getAttribute("autocorrect")).toBe("off");
   expect(text.getAttribute("spellcheck")).toBe("false");
+  // Derselbe Fokusring wie bei den Feldern der PC-App
+  expect(text.className).toContain(
+    "outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+  );
   expect(screen.queryByTestId("transfer-file")).toBeNull();
 });
 
@@ -867,9 +877,12 @@ it("scheitert das Übernehmen, bleibt die Vorschau mit einem Hinweis", async () 
     await screen.findByRole("button", { name: "3 Impfungen übernehmen" }),
   );
 
-  expect((await screen.findByRole("alert")).textContent).toBe(
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toBe(
     "Speichern hat nicht geklappt. Bitte versuche es noch einmal.",
   );
+  // Der Fokus geht auf die Meldung, sie wird vorgelesen.
+  expect(document.activeElement).toBe(alert);
   expect(addVaccinations).toHaveBeenCalledOnce();
   expect(addVaccinations.mock.calls[0][0]).toHaveLength(3);
   expect(
@@ -885,4 +898,118 @@ it("scheitert das Übernehmen, bleibt die Vorschau mit einem Hinweis", async () 
     ).toBe(false),
   );
   expect(screen.queryByText(/übernommen\./)).toBeNull();
+});
+
+describe("Fokus und Statusmeldungen", () => {
+  const heading = () =>
+    screen.getByRole("heading", { name: "Impfungen übernehmen" });
+
+  it("der Fortschritt erscheint in einem Statusbereich, der schon vorher da ist", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    const [first, , third] = partsOf(payload, 3);
+    const status = screen.getByRole("status");
+    expect(status.textContent).toBe("");
+
+    await scan(user, third);
+    expect(status.textContent).toBe(
+      "1 von 3 Teilen gelesen. Es fehlen noch Teil 1 und 2.",
+    );
+    await scan(user, first);
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status.textContent).toBe(
+      "2 von 3 Teilen gelesen. Es fehlt noch Teil 2.",
+    );
+
+    await scan(user, "https://example.org");
+    await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+    expect(screen.getByRole("status")).toBe(status);
+    expect(status.textContent).toBe("");
+  });
+
+  it("die Vorschau bekommt den Fokus, danach die Meldung über das Übernehmen", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+
+    await paste(user, textOf(payload));
+
+    const summary = await screen.findByText(
+      "3 Impfungen gefunden, davon 0 schon eingetragen.",
+    );
+    expect(document.activeElement).toBe(summary);
+
+    await user.click(
+      screen.getByRole("button", { name: "3 Impfungen übernehmen" }),
+    );
+    const done = await screen.findByText("3 Impfungen übernommen.");
+    expect(document.activeElement).toBe(done);
+  });
+
+  it("„Abbrechen“ in der Vorschau setzt den Fokus auf die Überschrift", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    await paste(user, textOf(payload));
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen.");
+
+    await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+
+    expect(document.activeElement).toBe(heading());
+  });
+
+  it("ein Fehler bekommt den Fokus, auch wenn er gleich lautet wie der vorige", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+
+    await scan(user, "https://example.org");
+    const alert = await screen.findByRole("alert");
+    expect(document.activeElement).toBe(alert);
+
+    await user.click(screen.getByLabelText("Gescannter Text"));
+    await scan(user, "https://example.org");
+    expect(document.activeElement).toBe(screen.getByRole("alert"));
+  });
+
+  it("verschwindet der Fehler mit dem Fokus, geht der Fokus auf die Überschrift", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    const [first] = partsOf(payload, 3);
+    await scan(user, "https://example.org");
+    expect(document.activeElement).toBe(await screen.findByRole("alert"));
+
+    // Der Scanner liest weiter, ohne dass sich der Fokus bewegt.
+    const field = screen.getByLabelText("Gescannter Text") as HTMLInputElement;
+    field.value = first;
+    fireEvent.keyDown(field, { key: "Enter" });
+
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe(
+      "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+    );
+    expect(document.activeElement).toBe(heading());
+  });
+
+  it("nach „Neu beginnen“ und „Von vorn beginnen“ fällt der Fokus nicht auf body", async () => {
+    await seed({});
+    const user = userEvent.setup();
+    await renderWithData(<TransferScreen />, "/uebernehmen");
+    const [a1] = partsOf(payload, 3);
+    const [b1] = partsOf({ ...payload, id: "B00002" }, 2);
+    await scan(user, a1);
+    await scan(user, b1);
+
+    await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+    expect(
+      await screen.findByText("1 von 2 Teilen gelesen. Es fehlt noch Teil 2."),
+    ).toBeTruthy();
+    expect(document.activeElement).toBe(heading());
+
+    await scan(user, "https://example.org");
+    await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+    expect(document.activeElement).toBe(heading());
+  });
 });
