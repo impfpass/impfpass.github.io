@@ -3,10 +3,12 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { LICENSE_PROJECTS, type LicenseProject } from "./licenseProjects";
 import {
+  addFallbackTexts,
   EXTRA_PACKAGES,
   formatNotices,
   licenseFileKind,
   licensesPlugin,
+  noticesWithoutText,
   type PackageNotice,
   packageRootFromId,
   projectsOf,
@@ -264,6 +266,49 @@ describe("summarizeNotices", () => {
   });
 });
 
+describe("Pakete ohne Lizenzdatei", () => {
+  it("bekommen den Lizenztext aus vite/license-fallbacks, falls es einen gibt", () => {
+    const [bar, own] = addFallbackTexts(
+      [
+        notice("react-remove-scroll-bar"),
+        {
+          ...notice("react"),
+          texts: [{ file: "LICENSE", text: "eigener Text" }],
+        },
+      ],
+      path.resolve("vite/license-fallbacks"),
+    );
+    expect(bar.texts).toHaveLength(1);
+    expect(bar.texts[0].file).toBe("LICENSE (aus dem Repository des Pakets)");
+    expect(bar.texts[0].text).toMatch(/Copyright \(c\) .*Anton Korzunov/);
+    expect(own.texts).toEqual([{ file: "LICENSE", text: "eigener Text" }]);
+  });
+
+  it("ohne Lizenztext werden gemeldet, außer ihre Lizenz verlangt keinen", () => {
+    expect(
+      noticesWithoutText([
+        notice("ohne", "MIT"),
+        notice("frei", "Unlicense"),
+        notice("null", "0BSD"),
+        { ...notice("mit"), texts: [{ file: "LICENSE", text: "MIT" }] },
+      ]),
+    ).toEqual(["ohne 1.0.0 (MIT)"]);
+  });
+
+  it("die Lizenztexte in vite/license-fallbacks sind noch nötig", () => {
+    // Bringt ein Paket inzwischen selbst eine Lizenzdatei mit, kann der
+    // Ersatz weg.
+    for (const file of readdirSync("vite/license-fallbacks")) {
+      const name = file.replace(/\.txt$/, "").replace("__", "/");
+      const own = readPackageNotice(path.resolve("node_modules", name));
+      expect(own, `${name} ist nicht mehr installiert`).not.toBeNull();
+      expect(own!.texts, `${name} bringt jetzt eine Lizenzdatei mit`).toEqual(
+        [],
+      );
+    }
+  });
+});
+
 describe("unexplainedLicenses", () => {
   it("ist leer, wenn jede vorkommende Lizenz erklärt ist", () => {
     const summary = {
@@ -332,12 +377,18 @@ const ONE_PER_PROJECT = [
   "jsqr",
   "qrcode",
   "fflate",
+  // MIT ohne eigene Lizenzdatei
+  "react-remove-scroll-bar",
 ];
 
 describe("licensesPlugin", () => {
   it("legt Lizenztexte und Übersicht als Dateien ab", () => {
     const emitted = runPlugin(ONE_PER_PROJECT);
     expect(emitted.get("third-party-licenses.txt")).toMatch(/^react \d/m);
+    // Ohne eigene Lizenzdatei, Text aus vite/license-fallbacks.
+    expect(emitted.get("third-party-licenses.txt")).toMatch(
+      /^react-remove-scroll-bar \d[^=]*Anton Korzunov/m,
+    );
     const json = emitted.get("third-party-licenses.json")!;
     expect(json.endsWith("}\n")).toBe(true);
     const summary = JSON.parse(json) as {

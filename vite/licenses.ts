@@ -102,6 +102,46 @@ export function readPackageNotice(root: string): PackageNotice | null {
   };
 }
 
+/** Lizenzen, die keinen mitgelieferten Lizenztext verlangen. */
+export const NO_TEXT_REQUIRED: readonly string[] = ["0BSD", "Unlicense"];
+
+/** Ersatzdatei für ein Paket: `@scope/name` liegt als `@scope__name.txt`. */
+function fallbackFile(dir: string, name: string): string {
+  return path.join(dir, `${name.replace("/", "__")}.txt`);
+}
+
+/**
+ * Ergänzt Pakete ohne eigene Lizenzdatei um den Lizenztext aus `dir`, wenn
+ * dort einer liegt (aus dem Repository des Pakets übernommen).
+ */
+export function addFallbackTexts(
+  notices: PackageNotice[],
+  dir: string,
+): PackageNotice[] {
+  return notices.map((n) => {
+    const file = fallbackFile(dir, n.name);
+    if (n.texts.length > 0 || !existsSync(file)) return n;
+    return {
+      ...n,
+      texts: [
+        {
+          file: "LICENSE (aus dem Repository des Pakets)",
+          text: readFileSync(file, "utf-8"),
+        },
+      ],
+    };
+  });
+}
+
+/** Pakete ohne Lizenztext, deren Lizenz einen verlangt, als „name version (Lizenz)“. */
+export function noticesWithoutText(notices: PackageNotice[]): string[] {
+  return notices
+    .filter(
+      (n) => n.texts.length === 0 && !NO_TEXT_REQUIRED.includes(n.license),
+    )
+    .map((n) => `${n.name} ${n.version} (${n.license})`);
+}
+
 export function sortNotices(notices: PackageNotice[]): PackageNotice[] {
   return [...notices].sort(
     (a, b) =>
@@ -239,7 +279,16 @@ export function licensesPlugin(): Plugin {
         }
         notices.push(notice);
       }
-      const sorted = sortNotices(notices);
+      const sorted = sortNotices(
+        addFallbackTexts(notices, path.join(root, "vite", "license-fallbacks")),
+      );
+      // MIT, ISC, Apache und BSD verlangen Urheberhinweis und Lizenztext.
+      const withoutText = noticesWithoutText(sorted);
+      if (withoutText.length > 0) {
+        this.error(
+          `Paket ohne Lizenztext im Build: ${withoutText.join(", ")}. Den Lizenztext aus dem Repository des Pakets als vite/license-fallbacks/<name>.txt ablegen.`,
+        );
+      }
       let summary: LicenseSummary;
       try {
         summary = summarizeNotices(sorted, LICENSE_PROJECTS);

@@ -425,7 +425,7 @@ export const T = {
       MIT: "Die MIT-Lizenz erlaubt jede Nutzung. Bedingung: Urheberhinweis und Lizenztext müssen bei jeder Weitergabe dabei sein.",
       ISC: "Die ISC-Lizenz entspricht inhaltlich der MIT-Lizenz, sie ist nur kürzer formuliert. Auch hier müssen Urheberhinweis und Lizenztext mitgeliefert werden.",
       "Apache-2.0":
-        "Die Apache-Lizenz 2.0 erlaubt jede Nutzung. Lizenztext und Urheberhinweise müssen mitgeliefert werden, ebenso eine NOTICE-Datei, falls das Paket eine hat. Geänderte Dateien müssen als geändert gekennzeichnet sein. Außerdem erlauben die Urheber die Nutzung ihrer Patente, soweit sie die Software betreffen. Wer wegen solcher Patente klagt, verliert diese Erlaubnis.",
+        "Die Apache-Lizenz 2.0 erlaubt jede Nutzung. Lizenztext und Urheberhinweise müssen mitgeliefert werden, ebenso eine NOTICE-Datei, falls das Paket eine hat. Geänderte Dateien müssen als geändert gekennzeichnet sein. Außerdem erlauben die Urheber die Nutzung ihrer Patente, soweit sie die Software betreffen. Wer vor Gericht behauptet, die Software verletze ein Patent, verliert diese Erlaubnis.",
       "0BSD":
         "Die Zero-Clause-BSD-Lizenz erlaubt jede Nutzung ohne Bedingung. Nicht einmal ein Urheberhinweis ist nötig.",
       Unlicense:
