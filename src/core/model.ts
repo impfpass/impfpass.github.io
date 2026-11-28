@@ -21,7 +21,8 @@ export interface PersonAnswers {
 
 export const BLOOD_GROUPS = ["0", "A", "B", "AB"] as const;
 export type BloodGroup = (typeof BLOOD_GROUPS)[number];
-export type Rhesus = "positive" | "negative";
+export const RHESUS_VALUES = ["positive", "negative"] as const;
+export type Rhesus = (typeof RHESUS_VALUES)[number];
 
 export interface Person {
   id: string;

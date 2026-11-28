@@ -48,6 +48,11 @@ export interface AppData {
   ruleState: RuleState | null;
   settings: Settings;
   today: ISODate;
+  /**
+   * Zählt die Wiederherstellungen seit dem Start. Formulare mit eigenem
+   * Zustand bauen sich damit neu auf, auch wenn die Person dieselbe bleibt.
+   */
+  restoreCount: number;
   actions: {
     /** Ohne `answers` gelten die Voreinstellungen (DEFAULT_ANSWERS). */
     createPerson(input: {
@@ -103,6 +108,7 @@ async function loadAll(repo: Repository): Promise<Loaded> {
 interface State extends Loaded {
   status: AppData["status"];
   repo: Repository | null;
+  restoreCount: number;
 }
 
 const INITIAL: State = {
@@ -113,6 +119,7 @@ const INITIAL: State = {
   decisions: [],
   ruleState: null,
   settings: DEFAULT_SETTINGS,
+  restoreCount: 0,
 };
 
 export function AppDataProvider(props: {
@@ -204,7 +211,7 @@ export function AppDataProvider(props: {
         const loaded = await loadAll(repo);
         if (!cancelled) {
           adoptStoredRuleState(loaded.ruleState);
-          setState({ status: "ready", repo, ...loaded });
+          setState((s) => ({ ...s, status: "ready", repo, ...loaded }));
         }
       } catch {
         if (!cancelled) {
@@ -401,7 +408,11 @@ export function AppDataProvider(props: {
       // Sicherung); er entsteht danach ohne Hinweise neu.
       const loaded = await loadAll(r);
       adoptStoredRuleState(loaded.ruleState);
-      setState((s) => ({ ...s, ...loaded }));
+      setState((s) => ({
+        ...s,
+        ...loaded,
+        restoreCount: s.restoreCount + 1,
+      }));
     },
     [requireRepo, adoptStoredRuleState],
   );
@@ -421,6 +432,7 @@ export function AppDataProvider(props: {
       ruleState: state.ruleState,
       settings,
       today,
+      restoreCount: state.restoreCount,
       actions: {
         createPerson,
         updatePerson,
@@ -444,6 +456,7 @@ export function AppDataProvider(props: {
       state.ruleState,
       settings,
       today,
+      state.restoreCount,
       createPerson,
       updatePerson,
       saveVaccination,

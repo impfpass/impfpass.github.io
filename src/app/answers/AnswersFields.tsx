@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { PersonAnswers } from "@/core/model";
 import { T } from "@/texts";
+import { CHOICE_ITEM_CLASS } from "../styles";
 
 type Job = PersonAnswers["job"];
 
@@ -52,11 +53,7 @@ export function AnswersFields(props: {
         </p>
       </div>
 
-      <div
-        role="group"
-        aria-labelledby={`${fsmeId}-label`}
-        className="flex flex-col gap-3"
-      >
+      <div className="flex flex-col gap-3">
         <p id={`${fsmeId}-label`} className="font-medium">
           {T.answers.fsmeQuestion}
         </p>
@@ -65,6 +62,8 @@ export function AnswersFields(props: {
           variant="outline"
           spacing={1}
           value={value.fsme}
+          aria-labelledby={`${fsmeId}-label`}
+          aria-describedby={`${fsmeId}-help`}
           onValueChange={(v) =>
             v && onChange({ ...value, fsme: v as PersonAnswers["fsme"] })
           }
@@ -74,13 +73,15 @@ export function AnswersFields(props: {
             <ToggleGroupItem
               key={o.value}
               value={o.value}
-              className="h-auto min-h-11 w-full whitespace-normal"
+              className={CHOICE_ITEM_CLASS}
             >
               {o.label}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <p className="text-muted-foreground">{T.answers.fsmeHelp}</p>
+        <p id={`${fsmeId}-help`} className="text-muted-foreground">
+          {T.answers.fsmeHelp}
+        </p>
         <a
           href={T.answers.fsmeLinkUrl}
           target="_blank"

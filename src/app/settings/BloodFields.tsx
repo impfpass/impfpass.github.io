@@ -1,15 +1,18 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { BLOOD_GROUPS, type BloodGroup, type Rhesus } from "@/core/model";
+import {
+  BLOOD_GROUPS,
+  RHESUS_VALUES,
+  type BloodGroup,
+  type Rhesus,
+} from "@/core/model";
 import { T } from "@/texts";
+import { CHOICE_ITEM_CLASS } from "../styles";
 
 const B = T.settings.blood;
-const RHESUS: { value: Rhesus; label: string }[] = [
-  { value: "positive", label: B.positive },
-  { value: "negative", label: B.negative },
-];
-const ITEM_CLASS = "h-auto min-h-11 w-full whitespace-normal";
+/** Rhesusformeln im Pass sind kurz, etwa „CcD.ee“. */
+const FORMULA_MAX = 20;
 
 /** Blutgruppe, Rhesusfaktor und Rhesusformel im Profil; ein zweiter Tipp hebt die Auswahl auf. */
 export function BloodFields(props: {
@@ -46,7 +49,7 @@ export function BloodFields(props: {
           className="grid w-full grid-cols-4"
         >
           {BLOOD_GROUPS.map((g) => (
-            <ToggleGroupItem key={g} value={g} className={ITEM_CLASS}>
+            <ToggleGroupItem key={g} value={g} className={CHOICE_ITEM_CLASS}>
               {B.groups[g]}
             </ToggleGroupItem>
           ))}
@@ -66,13 +69,9 @@ export function BloodFields(props: {
           onValueChange={(v) => props.onRhesus(v ? (v as Rhesus) : undefined)}
           className="grid w-full grid-cols-2"
         >
-          {RHESUS.map((r) => (
-            <ToggleGroupItem
-              key={r.value}
-              value={r.value}
-              className={ITEM_CLASS}
-            >
-              {r.label}
+          {RHESUS_VALUES.map((r) => (
+            <ToggleGroupItem key={r} value={r} className={CHOICE_ITEM_CLASS}>
+              {B[r]}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -86,6 +85,7 @@ export function BloodFields(props: {
           id={formulaId}
           value={props.formula}
           onChange={(e) => props.onFormula(e.target.value)}
+          maxLength={FORMULA_MAX}
           autoCapitalize="off"
           autoCorrect="off"
           autoComplete="off"

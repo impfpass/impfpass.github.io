@@ -1,8 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { useHashLocation } from "wouter/use-hash-location";
 import { AppDataProvider } from "@/app/data/AppData";
+import { createBackup } from "@/core/formats/backup";
+import { DEFAULT_ANSWERS, DEFAULT_SETTINGS } from "@/core/model";
 import { openRepository } from "@/core/storage/repository";
 import { renderWithData, seed, testPerson } from "@/test/helpers";
 import { InfoScreen } from "./InfoScreen";
@@ -277,7 +279,15 @@ it("gespeicherte Blutgruppe ist ausgewählt und lässt sich entfernen", async ()
 });
 
 it("Name ändern lässt die Blutgruppe unverändert", async () => {
-  await seed({ persons: [testPerson({ bloodGroup: "AB" })] });
+  await seed({
+    persons: [
+      testPerson({
+        bloodGroup: "AB",
+        rhesus: "negative",
+        rhesusFormula: "ccddee",
+      }),
+    ],
+  });
   const user = userEvent.setup();
   const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
 
@@ -288,6 +298,17 @@ it("Name ändern lässt die Blutgruppe unverändert", async () => {
 
   await waitFor(() => expect(data().person?.name).toBe("Christa M."));
   expect(data().person?.bloodGroup).toBe("AB");
+  expect(data().person?.rhesus).toBe("negative");
+  expect(data().person?.rhesusFormula).toBe("ccddee");
+});
+
+it("die Rhesusformel nimmt höchstens 20 Zeichen auf", async () => {
+  await seed({ persons: [testPerson()] });
+  const user = userEvent.setup();
+  await renderWithData(<SettingsScreen />, "/einstellungen");
+  const formula = screen.getByLabelText<HTMLInputElement>("Rhesusformel");
+  await user.type(formula, "CcD.ee".repeat(5));
+  expect(formula.value).toBe("CcD.ee".repeat(5).slice(0, 20));
 });
 
 it("Blutgruppe: Hinweis zum Aufheben der Auswahl, Hinweis bezieht sich auf die Blutgruppe", async () => {
@@ -304,4 +325,57 @@ it("Blutgruppe: Hinweis zum Aufheben der Auswahl, Hinweis bezieht sich auf die B
       .getByRole("radiogroup", { name: "Blutgruppe" })
       .getAttribute("aria-describedby"),
   ).toBeTruthy();
+});
+
+it("nach dem Wiederherstellen derselben Person zeigen die Formulare die Angaben aus der Sicherung", async () => {
+  await seed({ persons: [testPerson({ bloodGroup: "B" })] });
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+  expect(
+    screen.getByRole("radio", { name: "B" }).getAttribute("aria-checked"),
+  ).toBe("true");
+
+  const backup = createBackup(
+    {
+      persons: [
+        testPerson({
+          name: "Christa M.",
+          bloodGroup: "A",
+          rhesusFormula: "CcD.ee",
+          answers: { ...DEFAULT_ANSWERS, fsme: "yes" },
+        }),
+      ],
+      vaccinations: [],
+      decisions: [],
+      settings: DEFAULT_SETTINGS,
+    },
+    new Date("2026-11-20T09:00:00Z"),
+  );
+  await act(() => data().actions.restore(backup));
+
+  expect(screen.getByLabelText<HTMLInputElement>("Name").value).toBe(
+    "Christa M.",
+  );
+  expect(
+    screen.getByRole("radio", { name: "A" }).getAttribute("aria-checked"),
+  ).toBe("true");
+  expect(screen.getByLabelText<HTMLInputElement>("Rhesusformel").value).toBe(
+    "CcD.ee",
+  );
+  expect(
+    screen.getByRole("radio", { name: "Ja" }).getAttribute("aria-checked"),
+  ).toBe("true");
+});
+
+it("eine Angabe zur Person lässt einen noch nicht gespeicherten Namen stehen", async () => {
+  await seed({ persons: [testPerson()] });
+  const user = userEvent.setup();
+  const { data } = await renderWithData(<SettingsScreen />, "/einstellungen");
+  const name = screen.getByLabelText<HTMLInputElement>("Name");
+  await user.clear(name);
+  await user.type(name, "Christa M.");
+  await user.click(screen.getByRole("radio", { name: "Ja" }));
+  await waitFor(() => expect(data().person?.answers.fsme).toBe("yes"));
+  expect(screen.getByLabelText<HTMLInputElement>("Name").value).toBe(
+    "Christa M.",
+  );
 });

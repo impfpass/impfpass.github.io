@@ -218,7 +218,10 @@ const LINK_CLASS =
   "flex min-h-12 items-center justify-between rounded-md border px-4";
 
 export function SettingsScreen() {
-  const { person } = useAppData();
+  const { person, restoreCount } = useAppData();
+  // Neu aufbauen, wenn nach einer Wiederherstellung andere Angaben da sind,
+  // auch bei derselben Person. Eigenes Speichern baut nichts neu auf.
+  const formKey = person ? `${person.id}-${restoreCount}` : "";
   return (
     <div className="flex flex-col gap-8">
       <h1 className="text-2xl font-semibold">{T.settings.title}</h1>
@@ -229,8 +232,7 @@ export function SettingsScreen() {
         <h2 id="settings-profile" className="text-lg font-semibold">
           {T.settings.profile}
         </h2>
-        {/* Neu aufbauen, wenn nach einer Wiederherstellung eine andere Person da ist */}
-        {person && <ProfileForm key={person.id} person={person} />}
+        {person && <ProfileForm key={formKey} person={person} />}
       </section>
       <section
         aria-labelledby="settings-answers"
@@ -239,7 +241,7 @@ export function SettingsScreen() {
         <h2 id="settings-answers" className="text-lg font-semibold">
           {T.answers.title}
         </h2>
-        {person && <AnswersForm key={person.id} person={person} />}
+        {person && <AnswersForm key={formKey} person={person} />}
       </section>
       <section
         aria-labelledby="settings-reminders"

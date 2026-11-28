@@ -25,6 +25,7 @@ import { BackupHint } from "../entry/BackupHint";
 import { T } from "@/texts";
 import { ImportPreview } from "./ImportPreview";
 import { Scanner } from "./Scanner";
+import { CHOICE_ITEM_CLASS } from "../styles";
 
 type View =
   | { kind: "collect" }
@@ -386,7 +387,7 @@ export function TransferScreen() {
           <ToggleGroupItem
             key={w.value}
             value={w.value}
-            className="h-auto min-h-11 w-full whitespace-normal"
+            className={CHOICE_ITEM_CLASS}
           >
             {w.label}
           </ToggleGroupItem>

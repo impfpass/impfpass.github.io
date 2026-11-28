@@ -20,6 +20,7 @@ import { validateEntry, type EntryErrors } from "@/core/validation";
 import { useAppData } from "../data/AppData";
 import { T } from "@/texts";
 import { BackupHint } from "./BackupHint";
+import { CHOICE_ITEM_CLASS } from "../styles";
 
 const PRECISIONS: { value: DatePrecision; label: string }[] = [
   { value: "day", label: T.entry.precision.day },
@@ -235,7 +236,7 @@ export function EntryForm({
             <ToggleGroupItem
               key={p.value}
               value={p.value}
-              className="h-auto min-h-11 w-full whitespace-normal"
+              className={CHOICE_ITEM_CLASS}
             >
               {p.label}
             </ToggleGroupItem>
