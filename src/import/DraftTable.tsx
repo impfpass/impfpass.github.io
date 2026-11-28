@@ -206,7 +206,7 @@ export function DraftTable({
                   <th scope="col" className="w-32 p-2">
                     {c.batch}
                   </th>
-                  <th scope="col" className="w-60 p-2">
+                  <th scope="col" className="w-56 p-2">
                     {c.doctor}
                   </th>
                   <th scope="col" className="w-28 p-2">
@@ -253,27 +253,20 @@ export function DraftTable({
         <DeleteDraftButton onConfirm={onClear} />
       </div>
 
-      {/* Der Bereich steht immer im DOM, nur sein Inhalt kommt und geht. */}
+      {/* Der Statusbereich steht immer im DOM und enthält nur den Text; der Knopf
+          liegt daneben, damit Screenreader ihn nicht doppelt vorlesen. */}
       <div
-        role="status"
         className={
           removed
             ? "sticky bottom-4 flex flex-wrap items-center gap-3 rounded-md border bg-background p-3 shadow-md"
             : "sr-only"
         }
       >
+        <p role="status">{removed && t.removed(removed.index + 1)}</p>
         {removed && (
-          <>
-            {t.removed(removed.index + 1)}
-            <Button
-              ref={undoRef}
-              type="button"
-              variant="outline"
-              onClick={undo}
-            >
-              {t.undo}
-            </Button>
-          </>
+          <Button ref={undoRef} type="button" variant="outline" onClick={undo}>
+            {t.undo}
+          </Button>
         )}
       </div>
 

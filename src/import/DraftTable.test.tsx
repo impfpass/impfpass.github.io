@@ -372,9 +372,7 @@ describe("Zeilen hinzufügen und löschen", () => {
     );
     expect(bodyRows()).toHaveLength(2);
     expect(input("Datum, Zeile 2").value).toBe("03.04.2018");
-    expect(screen.getByRole("status").textContent).toContain(
-      "Zeile 2 gelöscht.",
-    );
+    expect(screen.getByRole("status").textContent).toBe("Zeile 2 gelöscht.");
 
     await userEvent.click(screen.getByRole("button", { name: "Rückgängig" }));
     expect(bodyRows()).toHaveLength(3);
@@ -392,6 +390,19 @@ describe("Zeilen hinzufügen und löschen", () => {
     );
     expect(screen.getByRole("status")).toBe(region);
     expect(region.textContent).toContain("Zeile 1 gelöscht.");
+  });
+
+  it("im Statusbereich steht nur der Text, der Knopf „Rückgängig“ liegt außerhalb", async () => {
+    setup([row("01.02.2010"), row("05.12.2016")]);
+    await userEvent.click(
+      screen.getByRole("button", { name: "Löschen, Zeile 1" }),
+    );
+    const region = screen.getByRole("status");
+    expect(region.textContent).toBe("Zeile 1 gelöscht.");
+    expect(
+      within(region).queryByRole("button", { name: "Rückgängig" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Rückgängig" })).toBeTruthy();
   });
 
   it("setzt den Fokus nach dem Löschen auf „Rückgängig“ und nach dem Zurückholen auf „Löschen“ der Zeile", async () => {
