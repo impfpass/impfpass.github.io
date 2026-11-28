@@ -489,6 +489,125 @@ it("ein Teil einer anderen Übertragung bietet „Neu beginnen“ an", async () 
   expect(screen.queryByRole("button", { name: "Neu beginnen" })).toBeNull();
 });
 
+it("„Neu beginnen“ liest auch die folgenden Zeilen des eingefügten Texts", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [a1] = partsOf(payload, 3);
+  const [b1, b2] = partsOf(
+    { ...payload, id: "B00002", entries: payload.entries.slice(0, 2) },
+    2,
+  );
+
+  await paste(user, ["Hallo,", a1, b1, b2, "Viele Grüße"].join("\n"));
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Dieser Code gehört zu einer anderen Übertragung.",
+  );
+  await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+
+  expect(
+    await screen.findByText("2 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+  // Der Text ist gelesen und steht danach nicht mehr im Feld.
+  await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+  expect(
+    (screen.getByLabelText("Text einfügen") as HTMLTextAreaElement).value,
+  ).toBe("");
+});
+
+it("„Neu beginnen“ lässt geänderten Text im Feld stehen", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [a1] = partsOf(payload, 3);
+  const [b1, b2] = partsOf({ ...payload, id: "B00002" }, 2);
+  await paste(user, [a1, b1, b2].join("\n"));
+  await screen.findByRole("alert");
+
+  await user.type(screen.getByLabelText("Text einfügen"), " neu");
+  await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+  await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen.");
+  await user.click(screen.getByRole("button", { name: "Abbrechen" }));
+
+  expect(
+    (screen.getByLabelText("Text einfügen") as HTMLTextAreaElement).value,
+  ).toBe(`${[a1, b1, b2].join("\n")} neu`);
+});
+
+it("„Neu beginnen“ nach gesammelten Teilen liest alle Zeilen ab der ersten unpassenden", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [a1] = partsOf(payload, 3);
+  const [b1, b2, b3] = partsOf({ ...payload, id: "B00002" }, 3);
+  await scan(user, a1);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await chooseWay(user, "Text einfügen");
+  await paste(user, [b3, b1].join("\n"));
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Dieser Code gehört zu einer anderen Übertragung.",
+  );
+  await user.click(screen.getByRole("button", { name: "Neu beginnen" }));
+
+  expect(
+    await screen.findByText("2 von 3 Teilen gelesen. Es fehlt noch Teil 2."),
+  ).toBeTruthy();
+  await paste(user, b2);
+  expect(
+    await screen.findByText("3 Impfungen gefunden, davon 0 schon eingetragen."),
+  ).toBeTruthy();
+});
+
+it("Text ohne Teilzeile nach gesammelten Teilen bietet „Von vorn beginnen“", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  await paste(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await paste(user, "Hallo, hier sind meine Impfungen.");
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Das ist kein Code von ImpfPass.",
+  );
+  expect(
+    screen.getByText("1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3."),
+  ).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+  expect(screen.queryByText(/Teilen gelesen/)).toBeNull();
+  expect(screen.queryByRole("alert")).toBeNull();
+});
+
+it("eine Datei ohne Teilzeile nach gesammelten Teilen bietet „Von vorn beginnen“", async () => {
+  await seed({});
+  const user = userEvent.setup();
+  await renderWithData(<TransferScreen />, "/uebernehmen");
+  const [first] = partsOf(payload, 3);
+  await scan(user, first);
+  await screen.findByText(
+    "1 von 3 Teilen gelesen. Es fehlen noch Teil 2 und 3.",
+  );
+
+  await chooseWay(user, "Datei öffnen");
+  await user.upload(
+    screen.getByTestId("transfer-file"),
+    new File(["Einkaufsliste\nBrot\n"], "notiz.txt", { type: "text/plain" }),
+  );
+
+  expect((await screen.findByRole("alert")).textContent).toBe(
+    "Das ist kein Code von ImpfPass.",
+  );
+  await user.click(screen.getByRole("button", { name: "Von vorn beginnen" }));
+  expect(screen.queryByText(/Teilen gelesen/)).toBeNull();
+});
+
 it("ein fremder Code nach gesammelten Teilen behält sie und bietet „Von vorn beginnen“", async () => {
   await seed({});
   const user = userEvent.setup();

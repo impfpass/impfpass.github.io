@@ -39,10 +39,17 @@ const WAYS: { value: Way; label: string }[] = [
   { value: "text", label: T.transfer.pasteText },
 ];
 
+/** Zeilen einer Eingabe ab der ersten, die nicht zu den gesammelten Teilen passt. */
+interface Rest {
+  lines: readonly string[];
+  /** Der Inhalt des Textfelds, wenn die Zeilen daraus stammen. */
+  pasted?: string;
+}
+
 interface Problem {
   message: string;
-  /** Passt nicht zu den gesammelten Teilen: „Neu beginnen“ fängt mit ihm an. */
-  restartWith?: string;
+  /** Passt nicht zu den gesammelten Teilen: „Neu beginnen“ liest ab hier neu. */
+  restartWith?: Rest;
   /** Taugt auch allein nicht als Anfang: „Von vorn beginnen“ verwirft die Teile. */
   startOver?: boolean;
 }
@@ -122,42 +129,50 @@ export function TransferScreen() {
   }
 
   /**
-   * Nimmt eine Teilzeile auf, aus dem Scanner, einer Datei oder eingefügtem
-   * Text. Ist die Übertragung vollständig, erscheint die Vorschau.
+   * Nimmt Teilzeilen auf, aus dem Scanner, einer Datei oder eingefügtem Text.
+   * Ist die Übertragung vollständig, erscheint die Vorschau. `false`, wenn
+   * eine Zeile scheitert.
    */
-  function onCode(line: string): "partial" | "complete" | "failed" {
-    let next: TransferCollector;
-    try {
-      next = addPart(latest.current, line).collector;
-    } catch (e) {
-      // Mit gesammelten Teilen gibt es immer einen Ausweg: „Neu beginnen“ mit
-      // dieser Zeile, wenn sie allein taugt, sonst „Von vorn beginnen“.
-      const way =
-        latest.current === null
-          ? {}
-          : canStartWith(line)
-            ? { restartWith: line }
-            : { startOver: true };
-      setProblem({ message: messageOf(e), ...way });
-      return "failed";
+  function addLines(lines: readonly string[], pasted?: string): boolean {
+    for (const [i, line] of lines.entries()) {
+      let next: TransferCollector;
+      try {
+        next = addPart(latest.current, line).collector;
+      } catch (e) {
+        // Mit gesammelten Teilen gibt es immer einen Ausweg: „Neu beginnen“ ab
+        // dieser Zeile, wenn sie allein taugt, sonst „Von vorn beginnen“.
+        const way =
+          latest.current === null
+            ? {}
+            : canStartWith(line)
+              ? { restartWith: { lines: lines.slice(i), pasted } }
+              : { startOver: true };
+        setProblem({ message: messageOf(e), ...way });
+        return false;
+      }
+      if (missingParts(next).length > 0) {
+        setCollector(next);
+        continue;
+      }
+      setCollector(null);
+      try {
+        showPreview(decodeCollected(next));
+      } catch (e) {
+        setProblem({ message: messageOf(e) });
+        return false;
+      }
+      // Zeilen nach einer vollständigen Übertragung bleiben ungelesen.
+      break;
     }
     setProblem(null);
-    if (missingParts(next).length > 0) {
-      setCollector(next);
-      return "partial";
-    }
-    setCollector(null);
-    try {
-      showPreview(decodeCollected(next));
-      return "complete";
-    } catch (e) {
-      setProblem({ message: messageOf(e) });
-      return "failed";
-    }
+    return true;
   }
 
-  /** Datei und eingefügter Text: eine oder mehrere Teilzeilen. */
-  function readText(content: string): boolean {
+  /**
+   * Datei und eingefügter Text: eine oder mehrere Teilzeilen. `pasted` ist
+   * der Inhalt des Textfelds, wenn der Text daher stammt.
+   */
+  function readText(content: string, pasted?: string): boolean {
     // Datei und Text vom PC sind ein einziger Teil 1/1. Gescannte Teile
     // derselben Übertragung sind anders geteilt und passen nicht dazu.
     const whole = wholeTransfer(content);
@@ -171,19 +186,24 @@ export function TransferScreen() {
       (line) => !isForeignLine(line),
     );
     if (lines.length === 0) {
-      setProblem({ message: T.transfer.errors.notTransfer });
+      // Wie nach einem fremden Code bleiben gesammelte Teile, bis man von vorn beginnt.
+      setProblem({
+        message: T.transfer.errors.notTransfer,
+        startOver: latest.current !== null,
+      });
       return false;
     }
-    for (const line of lines) {
-      const result = onCode(line);
-      if (result !== "partial") return result === "complete";
-    }
-    return true;
+    return addLines(lines, pasted);
   }
 
-  function restart(line: string) {
+  /** Eine neue Übertragung mit den Zeilen ab der ersten unpassenden. */
+  function restart({ lines, pasted }: Rest) {
     setCollector(null);
-    onCode(line);
+    // Gelesener Text verschwindet aus dem Feld wie nach „Einlesen“, sofern
+    // es inzwischen nicht geändert wurde.
+    if (addLines(lines, pasted) && pasted !== undefined) {
+      setText((t) => (t === pasted ? "" : t));
+    }
   }
 
   function startOver() {
@@ -331,7 +351,7 @@ export function TransferScreen() {
       </ToggleGroup>
       {way === "scan" && (
         <Scanner
-          onCode={(line) => void onCode(line)}
+          onCode={(line) => void addLines([line])}
           onFallback={(w) => setWay(w)}
         />
       )}
@@ -372,7 +392,7 @@ export function TransferScreen() {
             type="button"
             disabled={text.trim() === ""}
             onClick={() => {
-              if (readText(text)) setText("");
+              if (readText(text, text)) setText("");
             }}
           >
             {T.transfer.read}
