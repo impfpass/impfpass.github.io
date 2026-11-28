@@ -35,9 +35,11 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     // Die PC-App (Plan 3) liegt unter /import/ und hat eine eigene Seite.
     navigateFallbackDenylist: [/^\/import\//],
     // Neue Version sofort aktivieren und die offenen Seiten übernehmen. Mit
-    // injectRegister "script" setzt das Plugin das nicht selbst. Unbedenklich,
-    // weil beide Seiten (Handy-App und PC-App unter /import/) ihre Teile beim
-    // Start laden und nichts nachgeladen wird.
+    // injectRegister "script" setzt das Plugin das nicht selbst. Beide Seiten
+    // (Handy-App und PC-App unter /import/) laden ihren Code beim Start. Zur
+    // Laufzeit holt nur die Handy-App die Lizenzdateien; eine noch offene alte
+    // Seite kann dabei die Dateien der neuen Version bekommen. Deshalb prüft
+    // src/app/settings/licenseData.ts das Format der Übersicht.
     skipWaiting: true,
     clientsClaim: true,
   },

@@ -402,7 +402,7 @@ export const T = {
     title: "Verwendete Software",
     infoText:
       "ImpfPass nutzt freie Bibliotheken. Eine Übersicht zeigt, welche das sind und unter welchen Lizenzen sie stehen.",
-    infoLink: "Übersicht ansehen",
+    infoLink: "Software und Lizenzen ansehen",
     intro: (packages: number, projects: number) =>
       `ImpfPass enthält freie Software von Dritten: ${packages} Pakete aus ${projects} Projekten.`,
     textsLink: "Alle Lizenztexte ansehen",

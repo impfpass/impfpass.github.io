@@ -226,6 +226,20 @@ describe("summarizeNotices", () => {
     ).toThrow("Paket ohne Projekt in der Lizenzübersicht: zod");
   });
 
+  it("meldet ein Paket ohne Projekt in zwei Versionen nur einmal", () => {
+    expect(() =>
+      summarizeNotices(
+        [
+          notice("react"),
+          notice("tslib"),
+          notice("zod", "MIT", "3.25.0"),
+          notice("zod", "MIT", "4.0.0"),
+        ],
+        PROJECTS,
+      ),
+    ).toThrow(/^Paket ohne Projekt in der Lizenzübersicht: zod$/);
+  });
+
   it("meldet ein Paket in mehreren Projekten", () => {
     const projects = [
       { name: "A", packages: ["x"] },

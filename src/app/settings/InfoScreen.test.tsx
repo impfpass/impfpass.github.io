@@ -12,7 +12,11 @@ it("verweist innerhalb der App auf die verwendete Software", async () => {
   expect(
     screen.getByText(/Eine Übersicht zeigt, welche das sind/),
   ).toBeTruthy();
-  const link = screen.getByRole("link", { name: "Übersicht ansehen" });
+  // Eindeutig auch ohne Umgebung, etwa in der Linkliste von VoiceOver, wo
+  // sonst der Reiter „Übersicht“ daneben steht.
+  const link = screen.getByRole("link", {
+    name: "Software und Lizenzen ansehen",
+  });
   expect(link.getAttribute("href")).toBe("#/einstellungen/info/lizenzen");
   // Kein neues Fenster: In der App vom Home-Bildschirm käme man nicht zurück.
   expect(link.getAttribute("target")).toBeNull();
