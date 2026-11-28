@@ -71,6 +71,20 @@ ${CLEAN}
     expect(parseChatbotAnswer(text)[0]?.doctor).toBe("Praxis } {[ Muster");
   });
 
+  it("falls back to the inner array when the outer object is malformed", () => {
+    const text = `Antwort: {"impfpass": "import", "vaccinations": ${JSON.stringify([ROW])}, kaputt`;
+    expect(parseChatbotAnswer(text)).toEqual([EXPECTED]);
+  });
+
+  it("does not freeze on a huge amount of unclosed brackets", () => {
+    for (const open of ["[", "{"]) {
+      const started = performance.now();
+      const error = errorOf(() => parseChatbotAnswer(open.repeat(200_000)));
+      expect(error.code).toBe("noJson");
+      expect(performance.now() - started).toBeLessThan(1000);
+    }
+  });
+
   it("maps unsure names and drops unknown fields and duplicates", () => {
     const [row] = one({ ...ROW, unsure: ["name", "date", "foo", "date"] });
     expect(row?.unsure).toEqual(["label", "date"]);

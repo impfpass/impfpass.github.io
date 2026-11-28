@@ -65,8 +65,14 @@ function tryParse(s: string): unknown {
   }
 }
 
-/** Ende des Abschnitts ab `start` (`{` oder `[`); Klammern in Strings zählen nicht. */
-function findClosing(s: string, start: number): number {
+/**
+ * Ende des Abschnitts ab `start` (`{` oder `[`); Klammern in Strings zählen nicht.
+ * `scanned` ist die Zahl der geprüften Zeichen, auch wenn es kein Ende gibt.
+ */
+function findClosing(
+  s: string,
+  start: number,
+): { end: number; scanned: number } {
   let depth = 0;
   let inString = false;
   for (let i = start; i < s.length; i++) {
@@ -78,21 +84,30 @@ function findClosing(s: string, start: number): number {
     else if (c === "{" || c === "[") depth++;
     else if (c === "}" || c === "]") {
       depth--;
-      if (depth === 0) return i;
+      if (depth === 0) return { end: i, scanned: i - start + 1 };
     }
   }
-  return -1;
+  return { end: -1, scanned: s.length - start };
 }
+
+/**
+ * Obergrenze für alle Zeichen, die die Suche nach Abschnitten prüft. Jede
+ * Klammer ohne Gegenstück liest bis zum Textende; ohne Grenze würde eine
+ * Eingabe aus lauter `[` den Tab einfrieren. Echte Antworten bleiben weit darunter.
+ */
+const MAX_SCAN_CHARS = 20_000_000;
 
 /** Findet die erste Liste von Impfungen: erst der ganze Text, dann jeder Abschnitt. */
 function findEntries(s: string): unknown[] | null {
   const whole = entriesOf(tryParse(s.trim()));
   if (whole) return whole;
+  let budget = MAX_SCAN_CHARS;
   let i = 0;
-  while (i < s.length) {
+  while (i < s.length && budget > 0) {
     const c = s[i];
     if (c === "{" || c === "[") {
-      const end = findClosing(s, i);
+      const { end, scanned } = findClosing(s, i);
+      budget -= scanned;
       if (end < 0) {
         i++;
         continue;
