@@ -289,17 +289,18 @@ describe("Dubletten und geprüft", () => {
     ]);
   });
 
-  it("mit reviewed bleiben Fehler neben der Dublette", () => {
+  it("mit reviewed bleiben Fehler, nur der Dublettenhinweis fällt weg", () => {
+    const long = "x".repeat(MAX_TEXT_LENGTH + 1);
     const rows = [
-      { ...row("a", "05.12.2016"), batch: "x".repeat(MAX_TEXT_LENGTH + 1) },
-      { ...row("b", "05.12.2016"), reviewed: true },
+      { ...row("a", "05.12.2016"), batch: long, reviewed: true },
+      { ...row("b", "05.12.2016"), batch: long },
     ];
-    expect(
+    const kinds = (id: string) =>
       checkDraft(draftOf(rows), today)
-        .get("a")
-        ?.map((i) => i.kind),
-    ).toEqual(["textTooLong", "duplicate"]);
-    expect(checkDraft(draftOf(rows), today).get("b")).toEqual([]);
+        .get(id)
+        ?.map((i) => i.kind);
+    expect(kinds("a")).toEqual(["textTooLong"]);
+    expect(kinds("b")).toEqual(["textTooLong", "duplicate"]);
   });
 });
 
