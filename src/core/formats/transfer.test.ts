@@ -400,8 +400,6 @@ describe("addPart, missingParts und decodeCollected", () => {
       // Digitales COVID-Zertifikat der EU
       "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOK.IR9B+9G4G50PHZF0AT4V22F/8X*G3M9",
       "Hallo",
-      "IP:1:3/2:ABCDEF:QED8WEX0:12345678",
-      "IP:1:0/2:ABCDEF:QED8WEX0:12345678",
       // `IP:` ohne Version ist etwas anderes, etwa eine Adresse
       "IP:",
       "IP: 192.168.0.1",
@@ -423,6 +421,10 @@ describe("addPart, missingParts und decodeCollected", () => {
       "IP:1:1/1:ABCDEF:QED8WEX0:1234567",
       "IP:1:1/1:abcdef:QED8WEX0:12345678",
       "IP:0:1/1:ABCDEF:QED8WEX0:12345678",
+      // unmögliche Teilnummern
+      "IP:1:3/2:ABCDEF:QED8WEX0:12345678",
+      "IP:1:0/2:ABCDEF:QED8WEX0:12345678",
+      "IP:1:1/0:ABCDEF:QED8WEX0:12345678",
       // abgeschnitten
       "IP:1:1/1:ABCDEF:QED8W",
     ]) {

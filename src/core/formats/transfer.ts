@@ -261,7 +261,7 @@ function parsePart(rawLine: string): Part {
   if (!m) throw new TransferError("corrupt");
   const n = Number(m[1]);
   const total = Number(m[2]);
-  if (n < 1 || n > total) throw new TransferError("notTransfer");
+  if (n < 1 || n > total) throw new TransferError("corrupt");
   return { n, total, id: m[3], data: m[4], crc: m[5] };
 }
 
