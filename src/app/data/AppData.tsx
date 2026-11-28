@@ -312,6 +312,7 @@ export function AppDataProvider(props: {
 
   const importVaccinations = useCallback(
     async (vs: Vaccination[]) => {
+      if (vs.length === 0) return;
       await requireRepo().addVaccinations(vs);
       // Eine Impfung mit vorhandener ID ersetzt die alte an ihrer Stelle
       // (Import mit Ersetzen), die übrigen kommen hinten dazu.

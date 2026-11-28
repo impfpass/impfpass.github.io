@@ -505,6 +505,21 @@ describe("importVaccinations", () => {
     );
   });
 
+  it("ohne Impfungen ändert sich nichts", async () => {
+    await seed({ vaccinations: [testVaccination()] });
+    const { data } = await renderWithData(null, "/", {
+      rulebook: V1,
+      today: TODAY,
+    });
+    await waitFor(() => expect(data().vaccinations).toHaveLength(1));
+    const before = data();
+
+    await act(() => data().actions.importVaccinations([]));
+
+    expect(data().vaccinations).toBe(before.vaccinations);
+    expect(data()).toBe(before);
+  });
+
   it("lässt den Stand unverändert, wenn das Speichern scheitert", async () => {
     await seed({});
     const { data } = await renderWithData(null, "/", {
