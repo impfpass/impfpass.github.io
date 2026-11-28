@@ -630,7 +630,7 @@ So füllst du die Felder:
       notTransfer: "Das ist kein Code von ImpfPass.",
       otherTransfer: "Dieser Code gehört zu einer anderen Übertragung.",
       tooNew:
-        "Die Übertragung stammt aus einer neueren Version von ImpfPass. Schließe ImpfPass ganz und öffne es wieder, dann lädt die neue Version.",
+        "Die Übertragung stammt aus einer neueren Version von ImpfPass. Schließe ImpfPass ganz, öffne es wieder und warte einen Moment. Kommt die Meldung dann noch einmal, schließe und öffne es ein zweites Mal.",
       corrupt: "Die Übertragung ist beschädigt. Erzeuge sie am PC neu.",
     },
   },

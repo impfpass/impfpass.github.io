@@ -628,7 +628,7 @@ it("eine Übertragung mit Version 2 meldet „neuere Version“ und speichert ni
   await paste(user, line);
 
   expect((await screen.findByRole("alert")).textContent).toBe(
-    "Die Übertragung stammt aus einer neueren Version von ImpfPass. Schließe ImpfPass ganz und öffne es wieder, dann lädt die neue Version.",
+    "Die Übertragung stammt aus einer neueren Version von ImpfPass. Schließe ImpfPass ganz, öffne es wieder und warte einen Moment. Kommt die Meldung dann noch einmal, schließe und öffne es ein zweites Mal.",
   );
   expect(screen.queryByText(/gefunden/)).toBeNull();
   expect(screen.queryByRole("button", { name: /übernehmen$/ })).toBeNull();
