@@ -50,11 +50,13 @@ export function ImportApp({
       <header>
         <h1 className="text-2xl font-semibold">{T.pc.title}</h1>
       </header>
-      {!persistent && (
-        <p role="status" className="rounded-md border p-3">
-          {T.pc.notSaved}
-        </p>
-      )}
+      {/* Die Bereiche für Meldungen stehen immer im DOM, nur ihr Text kommt und geht. */}
+      <p
+        role="status"
+        className={persistent ? "sr-only" : "rounded-md border p-3"}
+      >
+        {persistent ? "" : T.pc.notSaved}
+      </p>
       <main className="flex-1">
         {status === "loading" ? (
           <p>{T.app.loading}</p>
@@ -91,11 +93,12 @@ export function ImportApp({
               <h2 className="text-xl font-semibold">
                 {STEPS[step - 1].heading}
               </h2>
-              {step === 1 && message && (
-                <p role="status" className="mt-4 rounded-md border p-3">
-                  {message}
-                </p>
-              )}
+              <p
+                role="status"
+                className={message ? "mt-4 rounded-md border p-3" : "sr-only"}
+              >
+                {message}
+              </p>
               {step === 1 && (
                 <GuideStep
                   draft={draft}
@@ -108,19 +111,12 @@ export function ImportApp({
                 />
               )}
               {step === 2 && (
-                <>
-                  {message && (
-                    <p role="status" className="mt-4 rounded-md border p-3">
-                      {message}
-                    </p>
-                  )}
-                  <DraftTable
-                    draft={draft}
-                    update={update}
-                    onNext={() => goTo(3)}
-                    onClear={deleteDraft}
-                  />
-                </>
+                <DraftTable
+                  draft={draft}
+                  update={update}
+                  onNext={() => goTo(3)}
+                  onClear={deleteDraft}
+                />
               )}
               {step === 3 && (
                 <TransferStep
