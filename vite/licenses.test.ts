@@ -13,6 +13,7 @@ import {
   readPackageNotice,
   sortNotices,
   summarizeNotices,
+  unexplainedLicenses,
 } from "./licenses";
 
 describe("packageRootFromId", () => {
@@ -260,6 +261,27 @@ describe("summarizeNotices", () => {
     expect(() => summarizeNotices([notice("zod")], PROJECTS)).toThrow(
       /Paket ohne Projekt in der Lizenzübersicht: zod\n(.|\n)*Projekt ohne Paket im Build: R/,
     );
+  });
+});
+
+describe("unexplainedLicenses", () => {
+  it("ist leer, wenn jede vorkommende Lizenz erklärt ist", () => {
+    const summary = {
+      packages: 2,
+      projects: [{ name: "React", licenses: ["MIT"] }],
+    };
+    expect(unexplainedLicenses(summary, ["MIT", "ISC"])).toEqual([]);
+  });
+
+  it("nennt jede Lizenz ohne Erklärung einmal, sortiert", () => {
+    const summary = {
+      packages: 3,
+      projects: [
+        { name: "A", licenses: ["MIT", "WTFPL"] },
+        { name: "B", licenses: ["GPL-3.0", "WTFPL"] },
+      ],
+    };
+    expect(unexplainedLicenses(summary, ["MIT"])).toEqual(["GPL-3.0", "WTFPL"]);
   });
 });
 

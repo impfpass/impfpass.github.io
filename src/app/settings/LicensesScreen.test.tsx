@@ -33,7 +33,7 @@ it("führt zu den Lizenztexten und zurück zur Info-Seite", async () => {
   await seed({});
   await renderWithData(<LicensesScreen load={async () => SUMMARY} />, ROUTE);
   const texts = await screen.findByRole("link", {
-    name: "Alle Lizenztexte ansehen",
+    name: "Lizenztexte aller Pakete ansehen",
   });
   expect(texts.getAttribute("href")).toBe(
     "#/einstellungen/info/lizenzen/texte",

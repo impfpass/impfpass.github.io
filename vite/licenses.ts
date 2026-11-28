@@ -6,6 +6,7 @@ import {
   LICENSES_TEXT_FILE,
   type LicenseSummary,
 } from "../src/core/licenses.ts";
+import { T } from "../src/texts.ts";
 import { LICENSE_PROJECTS, type LicenseProject } from "./licenseProjects.ts";
 
 /**
@@ -196,6 +197,15 @@ export function summarizeNotices(
   };
 }
 
+/** Lizenzen der Übersicht ohne Erklärung, jede einmal, sortiert. */
+export function unexplainedLicenses(
+  summary: LicenseSummary,
+  explained: readonly string[],
+): string[] {
+  const used = new Set(summary.projects.flatMap((p) => p.licenses));
+  return [...used].filter((id) => !explained.includes(id)).sort();
+}
+
 /**
  * Erzeugt beim Build `third-party-licenses.txt` aus den Paketen, deren Module
  * in einem Chunk stecken, plus EXTRA_PACKAGES, und daraus die Übersicht
@@ -236,6 +246,16 @@ export function licensesPlugin(): Plugin {
       } catch (e) {
         this.error(
           `vite/licenseProjects.ts passt nicht zu den Paketen im Build:\n${(e as Error).message}`,
+        );
+      }
+      // Die Seite „Lizenzen kurz erklärt“ soll jede vorkommende Lizenz erklären.
+      const unexplained = unexplainedLicenses(
+        summary,
+        Object.keys(T.licenseScreen.explanations),
+      );
+      if (unexplained.length > 0) {
+        this.error(
+          `Lizenz ohne Erklärung in src/texts.ts (T.licenseScreen.explanations): ${unexplained.join(", ")}`,
         );
       }
       this.emitFile({

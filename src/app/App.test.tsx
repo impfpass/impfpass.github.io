@@ -334,7 +334,7 @@ it("die Lizenzseiten behalten die untere Navigation und führen zurück", async 
   expect(await screen.findByText("React")).toBeTruthy();
   expect(screen.getByRole("navigation")).toBeTruthy();
   await user.click(
-    screen.getByRole("link", { name: "Alle Lizenztexte ansehen" }),
+    screen.getByRole("link", { name: "Lizenztexte aller Pakete ansehen" }),
   );
   expect(
     await screen.findByRole("heading", { level: 1, name: "Lizenztexte" }),

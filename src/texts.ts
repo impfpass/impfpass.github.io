@@ -405,10 +405,32 @@ export const T = {
     infoLink: "Software und Lizenzen ansehen",
     intro: (packages: number, projects: number) =>
       `ImpfPass enthält freie Software von Dritten: ${packages} Pakete aus ${projects} Projekten.`,
-    textsLink: "Alle Lizenztexte ansehen",
+    textsLink: "Lizenztexte aller Pakete ansehen",
     textsTitle: "Lizenztexte",
     loadFailed:
       "Die Lizenzangaben konnten nicht geladen werden. Bitte versuche es später noch einmal.",
+    explainedLink: "Alle Lizenzen kurz erklärt",
+    explainedTitle: "Lizenzen kurz erklärt",
+    explainedIntro:
+      "Alle Lizenzen hier sind freie Lizenzen. Sie erlauben, die Software zu nutzen, zu ändern und weiterzugeben, auch kommerziell. Alle schließen Gewährleistung und Haftung der Urheber aus. Sie unterscheiden sich darin, was man bei der Weitergabe mitliefern muss.",
+    explainedOutro:
+      "ImpfPass liefert die Urheberhinweise und Lizenztexte aller Pakete mit. Verbindlich ist jeweils der Lizenztext selbst.",
+    usedBy: (projects: readonly string[]) =>
+      `Kommt vor bei: ${projects.join(", ")}`,
+    unexplained:
+      "Für diese Lizenz gibt es hier keine Erklärung. Ihr Text steht bei den Lizenztexten aller Pakete.",
+    // Schlüssel wie in package.json der Pakete. Der Build bricht ab, wenn eine
+    // Lizenz ohne Erklärung vorkommt (vite/licenses.ts).
+    explanations: {
+      MIT: "Die MIT-Lizenz erlaubt jede Nutzung. Bedingung: Urheberhinweis und Lizenztext müssen bei jeder Weitergabe dabei sein.",
+      ISC: "Die ISC-Lizenz entspricht inhaltlich der MIT-Lizenz, sie ist nur kürzer formuliert. Auch hier müssen Urheberhinweis und Lizenztext mitgeliefert werden.",
+      "Apache-2.0":
+        "Die Apache-Lizenz 2.0 erlaubt jede Nutzung. Lizenztext und Urheberhinweise müssen mitgeliefert werden, ebenso eine NOTICE-Datei, falls das Paket eine hat. Geänderte Dateien müssen als geändert gekennzeichnet sein. Außerdem erlauben die Urheber die Nutzung ihrer Patente, soweit sie die Software betreffen. Wer wegen solcher Patente klagt, verliert diese Erlaubnis.",
+      "0BSD":
+        "Die Zero-Clause-BSD-Lizenz erlaubt jede Nutzung ohne Bedingung. Nicht einmal ein Urheberhinweis ist nötig.",
+      Unlicense:
+        "Mit der Unlicense gibt der Urheber die Software für die Allgemeinheit frei. Jede Nutzung ist erlaubt, ohne Bedingung.",
+    },
   },
   backup: {
     save: "Sicherung speichern",
