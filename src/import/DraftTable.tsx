@@ -187,14 +187,14 @@ export function DraftTable({
           <div className="overflow-x-auto">
             <table
               aria-label={t.label}
-              className="w-full min-w-[88rem] table-fixed border-collapse"
+              className="w-full min-w-[76rem] table-fixed border-collapse"
             >
               <thead>
                 <tr className="border-b text-left">
                   <th scope="col" className="w-12 p-2">
                     {c.number}
                   </th>
-                  <th scope="col" className="w-30 p-2">
+                  <th scope="col" className="w-28 p-2">
                     {c.date}
                   </th>
                   <th scope="col" className="w-44 p-2">
@@ -206,7 +206,7 @@ export function DraftTable({
                   <th scope="col" className="w-32 p-2">
                     {c.batch}
                   </th>
-                  <th scope="col" className="w-72 p-2">
+                  <th scope="col" className="w-60 p-2">
                     {c.doctor}
                   </th>
                   <th scope="col" className="w-28 p-2">
@@ -215,7 +215,7 @@ export function DraftTable({
                   <th scope="col" className="p-2">
                     {c.issues}
                   </th>
-                  <th scope="col" className="w-24 p-2">
+                  <th scope="col" className="w-20 p-2">
                     {c.remove}
                   </th>
                 </tr>
