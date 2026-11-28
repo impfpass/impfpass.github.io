@@ -17,8 +17,8 @@ const appSources = import.meta.glob<string>(
   { query: "?raw", import: "default", eager: true },
 );
 
-// Erfasst `from "x"` und `import "x"`.
-const SPECIFIER = /(?:from|import)\s+["']([^"']+)["']/g;
+// Erfasst `from "x"`, `import "x"` und `import("x")`.
+const SPECIFIER = /(?:\bfrom\s+|\bimport\s*\(?\s*)["']([^"']+)["']/g;
 
 /** Alle Importziele einer Datei, als Pfad relativ zu src/core/ (`@/` = src/). */
 function targets(file: string, code: string): string[] {
@@ -40,6 +40,24 @@ function offenders(
     .filter(([file, code]) => targets(file, code).some(forbidden))
     .map(([file]) => file);
 }
+
+it("die Suche findet statische und dynamische Importe, aber keine Aufrufe von from", () => {
+  const code = `
+    import { a } from "./a";
+    import "./side";
+    export * from '../b';
+    const m = await import("@/c");
+    const n = import( './d' );
+    const text = Array.from("nicht-ein-import");
+  `;
+  expect(targets("./x/y.ts", code)).toEqual([
+    "x/a",
+    "x/side",
+    "b",
+    "../c",
+    "x/d",
+  ]);
+});
 
 it("der Kern importiert nichts aus src/app, src/import, src/components, react oder react-dom", () => {
   expect(Object.keys(coreSources).length).toBeGreaterThan(5);

@@ -18,7 +18,9 @@ export function removeMainManifestLink(html: string): string {
 export function importPagePlugin(): Plugin {
   return {
     name: "impfpass-import-page",
-    // nach vite-plugin-pwa, das selbst mit enforce "post" läuft
+    // Beides ist nötig, geprüft mit `npm run build`: vite-plugin-pwa fügt den
+    // Link mit order "post" ein. Ohne enforce "post" oder ohne order "post"
+    // läuft dieser Hook davor, und der Link bleibt in /import/index.html.
     enforce: "post",
     transformIndexHtml: {
       order: "post",
