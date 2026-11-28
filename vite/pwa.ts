@@ -30,7 +30,7 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     ],
   },
   workbox: {
-    globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest}"],
+    globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,txt}"],
     cleanupOutdatedCaches: true,
     // Die PC-App (Plan 3) liegt unter /import/ und hat eine eigene Seite.
     navigateFallbackDenylist: [/^\/import\//],

@@ -7,6 +7,7 @@ import { appVersionDefine } from "./vite/appVersion.ts";
 import { bootFallbackPlugin } from "./vite/bootFallback.ts";
 import { cspPlugin } from "./vite/csp.ts";
 import { importPagePlugin } from "./vite/importPage.ts";
+import { licensesPlugin } from "./vite/licenses.ts";
 import { pwaOptions } from "./vite/pwa.ts";
 
 export default defineConfig({
@@ -17,6 +18,7 @@ export default defineConfig({
     cspPlugin(),
     bootFallbackPlugin(),
     importPagePlugin(),
+    licensesPlugin(),
   ],
   define: appVersionDefine(),
   build: {

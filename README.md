@@ -33,3 +33,5 @@ Jeder Push auf `main` startet den Workflow `.github/workflows/pages.yml`. Er pr√
 ## Lizenz
 
 MIT, siehe [LICENSE](LICENSE).
+
+Die Lizenztexte der enthaltenen Software von Dritten werden beim Build in `third-party-licenses.txt` erzeugt und mit der App ausgeliefert.

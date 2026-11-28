@@ -392,6 +392,11 @@ export const T = {
     derived:
       "Die Regeln sind selbst aus den Empfehlungen der STIKO abgeleitet. Bei Fragen zu deiner Impfung entscheidet deine Ärztin oder dein Arzt.",
   },
+  licenses: {
+    title: "Verwendete Software",
+    text: "ImpfPass nutzt freie Bibliotheken. Deren Lizenztexte stehen in einer eigenen Datei.",
+    link: "Lizenztexte ansehen",
+  },
   backup: {
     save: "Sicherung speichern",
     saveFailed:

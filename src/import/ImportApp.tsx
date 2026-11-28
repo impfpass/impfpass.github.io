@@ -139,6 +139,15 @@ export function ImportApp({
       <footer className="space-y-1">
         <p>{T.pc.footer.medical}</p>
         <p>{T.pc.footer.local}</p>
+        <p>
+          {T.licenses.text}{" "}
+          <a
+            href="/third-party-licenses.txt"
+            className="inline-flex min-h-11 items-center underline"
+          >
+            {T.licenses.link}
+          </a>
+        </p>
       </footer>
     </div>
   );

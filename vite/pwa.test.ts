@@ -41,3 +41,8 @@ it("das Manifest der PC-App hat eine eigene Kennung und den Bereich /import/", (
     display: "standalone",
   });
 });
+
+it("die Lizenztexte (txt) stehen im Vorab-Cache und sind offline da", () => {
+  const patterns = pwaOptions.workbox?.globPatterns ?? [];
+  expect(patterns.some((p) => /\{[^}]*\btxt\b[^}]*\}/.test(p))).toBe(true);
+});

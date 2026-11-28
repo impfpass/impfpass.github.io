@@ -33,6 +33,13 @@ it("zeigt Kopf, Schrittleiste und Fuß", async () => {
   ).toBeTruthy();
 });
 
+it("der Fuß verweist auf die Lizenztexte der verwendeten Software", async () => {
+  render(<ImportApp />);
+  const link = await screen.findByRole("link", { name: "Lizenztexte ansehen" });
+  expect(link.getAttribute("href")).toBe("/third-party-licenses.txt");
+  expect(link.closest("footer")).toBeTruthy();
+});
+
 it("beginnt ohne Zeilen bei Schritt 1", async () => {
   render(<ImportApp />);
   await screen.findByText("1 Anleitung");

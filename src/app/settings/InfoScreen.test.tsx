@@ -3,6 +3,22 @@ import { RULEBOOK } from "@/core/rules/rulebook";
 import { renderWithData, seed } from "@/test/helpers";
 import { InfoScreen } from "./InfoScreen";
 
+it("verweist auf die Lizenztexte der verwendeten Software", async () => {
+  await seed({});
+  await renderWithData(<InfoScreen />);
+  expect(
+    screen.getByRole("heading", { level: 2, name: "Verwendete Software" }),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/Deren Lizenztexte stehen in einer eigenen Datei/),
+  ).toBeTruthy();
+  expect(
+    screen
+      .getByRole("link", { name: "Lizenztexte ansehen" })
+      .getAttribute("href"),
+  ).toBe("/third-party-licenses.txt");
+});
+
 it("nennt STIKO-Stand, Regelwerk-Version und Quellen", async () => {
   await seed({});
   await renderWithData(<InfoScreen />);
