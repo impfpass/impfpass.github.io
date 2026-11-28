@@ -560,7 +560,8 @@ So füllst du die Felder:
       textLabel: "Übertragungstext",
       textHelp:
         "Füge den Text auf dem Handy in ImpfPass unter „Impfungen übernehmen“ mit „Text einfügen“ ein. Schickst du ihn per E-Mail, Messenger oder über eine Cloud, gehen die Daten dabei über deren Anbieter.",
-      back: "Zurück zur Tabelle",
+      saveFailed:
+        "Die Datei konnte nicht gespeichert werden. Bitte versuche es noch einmal.",
       deleteDraft: "Entwurf löschen",
       deleteTitle:
         "Entwurf löschen? Die Tabelle mit allen Einträgen wird auf diesem PC gelöscht.",

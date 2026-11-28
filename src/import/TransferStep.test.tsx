@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { todayISO } from "@/core/dates";
 import { readTransferText, transferFileName } from "@/core/formats/transfer";
@@ -293,4 +293,92 @@ it("Entwurf löschen fragt nach und ruft erst nach Bestätigung onCleared", asyn
   );
   await userEvent.click(await screen.findByRole("button", { name: "Löschen" }));
   expect(onCleared).toHaveBeenCalledTimes(1);
+});
+
+describe("Statusmeldung beim Kopieren", () => {
+  it("ist schon vor dem Kopieren da und bekommt dann den Text", async () => {
+    setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+    render(
+      <TransferStep draft={draftWith(1)} onBack={noop} onCleared={noop} />,
+    );
+    const region = screen.getByRole("status");
+    expect(region.textContent).toBe("");
+    await userEvent.click(
+      screen.getByRole("button", { name: "Text kopieren" }),
+    );
+    expect(screen.getByRole("status")).toBe(region);
+    await waitFor(() => expect(region.textContent).toBe("Kopiert."));
+  });
+});
+
+describe("Datei speichern", () => {
+  it("zeigt bei einem Fehler eine Meldung und keine unbehandelte Ablehnung", async () => {
+    const unhandled = vi.fn();
+    process.on("unhandledRejection", unhandled);
+    vi.mocked(saveFile).mockRejectedValueOnce(new Error("kaputt"));
+    render(
+      <TransferStep draft={draftWith(1)} onBack={noop} onCleared={noop} />,
+    );
+    expect(screen.queryByRole("alert")).toBeNull();
+    await userEvent.click(
+      screen.getByRole("button", { name: "Datei speichern" }),
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      T.pc.send.saveFailed,
+    );
+    await new Promise((r) => setTimeout(r, 0));
+    process.off("unhandledRejection", unhandled);
+    expect(unhandled).not.toHaveBeenCalled();
+  });
+
+  it("nimmt die Meldung beim nächsten Versuch zurück", async () => {
+    vi.mocked(saveFile).mockRejectedValueOnce(new Error("kaputt"));
+    render(
+      <TransferStep draft={draftWith(1)} onBack={noop} onCleared={noop} />,
+    );
+    const button = screen.getByRole("button", { name: "Datei speichern" });
+    await userEvent.click(button);
+    await screen.findByRole("alert");
+    await userEvent.click(button);
+    await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+  });
+});
+
+describe("Pfeiltasten und Dialoge", () => {
+  it("blättern nicht, solange der Dialog „Entwurf löschen“ offen ist", async () => {
+    render(
+      <TransferStep draft={draftWith(400)} onBack={noop} onCleared={noop} />,
+    );
+    const label = screen.getByText(/^Code 1 von \d+$/).textContent;
+    await userEvent.click(
+      screen.getByRole("button", { name: "Entwurf löschen" }),
+    );
+    await screen.findByRole("alertdialog");
+    await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+    await userEvent.click(screen.getByRole("button", { name: "Abbrechen" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    expect(screen.getByText(/^Code \d+ von \d+$/).textContent).toBe(label);
+  });
+
+  it("blättern auch nicht, wenn der Fokus in einem Dialog liegt", async () => {
+    render(
+      <TransferStep draft={draftWith(400)} onBack={noop} onCleared={noop} />,
+    );
+    const dialog = document.createElement("div");
+    dialog.setAttribute("role", "dialog");
+    const inner = document.createElement("button");
+    dialog.append(inner);
+    document.body.append(dialog);
+    const label = screen.getByText(/^Code 1 von \d+$/).textContent;
+    inner.focus();
+    await userEvent.keyboard("{ArrowRight}");
+    dialog.remove();
+    expect(screen.getByText(/^Code \d+ von \d+$/).textContent).toBe(label);
+  });
+});
+
+it("zeigt die Textzeile in Grundschrift", () => {
+  render(<TransferStep draft={draftWith(1)} onBack={noop} onCleared={noop} />);
+  const area = screen.getByLabelText(T.pc.send.textLabel);
+  expect(area.className).not.toMatch(/\btext-(sm|xs)\b/);
 });

@@ -70,6 +70,7 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
 
   const [index, setIndex] = useState(0);
   const [copied, setCopied] = useState<boolean | null>(null);
+  const [saveFailed, setSaveFailed] = useState(false);
   const textRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -77,10 +78,12 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
     function onKeyDown(e: KeyboardEvent) {
       if (
         e.target instanceof HTMLElement &&
-        e.target.closest("textarea, input")
+        e.target.closest("textarea, input, [role=dialog], [role=alertdialog]")
       ) {
         return;
       }
+      // Ein offener Dialog gehört der Tastatur, auch wenn der Fokus woanders liegt.
+      if (document.querySelector("[role=dialog], [role=alertdialog]")) return;
       if (e.key === "ArrowLeft") setIndex((i) => Math.max(0, i - 1));
       if (e.key === "ArrowRight") setIndex((i) => Math.min(total - 1, i + 1));
     }
@@ -92,7 +95,12 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
     const file = new File([`${textLine}\n`], transferFileName(new Date()), {
       type: "text/plain",
     });
-    await saveFile(file, { preferShare: false });
+    setSaveFailed(false);
+    try {
+      await saveFile(file, { preferShare: false });
+    } catch {
+      setSaveFailed(true);
+    }
   }
 
   async function copy() {
@@ -106,7 +114,7 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
           {transfer.problem}
         </p>
         <Button type="button" variant="outline" onClick={onBack}>
-          {t.back}
+          {T.pc.table.back}
         </Button>
       </div>
     );
@@ -163,6 +171,11 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
         <Button type="button" variant="outline" onClick={save}>
           {t.saveFile}
         </Button>
+        {saveFailed && (
+          <p role="alert" className="text-destructive">
+            {t.saveFailed}
+          </p>
+        )}
         <p>{t.fileHelp}</p>
       </section>
 
@@ -173,25 +186,28 @@ export function TransferStep({ draft, onBack, onCleared }: TransferStepProps) {
         <Button type="button" variant="outline" onClick={copy}>
           {t.copyText}
         </Button>
-        {copied !== null && (
-          <p role="status">
-            {copied ? T.pc.guide.copied : T.pc.guide.copyFailed}
-          </p>
-        )}
+        {/* Der Bereich steht immer im DOM, damit die Meldung angesagt wird. */}
+        <p role="status" className={copied === null ? "sr-only" : undefined}>
+          {copied === null
+            ? ""
+            : copied
+              ? T.pc.guide.copied
+              : T.pc.guide.copyFailed}
+        </p>
         <textarea
           ref={textRef}
           readOnly
           rows={3}
           aria-label={t.textLabel}
           value={textLine}
-          className="w-full rounded-md border p-2 font-mono text-sm"
+          className="w-full rounded-md border p-2 font-mono break-all"
         />
         <p>{t.textHelp}</p>
       </section>
 
       <div className="flex flex-wrap gap-3">
         <Button type="button" variant="outline" onClick={onBack}>
-          {t.back}
+          {T.pc.table.back}
         </Button>
         <DeleteDraftButton onConfirm={onCleared} />
       </div>
