@@ -717,5 +717,32 @@ So füllst du die Felder:
       serology: (name: string) => `${name}: Bluttest, ob ich geschützt bin?`,
       answer: "Antworten in ImpfPass eintragen",
     },
+    screen: {
+      title: "Ins GTD übernehmen",
+      intro: (host: string) =>
+        `Die Erinnerungen enthalten, welche Impfung wann fällig ist. Mit dem Link gehen sie an deine GTD-App unter ${host}, beim Kopieren in die Zwischenablage.`,
+      changes: "Neu oder geändert",
+      when: (date: string | null) =>
+        date ? `Erinnerung am ${date}` : "Erinnerung heute",
+      cancels: (n: number) =>
+        n === 1
+          ? "1 Erinnerung entfällt und wird im GTD zurückgezogen."
+          : `${n} Erinnerungen entfallen und werden im GTD zurückgezogen.`,
+      openLink: "Link öffnen",
+      copy: "Text kopieren",
+      opened:
+        "Der Link ist geöffnet. Bestätige die Übernahme in deiner GTD-App.",
+      copied: "Kopiert. Füge den Text jetzt in deiner GTD-App ein.",
+      copyFailed:
+        "Kopieren hat nicht geklappt. Markiere den Text und kopiere ihn selbst.",
+      textLabel: "Text für die GTD-App",
+      copiedManually: "Ich habe den Text kopiert",
+      iphone:
+        "Auf dem iPhone kopierst du den Text und fügst ihn in der GTD-App vom Home-Bildschirm ein. Ein Link öffnet sich dort in Safari.",
+      upToDate: "Dein GTD ist auf dem neuesten Stand.",
+      noAddress:
+        "Trag in den Einstellungen die Adresse deiner GTD-App ein, dann kannst du Erinnerungen übergeben.",
+      toSettings: "Zu den Einstellungen",
+    },
   },
 } as const;

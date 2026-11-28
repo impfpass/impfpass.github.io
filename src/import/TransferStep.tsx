@@ -13,7 +13,7 @@ import { draftToEntries, type Draft } from "@/core/import/draft";
 import type { TransferEntry } from "@/core/model";
 import { saveFile } from "@/lib/saveFile";
 import { T } from "@/texts";
-import { copyText } from "./copyText";
+import { copyText } from "@/lib/copyText";
 import { DeleteDraftButton } from "./DeleteDraftButton";
 
 const t = T.pc.send;

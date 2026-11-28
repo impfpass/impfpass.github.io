@@ -5,6 +5,7 @@ import type { Repository } from "@/core/storage/repository";
 import { AppDataProvider, useAppData } from "./data/AppData";
 import { EntryDetail } from "./entry/EntryDetail";
 import { EntryForm } from "./entry/EntryForm";
+import { GtdScreen } from "./gtd/GtdScreen";
 import { ListScreen } from "./list/ListScreen";
 import { OverviewScreen } from "./overview/OverviewScreen";
 import { RecommendationDetail } from "./recommendation/RecommendationDetail";
@@ -105,6 +106,9 @@ function Screens() {
         </Route>
         <Route path="/uebernehmen">
           <TransferScreen />
+        </Route>
+        <Route path="/gtd">
+          <GtdScreen />
         </Route>
         <Route>
           <OverviewScreen />

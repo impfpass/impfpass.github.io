@@ -20,7 +20,7 @@ import {
   type DraftRow,
 } from "@/core/import/draft";
 import { T } from "@/texts";
-import { copyText } from "./copyText";
+import { copyText } from "@/lib/copyText";
 import { DeleteDraftButton } from "./DeleteDraftButton";
 
 const TEXTAREA_CLASS =
