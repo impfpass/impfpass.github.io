@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/core/dates";
 import { gtdLink, gtdText } from "@/core/formats/gtd";
-import { buildPayload } from "@/core/gtd/handover";
+import { buildPayload, type GtdChanges } from "@/core/gtd/handover";
 import { copyText } from "@/lib/copyText";
 import { T } from "@/texts";
 import { useAppData } from "../data/AppData";
@@ -16,7 +16,7 @@ import { useAppData } from "../data/AppData";
 export function GtdScreen() {
   const { settings, gtd, today, actions } = useAppData();
   const G = T.gtd.screen;
-  const { changes } = gtd;
+  const { changes, reminders } = gtd;
   const [message, setMessage] = useState<string | null>(null);
   const [saveFailed, setSaveFailed] = useState(false);
   const [manual, setManual] = useState(false);
@@ -24,25 +24,34 @@ export function GtdScreen() {
   // Zeitpunkt der Übergabe: wann die Seite geöffnet wurde.
   const [now] = useState(() => new Date());
 
+  const pending = changes.upserts.length + changes.cancels.length > 0;
+  // Ist alles übergeben, lässt sich alles noch einmal schicken, etwa wenn der
+  // Link bei der Anmeldung in der GTD-App seine Daten verloren hat. Das
+  // schadet nicht, die GTD-App erkennt doppelte refs (Spec 9.2).
+  const resend = useMemo<GtdChanges>(
+    () => ({ upserts: reminders, cancels: [] }),
+    [reminders],
+  );
+  const toSend = pending ? changes : resend;
   // Link und Text tragen genau die Änderungen, die danach als übergeben gelten.
   const payload = useMemo(
-    () => buildPayload(changes, today, now),
-    [changes, today, now],
+    () => buildPayload(toSend, today, now),
+    [toSend, today, now],
   );
   const address = settings.gtdUrl;
   const text = gtdText(payload);
-  const count = changes.upserts.length + changes.cancels.length;
 
   useEffect(() => {
     if (manual) textRef.current?.select();
   }, [manual]);
 
-  async function mark(done: string) {
+  /** Nach Link oder Kopieren; nur offene Änderungen gelten danach als übergeben. */
+  async function done(confirmation: string) {
     setSaveFailed(false);
     try {
-      await actions.markHandedOver(changes);
+      if (pending) await actions.markHandedOver(changes);
       setManual(false);
-      setMessage(done);
+      setMessage(confirmation);
     } catch {
       setSaveFailed(true);
     }
@@ -50,7 +59,7 @@ export function GtdScreen() {
 
   async function copy() {
     setMessage(null);
-    if (await copyText(text, textRef.current)) await mark(G.copied);
+    if (await copyText(text, textRef.current)) await done(G.copied);
     else setManual(true);
   }
 
@@ -67,13 +76,19 @@ export function GtdScreen() {
         </Link>
       </>
     );
-  } else if (count === 0) {
+  } else if (!pending && reminders.length === 0) {
     body = <p>{G.upToDate}</p>;
   } else {
     body = (
       <>
+        {!pending && (
+          <>
+            <p>{G.upToDate}</p>
+            <p>{G.resend}</p>
+          </>
+        )}
         <p>{G.intro(new URL(address).host)}</p>
-        {changes.upserts.length > 0 && (
+        {pending && changes.upserts.length > 0 && (
           <section className="flex flex-col gap-2">
             <h2 className="text-xl font-semibold">{G.changes}</h2>
             <ul className="flex flex-col divide-y">
@@ -92,7 +107,7 @@ export function GtdScreen() {
             </ul>
           </section>
         )}
-        {changes.cancels.length > 0 && (
+        {pending && changes.cancels.length > 0 && (
           <p>{G.cancels(changes.cancels.length)}</p>
         )}
         <div className="flex flex-wrap gap-3">
@@ -101,7 +116,7 @@ export function GtdScreen() {
               href={gtdLink(address, payload)}
               target="_blank"
               rel="noreferrer"
-              onClick={() => void mark(G.opened)}
+              onClick={() => void done(G.opened)}
             >
               {G.openLink}
             </a>
@@ -127,7 +142,7 @@ export function GtdScreen() {
             <Button
               type="button"
               className="self-start"
-              onClick={() => void mark(G.copied)}
+              onClick={() => void done(G.copied)}
             >
               {G.copiedManually}
             </Button>

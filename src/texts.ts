@@ -745,6 +745,8 @@ So füllst du die Felder:
       iphone:
         "Auf dem iPhone kopierst du den Text und fügst ihn in der GTD-App vom Home-Bildschirm ein. Ein Link öffnet sich dort in Safari.",
       upToDate: "Dein GTD ist auf dem neuesten Stand.",
+      resend:
+        "Hat die Übernahme in der GTD-App nicht geklappt? Dann übergib alle Erinnerungen noch einmal. Doppelte Einträge entstehen dabei nicht.",
       noAddress:
         "Trag in den Einstellungen die Adresse deiner GTD-App ein, dann kannst du Erinnerungen übergeben.",
       toSettings: "Zu den Einstellungen",

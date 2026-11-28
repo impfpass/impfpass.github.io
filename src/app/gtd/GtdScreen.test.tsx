@@ -182,3 +182,42 @@ it("ohne Adresse verweist die Seite auf die Einstellungen", async () => {
   ).toBe("#/einstellungen");
   expect(screen.queryByRole("button", { name: "Text kopieren" })).toBeNull();
 });
+
+it("nach der Übergabe lässt sich alles noch einmal übergeben, ohne den Stand zu ändern", async () => {
+  await seed({ settings: withAddress });
+  const user = userEvent.setup();
+  const writeText = vi.fn().mockResolvedValue(undefined);
+  setClipboard({ writeText });
+  const { data } = await renderWithData(<GtdScreen />, "/gtd", {
+    today: TODAY,
+  });
+  await user.click(screen.getByRole("link", { name: "Link öffnen" }));
+  await waitFor(() => expect(data().gtd.changes).toEqual(empty));
+  const repo = await openRepository();
+  const stored = await repo.getGtdState("p1");
+  const all = data().gtd.reminders.map((r) => r.ref);
+
+  expect(
+    screen.getByText(
+      "Hat die Übernahme in der GTD-App nicht geklappt? Dann übergib alle Erinnerungen noch einmal. Doppelte Einträge entstehen dabei nicht.",
+    ),
+  ).toBeTruthy();
+  const href = screen
+    .getByRole("link", { name: "Link öffnen" })
+    .getAttribute("href")!;
+  expect(
+    decodeGtdData(href.split("#impfpass=")[1]).items.map((i) => i.ref),
+  ).toEqual(all);
+
+  await user.click(screen.getByRole("button", { name: "Text kopieren" }));
+  const text = writeText.mock.calls[0][0] as string;
+  expect(
+    decodeGtdData(text.slice(GTD_TEXT_PREFIX.length)).items.map((i) => i.ref),
+  ).toEqual(all);
+  expect(
+    await screen.findByText(
+      "Kopiert. Füge den Text jetzt in deiner GTD-App ein.",
+    ),
+  ).toBeTruthy();
+  expect(await repo.getGtdState("p1")).toEqual(stored);
+});
