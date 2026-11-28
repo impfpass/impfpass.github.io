@@ -239,3 +239,15 @@ it("„Trotzdem übertragen“ führt über die Rückfrage zu Schritt 3", async 
   ).toBeTruthy();
   expect(screen.queryByRole("alertdialog")).toBeNull();
 });
+
+it("gibt nur der Tabelle die breite Seite", async () => {
+  const store = await openDraftStore();
+  await store.save({ ...emptyDraft(new Date()), rows: [newRow("r1")] });
+  render(<ImportApp />);
+  await screen.findByRole("heading", { level: 2, name: "Tabelle prüfen" });
+  const page = screen.getByRole("main").parentElement!;
+  expect(page.className).toContain("max-w-[112rem]");
+  await userEvent.click(screen.getByRole("button", { name: "1 Anleitung" }));
+  expect(page.className).toContain("max-w-7xl");
+  expect(page.className).not.toContain("112rem");
+});

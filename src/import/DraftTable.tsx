@@ -187,7 +187,7 @@ export function DraftTable({
           <div className="overflow-x-auto">
             <table
               aria-label={t.label}
-              className="w-full min-w-[80rem] table-fixed border-collapse"
+              className="w-full min-w-[88rem] table-fixed border-collapse"
             >
               <thead>
                 <tr className="border-b text-left">
@@ -206,7 +206,7 @@ export function DraftTable({
                   <th scope="col" className="w-32 p-2">
                     {c.batch}
                   </th>
-                  <th scope="col" className="w-80 p-2">
+                  <th scope="col" className="w-72 p-2">
                     {c.doctor}
                   </th>
                   <th scope="col" className="w-28 p-2">
@@ -423,7 +423,6 @@ function RowView({
         <Input
           {...VERBATIM_INPUT}
           aria-label={field(c.doctor)}
-          title={row.doctor || undefined}
           aria-invalid={invalid("doctor")}
           value={row.doctor}
           onChange={(e) => {

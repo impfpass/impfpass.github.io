@@ -551,19 +551,3 @@ describe("Weiter zum Übertragen", () => {
     expect(onNext).toHaveBeenCalledTimes(1);
   });
 });
-
-describe("lange Arztangaben", () => {
-  const stamp = "Praxis Dr. med. Musterfrau-Beispiel, Hamburg";
-
-  it("zeigen den ganzen Text als Tooltip am Feld", () => {
-    setup([row("05.12.2016", "Boostrix Polio", { doctor: stamp })]);
-    const doctor = input("Arzt oder Praxis, Zeile 1");
-    expect(doctor.value).toBe(stamp);
-    expect(doctor.title).toBe(stamp);
-  });
-
-  it("haben ohne Angabe keinen Tooltip", () => {
-    setup([row()]);
-    expect(input("Arzt oder Praxis, Zeile 1").getAttribute("title")).toBeNull();
-  });
-});

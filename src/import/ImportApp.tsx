@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DraftStore } from "@/core/storage/draftStore";
 import { openDraftStore } from "@/core/storage/draftStore";
+import { cn } from "@/lib/utils";
 import { T } from "@/texts";
 import { DraftTable } from "./DraftTable";
 import { GuideStep } from "./GuideStep";
@@ -46,7 +47,13 @@ export function ImportApp({
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-7xl flex-col gap-6 p-6">
+    <div
+      className={cn(
+        "mx-auto flex min-h-screen flex-col gap-6 p-6",
+        // Die Tabelle braucht Platz, die anderen Schritte bleiben schmal.
+        step === 2 ? "max-w-[112rem]" : "max-w-7xl",
+      )}
+    >
       <header>
         <h1 className="text-2xl font-semibold">{T.pc.title}</h1>
       </header>

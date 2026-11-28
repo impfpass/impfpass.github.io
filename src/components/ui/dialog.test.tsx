@@ -24,3 +24,9 @@ it("blendet den Schließen-Knopf mit showCloseButton={false} aus", () => {
   open(false);
   expect(screen.queryByRole("button", { name: "Schließen" })).toBeNull();
 });
+
+it("lässt dem Kopfbereich Platz neben dem Schließen-Knopf", () => {
+  open();
+  const content = screen.getByRole("dialog");
+  expect(content.className).toContain("pr-12");
+});
