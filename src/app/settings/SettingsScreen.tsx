@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate, todayISO } from "@/core/dates";
-import { normalizeGtdAddress } from "@/core/formats/gtd";
+import { gtdAddress, normalizeGtdAddress } from "@/core/formats/gtd";
 import type { Person, PersonAnswers } from "@/core/model";
 import { AnswersFields } from "../answers/AnswersFields";
 import { BloodFields } from "./BloodFields";
@@ -251,7 +251,7 @@ function GtdSection() {
         {T.settings.gtdSave}
       </Button>
       {message && <p role="status">{message}</p>}
-      {settings.gtdUrl && (
+      {gtdAddress(settings) && (
         <Link href="/gtd" className={LINK_CLASS}>
           {T.settings.gtdOpen}
           <ChevronRight aria-hidden="true" className="size-5" />

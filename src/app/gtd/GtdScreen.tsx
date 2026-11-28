@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/core/dates";
-import { gtdLink, gtdText } from "@/core/formats/gtd";
+import { gtdAddress, gtdLink, gtdText } from "@/core/formats/gtd";
 import { buildPayload, type GtdChanges } from "@/core/gtd/handover";
 import { copyText } from "@/lib/copyText";
 import { T } from "@/texts";
@@ -38,11 +38,21 @@ export function GtdScreen() {
     () => buildPayload(toSend, today, now),
     [toSend, today, now],
   );
-  const address = settings.gtdUrl;
-  const text = gtdText(payload);
+  const address = gtdAddress(settings);
+  // Packen nur, wenn sich die Daten ändern, nicht bei jedem Zeichnen.
+  const text = useMemo(() => gtdText(payload), [payload]);
+  const link = useMemo(
+    () => (address ? gtdLink(address, payload) : ""),
+    [address, payload],
+  );
 
+  // Fokus und Markierung über setSelectionRange: Safari auf dem iPhone
+  // ignoriert select() oft, wenn es nicht direkt aus einem Tippen kommt.
   useEffect(() => {
-    if (manual) textRef.current?.select();
+    const field = textRef.current;
+    if (!manual || !field) return;
+    field.focus();
+    field.setSelectionRange(0, field.value.length);
   }, [manual]);
 
   /** Nach Link oder Kopieren; nur offene Änderungen gelten danach als übergeben. */
@@ -113,7 +123,7 @@ export function GtdScreen() {
         <div className="flex flex-wrap gap-3">
           <Button asChild>
             <a
-              href={gtdLink(address, payload)}
+              href={link}
               target="_blank"
               rel="noreferrer"
               onClick={() => void done(G.opened)}

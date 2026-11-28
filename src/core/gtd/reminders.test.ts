@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { evaluate } from "@/core/rules/evaluate";
+import { eb45 } from "@/core/rules/recommendations/eb45";
 import { RULEBOOK } from "@/core/rules/rulebook";
 import type { Recommendation } from "@/core/rules/types";
 import { rec } from "@/test/gtd";
@@ -21,6 +22,7 @@ function run(
     recommendations,
     leadMonths: options.leadMonths ?? 6,
     seasonDay: options.seasonDay ?? "09-01",
+    rulebook: RULEBOOK,
   });
 }
 
@@ -232,7 +234,10 @@ describe("remindersFor", () => {
     ).toEqual([]);
   });
 
-  it("offene Arztkarte: die Erinnerung nach Alter geht trotzdem mit", () => {
+  it("offene Arztkarte: die Erinnerung nach Alter geht trotzdem mit, unverändert", () => {
+    // Die Karte trägt die Fundstelle des Beschlusses (EB 45/2025); die
+    // Erinnerung nach Alter nennt die Fundstelle der Regel nach Alter, damit
+    // das Umschalten der Grunderkrankung sie nicht ändert.
     const discuss = run([
       rec({
         id: "zoster",
@@ -240,6 +245,7 @@ describe("remindersFor", () => {
         dueDate: "2027-03-01",
         dose: { number: 1, of: 2 },
         reason: { kind: "discuss", topic: "chronic", normalAge: 60 },
+        source: eb45(4, "Beschluss – Empfehlung"),
       }),
     ]);
     const [byAge] = run([
@@ -252,14 +258,12 @@ describe("remindersFor", () => {
       }),
     ]);
     expect(discuss).toHaveLength(2);
-    expect(discuss).toContainEqual(
-      expect.objectContaining({
-        ref: byAge.ref,
-        day: "2026-09-01",
-        description:
-          "Fällig ab 01.03.2027 (60. Geburtstag) laut STIKO, Stand Epid Bull 4/2026.",
-      }),
-    );
+    expect(discuss).toContainEqual(byAge);
+    expect(byAge).toMatchObject({
+      day: "2026-09-01",
+      description:
+        "Fällig ab 01.03.2027 (60. Geburtstag) laut STIKO, Stand Epid Bull 4/2026.",
+    });
   });
 
   describe("Sammelaktion für offene Arztfragen", () => {

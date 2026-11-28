@@ -89,3 +89,20 @@ it("die Handy-App (src/app) importiert nichts aus src/import", () => {
     [],
   );
 });
+
+it("nur die Handy-App übergibt ans GTD: src/import nutzt weder src/core/gtd noch das GTD-Format", () => {
+  const gtd = (t: string) =>
+    startsWithDir(t, "../core/gtd") || t === "../core/formats/gtd";
+  // Gegenprobe: ein solcher Import würde gefunden.
+  expect(
+    offenders(
+      {
+        "../import/x.tsx":
+          'import { remindersFor } from "@/core/gtd/reminders";',
+        "../import/y.tsx": 'import { gtdText } from "../core/formats/gtd";',
+      },
+      gtd,
+    ),
+  ).toEqual(["../import/x.tsx", "../import/y.tsx"]);
+  expect(offenders(importSources, gtd)).toEqual([]);
+});

@@ -271,9 +271,10 @@ export function AppDataProvider(props: {
             recommendations,
             leadMonths,
             seasonDay,
+            rulebook,
           })
         : [],
-    [person, recommendations, leadMonths, seasonDay],
+    [person, recommendations, leadMonths, seasonDay, rulebook],
   );
   const gtd = useMemo(
     () => ({

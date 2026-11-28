@@ -1,5 +1,5 @@
 import { deflateSync } from "fflate";
-import type { ISODate } from "../model";
+import type { ISODate, Settings } from "../model";
 import { toBase64Url } from "./base64url";
 
 /**
@@ -29,7 +29,10 @@ export const GTD_TEXT_PREFIX = "IMPFPASS-GTD:1:";
 
 const LOCAL_HOSTS = ["localhost", "127.0.0.1"];
 
-/** JSON als UTF-8, mit deflate gepackt, in Base64url ohne `=`. */
+/**
+ * JSON als UTF-8, gepackt mit raw DEFLATE (RFC 1951, ohne zlib-Kopf), in
+ * Base64url ohne `=`. Im Browser liest das `DecompressionStream("deflate-raw")`.
+ */
 export function encodeGtdData(p: GtdPayload): string {
   const json = new TextEncoder().encode(JSON.stringify(p));
   return toBase64Url(deflateSync(json, { level: 9 }));
@@ -68,4 +71,13 @@ export function normalizeGtdAddress(raw: string): string | null | "invalid" {
   if (url.protocol !== "https:" && !local) return "invalid";
   url.hash = "";
   return url.href;
+}
+
+/**
+ * Die geprüfte Adresse aus den Einstellungen, sonst null. Eine Sicherung kann
+ * von Hand bearbeitet sein; eine ungültige Adresse schaltet die Übergabe aus.
+ */
+export function gtdAddress(settings: Settings): string | null {
+  const address = normalizeGtdAddress(settings.gtdUrl ?? "");
+  return address === "invalid" ? null : address;
 }

@@ -29,7 +29,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - `src/app/transfer/`: die Handy-Seite „Impfungen übernehmen“ (Codes scannen, Datei oder Text einfügen, Vorschau, Übernahme).
 - `src/core/gtd/`: Erinnerungen für die GTD-App aus der Auswertung (`reminders.ts`) und der Vergleich mit dem, was schon übergeben ist (`handover.ts`). Das Übergabeformat liegt in `src/core/formats/gtd.ts`.
 - `src/app/gtd/`: die Handy-Seite „Ins GTD übernehmen“ und der Hinweis auf noch nicht übergebene Erinnerungen.
-- `src/components/QrCode.tsx` und `src/lib/saveFile.ts`: gemeinsame Bausteine von Handy- und PC-App.
+- `src/components/QrCode.tsx`, `src/lib/saveFile.ts` und `src/lib/copyText.ts`: gemeinsame Bausteine von Handy- und PC-App.
 - `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, `src/import/`, `src/components/`, `react` und `react-dom`, das prüft `src/core/boundaries.test.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
 - `src/lib/`: kleine Hilfen für die Oberfläche (`cn` aus dem Paket `cn`, das clsx und tailwind-merge ersetzt).

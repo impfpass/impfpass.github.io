@@ -3,7 +3,12 @@ import { addDays, addMonths, formatDate } from "../dates";
 import { sha256Hex } from "../formats/sha256";
 import type { ISODate } from "../model";
 import { seasonLabel } from "../rules/season";
-import type { Recommendation, RecStatus } from "../rules/types";
+import type {
+  Recommendation,
+  RecStatus,
+  Rulebook,
+  SourceRef,
+} from "../rules/types";
 
 /**
  * Eine Erinnerung „Termin beim Arzt ausmachen“ für die GTD-App (Spec 9.1).
@@ -53,6 +58,7 @@ function ageOf(r: Recommendation): number | null {
 function single(
   personId: string,
   r: Recommendation,
+  source: SourceRef,
   leadMonths: number,
 ): GtdReminder | null {
   const I = T.gtd.items;
@@ -83,7 +89,7 @@ function single(
     ref: refOf(personId, [r.id, dose, r.dueDate]),
     day,
     title: I.title(nameOf(r.id), detail),
-    description: start + I.source(r.source.edition),
+    description: start + I.source(source.edition),
     checklist: [...I.checklist],
   };
 }
@@ -91,6 +97,7 @@ function single(
 function seasons(
   personId: string,
   r: Recommendation,
+  source: SourceRef,
   seasonDay: string,
 ): GtdReminder[] {
   const I = T.gtd.items;
@@ -110,7 +117,7 @@ function seasons(
       description:
         I.seasonYearly(label) +
         (late ? I.seasonEarliest(date(due)) : "") +
-        I.source(r.source.edition),
+        I.source(source.edition),
       checklist: [...I.checklist],
     };
   });
@@ -143,16 +150,24 @@ export function remindersFor(input: {
   recommendations: Recommendation[];
   leadMonths: number;
   seasonDay: string;
+  rulebook: Rulebook;
 }): GtdReminder[] {
-  const { personId, recommendations, leadMonths, seasonDay } = input;
+  const { personId, recommendations, leadMonths, seasonDay, rulebook } = input;
   const result: GtdReminder[] = [];
   for (const r of recommendations) {
     const byAge =
       r.status === "discuss" && ageOf(r) !== null && r.dueDate !== null;
     if (!ACTIVE.includes(r.status) && !byAge) continue;
-    if (r.timing === "season") result.push(...seasons(personId, r, seasonDay));
+    // Bei offener Karte trägt die Empfehlung die Fundstelle der Karte; die
+    // Erinnerung nach Alter nennt die der Regel nach Alter, damit das
+    // Umschalten der Grunderkrankung sie nicht ändert.
+    const source = byAge
+      ? (rulebook.rules.find((rule) => rule.id === r.id)?.source ?? r.source)
+      : r.source;
+    if (r.timing === "season")
+      result.push(...seasons(personId, r, source, seasonDay));
     else {
-      const one = single(personId, r, leadMonths);
+      const one = single(personId, r, source, leadMonths);
       if (one) result.push(one);
     }
   }

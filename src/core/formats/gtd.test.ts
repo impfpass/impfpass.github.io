@@ -1,7 +1,10 @@
+import { inflateRawSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_SETTINGS } from "@/core/model";
 import { decodeGtdData } from "@/test/gtd";
 import {
   encodeGtdData,
+  gtdAddress,
   GTD_TEXT_PREFIX,
   gtdLink,
   gtdText,
@@ -40,6 +43,14 @@ describe("Übergabe als Text", () => {
     expect(decodeGtdData(data)).toEqual(payload);
     expect(data).toBe(encodeGtdData(payload));
   });
+});
+
+it("packt mit raw DEFLATE ohne zlib-Kopf, wie Version 1 es festlegt", () => {
+  // So liest es auch die GTD-App, etwa mit DecompressionStream("deflate-raw").
+  const bytes = inflateRawSync(
+    Buffer.from(encodeGtdData(payload), "base64url"),
+  );
+  expect(JSON.parse(bytes.toString("utf8"))).toEqual(payload);
 });
 
 describe("Übergabe als Link", () => {
@@ -81,5 +92,19 @@ describe("normalizeGtdAddress", () => {
     expect(normalizeGtdAddress("   ")).toBeNull();
     expect(normalizeGtdAddress("gtd.example")).toBe("invalid");
     expect(normalizeGtdAddress("ftp://gtd.example")).toBe("invalid");
+  });
+});
+
+describe("gtdAddress", () => {
+  it("liefert die geprüfte Adresse aus den Einstellungen oder null", () => {
+    expect(gtdAddress({ ...DEFAULT_SETTINGS })).toBeNull();
+    expect(
+      gtdAddress({ ...DEFAULT_SETTINGS, gtdUrl: "https://gtd.example/x" }),
+    ).toBe("https://gtd.example/x");
+    // Etwa aus einer von Hand bearbeiteten Sicherung.
+    expect(gtdAddress({ ...DEFAULT_SETTINGS, gtdUrl: "kaputt" })).toBeNull();
+    expect(
+      gtdAddress({ ...DEFAULT_SETTINGS, gtdUrl: "javascript:alert(1)" }),
+    ).toBeNull();
   });
 });

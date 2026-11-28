@@ -104,6 +104,10 @@ it("Review Focus 2: gesperrte Zwischenablage zeigt den Text zum selbst Kopieren"
   const field = screen.getByRole("textbox") as HTMLTextAreaElement;
   expect(field.value.startsWith(GTD_TEXT_PREFIX)).toBe(true);
   expect(field.readOnly).toBe(true);
+  // Markiert und im Fokus, damit „Kopieren“ im Menü sofort alles nimmt.
+  expect(document.activeElement).toBe(field);
+  expect(field.selectionStart).toBe(0);
+  expect(field.selectionEnd).toBe(field.value.length);
   expect(data().gtd.changes).toBe(before);
 
   await user.click(
@@ -220,4 +224,15 @@ it("nach der Übergabe lässt sich alles noch einmal übergeben, ohne den Stand 
     ),
   ).toBeTruthy();
   expect(await repo.getGtdState("p1")).toEqual(stored);
+});
+
+it("eine ungültige Adresse aus einer Sicherung zählt wie keine", async () => {
+  await seed({ settings: { ...DEFAULT_SETTINGS, gtdUrl: "kaputt" } });
+  await renderWithData(<GtdScreen />, "/gtd", { today: TODAY });
+  expect(
+    screen.getByText(
+      "Trag in den Einstellungen die Adresse deiner GTD-App ein, dann kannst du Erinnerungen übergeben.",
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "Link öffnen" })).toBeNull();
 });

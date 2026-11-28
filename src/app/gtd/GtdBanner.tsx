@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { gtdAddress } from "@/core/formats/gtd";
 import { T } from "@/texts";
 import { useAppData } from "../data/AppData";
 
@@ -10,7 +11,7 @@ import { useAppData } from "../data/AppData";
 export function GtdBanner() {
   const { settings, gtd } = useAppData();
   const n = gtd.changes.upserts.length + gtd.changes.cancels.length;
-  if (!settings.gtdUrl || n === 0) return null;
+  if (!gtdAddress(settings) || n === 0) return null;
   return (
     <section className="flex flex-col gap-3 rounded-lg border p-4">
       <p>{T.gtd.pending(n)}</p>

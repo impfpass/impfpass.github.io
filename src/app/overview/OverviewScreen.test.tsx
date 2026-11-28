@@ -348,3 +348,16 @@ describe("Hinweis auf die GTD-Übergabe", () => {
     ).toBeNull();
   });
 });
+
+it("ohne gültige GTD-Adresse kein Hinweis auf die Übergabe", async () => {
+  await seed({
+    settings: {
+      leadMonths: 6,
+      seasonDay: "09-01",
+      listSort: "date-desc",
+      gtdUrl: "kaputt",
+    },
+  });
+  await renderWithData(<OverviewScreen />, "/", { today: TODAY });
+  expect(screen.queryByText(/noch nicht im GTD/)).toBeNull();
+});

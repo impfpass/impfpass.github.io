@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { RULEBOOK } from "@/core/rules/rulebook";
 import type { Recommendation } from "@/core/rules/types";
 import { rec } from "@/test/gtd";
 import {
@@ -17,6 +18,7 @@ function reminders(recs: Recommendation[], leadMonths = 6) {
     recommendations: recs,
     leadMonths,
     seasonDay: "09-01",
+    rulebook: RULEBOOK,
   });
 }
 
