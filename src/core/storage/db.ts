@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type {
   Decision,
+  GtdState,
   Person,
   RuleState,
   Settings,
@@ -10,12 +11,6 @@ import type {
 export const DB_NAME = "impfpass";
 export const DB_VERSION = 1;
 export const SETTINGS_KEY = "settings";
-
-/** Stand der GTD-Übergabe je Person (Plan 4). */
-export interface GtdState {
-  personId: string;
-  [key: string]: unknown;
-}
 
 export interface ImpfPassDB extends DBSchema {
   persons: { key: string; value: Person };

@@ -1,6 +1,7 @@
-import { ruleStateSchema } from "../formats/schemas";
+import { gtdStateSchema, ruleStateSchema } from "../formats/schemas";
 import type {
   Decision,
+  GtdState,
   Person,
   RuleState,
   Settings,
@@ -51,6 +52,9 @@ export interface Repository {
   getRuleState(personId: string): Promise<RuleState | null>;
   /** Startet die Transaktion beim Aufruf, also in Aufrufreihenfolge. */
   saveRuleState(s: RuleState): Promise<void>;
+  /** null, wenn nichts gespeichert ist oder der Eintrag nicht lesbar ist. */
+  getGtdState(personId: string): Promise<GtdState | null>;
+  saveGtdState(s: GtdState): Promise<void>;
   /** Voreinstellungen, wenn nichts gespeichert ist. */
   getSettings(): Promise<Settings>;
   saveSettings(s: Settings): Promise<void>;
@@ -125,6 +129,16 @@ function createRepository(db: ImpfPassDatabase): Repository {
     },
     saveRuleState: async (s) => {
       await db.put("ruleStates", s);
+    },
+    getGtdState: async (personId) => {
+      const stored: unknown = await db.get("gtdStates", personId);
+      if (stored === undefined) return null;
+      // Ein unlesbarer Stand wird verworfen; dann gilt alles einmal als offen.
+      const parsed = gtdStateSchema.safeParse(stored);
+      return parsed.success ? parsed.data : null;
+    },
+    saveGtdState: async (s) => {
+      await db.put("gtdStates", s);
     },
     getSettings,
     saveSettings: async (s) => {

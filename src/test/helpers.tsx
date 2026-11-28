@@ -7,6 +7,7 @@ import {
   DEFAULT_ANSWERS,
   DEFAULT_SETTINGS,
   type Decision,
+  type GtdState,
   type ISODate,
   type Person,
   type RuleState,
@@ -52,12 +53,14 @@ export async function seed(data: {
   settings?: Settings;
   decisions?: Decision[];
   ruleStates?: RuleState[];
+  gtdStates?: GtdState[];
 }) {
   const repo = await openRepository();
   for (const p of data.persons ?? [testPerson()]) await repo.savePerson(p);
   for (const v of data.vaccinations ?? []) await repo.saveVaccination(v);
   for (const d of data.decisions ?? []) await repo.saveDecision(d);
   for (const s of data.ruleStates ?? []) await repo.saveRuleState(s);
+  for (const s of data.gtdStates ?? []) await repo.saveGtdState(s);
   await repo.saveSettings(data.settings ?? DEFAULT_SETTINGS);
   return repo;
 }

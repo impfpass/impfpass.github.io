@@ -538,3 +538,72 @@ describe("importVaccinations", () => {
     expect(data().vaccinations).toEqual([]);
   });
 });
+
+describe("GTD-Übergabe", () => {
+  const GTD_TODAY = "2026-11-28";
+  const backup = () =>
+    createBackup(
+      {
+        persons: [testPerson()],
+        vaccinations: [],
+        decisions: [],
+        settings: DEFAULT_SETTINGS,
+      },
+      new Date("2026-11-27T10:00:00.000Z"),
+    );
+
+  it("ohne Stand ist alles offen, nach der Übergabe nichts mehr, auch nach neuem Laden", async () => {
+    await seed({});
+    const { data, unmount } = await renderWithData(null, "/", {
+      today: GTD_TODAY,
+    });
+    expect(data().gtd.reminders.length).toBeGreaterThan(0);
+    expect(data().gtd.changes.upserts).toEqual(data().gtd.reminders);
+    expect(data().gtd.changes.cancels).toEqual([]);
+
+    await act(() => data().actions.markHandedOver(data().gtd.changes));
+    expect(data().gtd.changes).toEqual({ upserts: [], cancels: [] });
+    unmount();
+
+    const again = renderProvider({ today: GTD_TODAY });
+    await waitFor(() => expect(again().status).toBe("ready"));
+    expect(again().gtd.changes).toEqual({ upserts: [], cancels: [] });
+  });
+
+  it("eine neue Impfung verschiebt Fälligkeiten: neue Erinnerungen und zurückgezogene", async () => {
+    await seed({});
+    const { data } = await renderWithData(null, "/", { today: GTD_TODAY });
+    await act(() => data().actions.markHandedOver(data().gtd.changes));
+
+    await act(() =>
+      data().actions.saveVaccination(testVaccination({ date: "2020-05-04" })),
+    );
+    expect(data().gtd.changes.upserts.length).toBeGreaterThan(0);
+    expect(data().gtd.changes.cancels.length).toBeGreaterThan(0);
+  });
+
+  it("Review Focus 5: nach dem Wiederherstellen gilt alles wieder als offen", async () => {
+    await seed({});
+    const { data } = await renderWithData(null, "/", { today: GTD_TODAY });
+    await act(() => data().actions.markHandedOver(data().gtd.changes));
+
+    await act(() => data().actions.restore(backup()));
+    expect(data().gtd.changes.upserts).toEqual(data().gtd.reminders);
+  });
+
+  it("scheitert das Speichern, bleibt alles offen", async () => {
+    await seed({});
+    const open = async (events?: DatabaseEvents) => ({
+      ...(await openRepository(events)),
+      saveGtdState: () => Promise.reject(new Error("Speichern fehlgeschlagen")),
+    });
+    const data = renderProvider({ open, today: GTD_TODAY });
+    await waitFor(() => expect(data().status).toBe("ready"));
+    const before = data().gtd.changes;
+
+    await expect(
+      act(() => data().actions.markHandedOver(before)),
+    ).rejects.toThrow();
+    expect(data().gtd.changes).toEqual(before);
+  });
+});

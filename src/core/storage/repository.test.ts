@@ -2,6 +2,7 @@ import { IDBFactory } from "fake-indexeddb";
 import { openDB } from "idb";
 import type {
   Decision,
+  GtdState,
   ListSort,
   Person,
   RuleState,
@@ -254,6 +255,41 @@ it("unlesbarer Regel-Stand ergibt null", async () => {
   await raw.put("ruleStates", { personId: "p1", foo: 1 });
   raw.close();
   expect(await repo.getRuleState("p1")).toBeNull();
+});
+
+const gtdState: GtdState = {
+  personId: "p1",
+  handedOver: [
+    {
+      ref: "ip-0123456789abcdef",
+      contentHash: "fedcba9876543210",
+      at: "2026-11-28T12:00:00.000Z",
+    },
+  ],
+};
+
+it("speichert und liest den GTD-Stand je Person", async () => {
+  await repo.saveGtdState(gtdState);
+  expect(await repo.getGtdState("p1")).toEqual(gtdState);
+  expect(await repo.getGtdState("p2")).toBeNull();
+});
+
+it("Review Focus 5: unlesbarer GTD-Stand ergibt null", async () => {
+  const raw = await openDB(DB_NAME, DB_VERSION);
+  await raw.put("gtdStates", { personId: "p1", handedOver: "kaputt" });
+  raw.close();
+  expect(await repo.getGtdState("p1")).toBeNull();
+});
+
+it("replaceAll leert den GTD-Stand, er gehört nicht in die Sicherung", async () => {
+  await repo.saveGtdState(gtdState);
+  await repo.replaceAll({
+    persons: [person("p1")],
+    vaccinations: [],
+    decisions: [],
+    settings: { leadMonths: 6, seasonDay: "09-01", listSort: "date-desc" },
+  });
+  expect(await repo.getGtdState("p1")).toBeNull();
 });
 
 it("addVaccinations speichert alle Einträge", async () => {

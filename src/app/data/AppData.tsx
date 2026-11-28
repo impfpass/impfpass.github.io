@@ -12,9 +12,16 @@ import {
 import { todayISO } from "@/core/dates";
 import type { BackupFile } from "@/core/formats/backup";
 import {
+  applyHandover,
+  pendingChanges,
+  type GtdChanges,
+} from "@/core/gtd/handover";
+import { remindersFor, type GtdReminder } from "@/core/gtd/reminders";
+import {
   DEFAULT_ANSWERS,
   DEFAULT_SETTINGS,
   type Decision,
+  type GtdState,
   type ISODate,
   type Person,
   type PersonAnswers,
@@ -49,6 +56,12 @@ export interface AppData {
   settings: Settings;
   today: ISODate;
   /**
+   * Erinnerungen für die GTD-App und was davon noch nicht übergeben ist
+   * (Plan 4). Ohne Person leer. `changes` bleibt dasselbe Objekt, solange
+   * sich nichts ändert.
+   */
+  gtd: { reminders: GtdReminder[]; changes: GtdChanges };
+  /**
    * Zählt die Wiederherstellungen seit dem Start. Formulare mit eigenem
    * Zustand bauen sich damit neu auf, auch wenn die Person dieselbe bleibt.
    */
@@ -78,6 +91,11 @@ export interface AppData {
     restore(b: BackupFile): Promise<void>;
     /** Alle gespeicherten Daten für eine Sicherung. */
     exportData(): Promise<BackupData>;
+    /**
+     * Merkt sich genau diese Änderungen als übergeben. Speichert zuerst;
+     * scheitert das, wirft es, und alles bleibt offen.
+     */
+    markHandedOver(changes: GtdChanges): Promise<void>;
   };
 }
 
@@ -88,6 +106,7 @@ interface Loaded {
   vaccinations: Vaccination[];
   decisions: Decision[];
   ruleState: RuleState | null;
+  gtdState: GtdState | null;
   settings: Settings;
 }
 
@@ -96,13 +115,15 @@ async function loadAll(repo: Repository): Promise<Loaded> {
   const persons = await repo.getPersons();
   persons.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const person = persons[0] ?? null;
-  const [vaccinations, decisions, ruleState, settings] = await Promise.all([
-    person ? repo.getVaccinations(person.id) : Promise.resolve([]),
-    person ? repo.getDecisions(person.id) : Promise.resolve([]),
-    person ? repo.getRuleState(person.id) : Promise.resolve(null),
-    repo.getSettings(),
-  ]);
-  return { person, vaccinations, decisions, ruleState, settings };
+  const [vaccinations, decisions, ruleState, gtdState, settings] =
+    await Promise.all([
+      person ? repo.getVaccinations(person.id) : Promise.resolve([]),
+      person ? repo.getDecisions(person.id) : Promise.resolve([]),
+      person ? repo.getRuleState(person.id) : Promise.resolve(null),
+      person ? repo.getGtdState(person.id) : Promise.resolve(null),
+      repo.getSettings(),
+    ]);
+  return { person, vaccinations, decisions, ruleState, gtdState, settings };
 }
 
 interface State extends Loaded {
@@ -118,6 +139,7 @@ const INITIAL: State = {
   vaccinations: [],
   decisions: [],
   ruleState: null,
+  gtdState: null,
   settings: DEFAULT_SETTINGS,
   restoreCount: 0,
 };
@@ -240,6 +262,29 @@ export function AppDataProvider(props: {
     [person, vaccinations, decisions, leadMonths, seasonDay, today, rulebook],
   );
 
+  const { gtdState } = state;
+  const reminders = useMemo(
+    () =>
+      person
+        ? remindersFor({
+            personId: person.id,
+            recommendations,
+            leadMonths,
+            seasonDay,
+          })
+        : [],
+    [person, recommendations, leadMonths, seasonDay],
+  );
+  const gtd = useMemo(
+    () => ({
+      reminders,
+      changes: person
+        ? pendingChanges(reminders, gtdState, person.id)
+        : { upserts: [], cancels: [] },
+    }),
+    [person, reminders, gtdState],
+  );
+
   // Hält den Schnappschuss aktuell und erzeugt nach einem neueren Regelwerk
   // die Hinweise. Läuft nach dem Laden und nach jeder Änderung, die die
   // Empfehlungen ändert. commitRuleState ändert nur `state.ruleState`, von
@@ -281,6 +326,7 @@ export function AppDataProvider(props: {
         vaccinations: [],
         decisions: [],
         ruleState: null,
+        gtdState: null,
       }));
       void requestPersistence();
     },
@@ -422,6 +468,20 @@ export function AppDataProvider(props: {
     [requireRepo],
   );
 
+  const markHandedOver = useCallback(
+    async (changes: GtdChanges) => {
+      const next = applyHandover(
+        gtdState,
+        requirePerson().id,
+        changes,
+        new Date().toISOString(),
+      );
+      await requireRepo().saveGtdState(next);
+      setState((s) => ({ ...s, gtdState: next }));
+    },
+    [requireRepo, requirePerson, gtdState],
+  );
+
   const value = useMemo<AppData>(
     () => ({
       status,
@@ -432,6 +492,7 @@ export function AppDataProvider(props: {
       ruleState: state.ruleState,
       settings,
       today,
+      gtd,
       restoreCount: state.restoreCount,
       actions: {
         createPerson,
@@ -445,6 +506,7 @@ export function AppDataProvider(props: {
         saveSettings,
         restore,
         exportData,
+        markHandedOver,
       },
     }),
     [
@@ -456,6 +518,7 @@ export function AppDataProvider(props: {
       state.ruleState,
       settings,
       today,
+      gtd,
       state.restoreCount,
       createPerson,
       updatePerson,
@@ -468,6 +531,7 @@ export function AppDataProvider(props: {
       saveSettings,
       restore,
       exportData,
+      markHandedOver,
     ],
   );
 
