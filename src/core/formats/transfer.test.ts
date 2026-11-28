@@ -400,22 +400,42 @@ describe("addPart, missingParts und decodeCollected", () => {
       // Digitales COVID-Zertifikat der EU
       "HC1:NCFOXN%TS3DH3ZSUZK+.V0ETD%65NL-AH-R6IOOK.IR9B+9G4G50PHZF0AT4V22F/8X*G3M9",
       "Hallo",
-      "IP:",
-      "IP:1:1/1:ABC:QED8WEX0:12345678",
       "IP:1:3/2:ABCDEF:QED8WEX0:12345678",
       "IP:1:0/2:ABCDEF:QED8WEX0:12345678",
-      "IP:1:1/100:ABCDEF:QED8WEX0:12345678",
-      "IP:1:1/1:ABCDEF::12345678",
-      "IP:1:1/1:ABCDEF:QED8WEX0:1234567",
-      "IP:1:1/1:abcdef:QED8WEX0:12345678",
-      "IP:x:1/1:ABCDEF:QED8WEX0:12345678",
-      "IP:0:1/1:ABCDEF:QED8WEX0:12345678",
     ]) {
       expect(
         errorCode(() => addPart(null, line)),
         line,
       ).toBe("notTransfer");
     }
+  });
+
+  it("eine Zeile mit IP:, die nicht zum Aufbau passt, ist beschädigt", () => {
+    for (const line of [
+      "IP:",
+      "IP:1:1/1:ABC:QED8WEX0:12345678",
+      "IP:1:1/100:ABCDEF:QED8WEX0:12345678",
+      "IP:1:1/1:ABCDEF::12345678",
+      "IP:1:1/1:ABCDEF:QED8WEX0:1234567",
+      "IP:1:1/1:abcdef:QED8WEX0:12345678",
+      "IP:x:1/1:ABCDEF:QED8WEX0:12345678",
+      "IP:0:1/1:ABCDEF:QED8WEX0:12345678",
+      // abgeschnitten
+      "IP:1:1/1:ABCDEF:QED8W",
+    ]) {
+      expect(
+        errorCode(() => addPart(null, line)),
+        line,
+      ).toBe("corrupt");
+    }
+  });
+
+  it("eine abgeschnittene Zeile im Text wird nicht als fremde Zeile übergangen", () => {
+    expect(
+      errorCode(() =>
+        readTransferText("Hallo\nIP:1:1/1:ABCDEF:QED8W\nViele Grüße"),
+      ),
+    ).toBe("corrupt");
   });
 
   it("Version 2 stammt aus einer neueren App", () => {

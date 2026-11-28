@@ -251,12 +251,15 @@ interface Part {
 function parsePart(rawLine: string): Part {
   // Die Textform ersetzt Leerzeichen durch "_", siehe toTextLine.
   const line = rawLine.replaceAll("_", " ");
+  if (!line.startsWith("IP:")) throw new TransferError("notTransfer");
   // Die Version zuerst: Eine neuere Version darf die Zeile anders aufbauen.
   const version = /^IP:(\d+):/.exec(line);
-  if (!version) throw new TransferError("notTransfer");
-  if (Number(version[1]) > TRANSFER_VERSION) throw new TransferError("tooNew");
+  if (version && Number(version[1]) > TRANSFER_VERSION) {
+    throw new TransferError("tooNew");
+  }
+  // Mit `IP:` ist es ein Code von ImpfPass; passt der Aufbau nicht, ist er beschädigt.
   const m = PART_PATTERN.exec(line);
-  if (!m) throw new TransferError("notTransfer");
+  if (!m) throw new TransferError("corrupt");
   const n = Number(m[1]);
   const total = Number(m[2]);
   if (n < 1 || n > total) throw new TransferError("notTransfer");
