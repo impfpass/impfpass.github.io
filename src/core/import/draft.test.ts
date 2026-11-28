@@ -1,3 +1,4 @@
+import { T } from "@/texts";
 import { draftSchema } from "../formats/schemas";
 import { MAX_TEXT_LENGTH, MAX_TRANSFER_ENTRIES } from "../formats/transfer";
 import type { ParsedRow } from "./chatbot";
@@ -206,6 +207,12 @@ describe("Datum prüfen", () => {
     expect(kinds(row("a", "14.03.1967"))).toEqual(["dateBeforeBirth"]);
   });
 
+  it("ein Datum genau am Geburtstag ist erlaubt", () => {
+    expect(kinds(row("a", "15.03.1967"))).toEqual([]);
+    expect(kinds(row("a", "03.1967"))).toEqual([]);
+    expect(kinds(row("a", "14.03.1967"))).toEqual(["dateBeforeBirth"]);
+  });
+
   it("ohne Geburtsdatum keine Prüfung darauf", () => {
     expect(kinds(row("a", "02.1960"), "")).toEqual([]);
     expect(kinds(row("a", "02.1960"), "kaputt")).toEqual([]);
@@ -269,6 +276,33 @@ describe("Dubletten", () => {
   });
 });
 
+describe("Dubletten und geprüft", () => {
+  it("mit reviewed verschwindet der Dublettenhinweis nur bei dieser Zeile", () => {
+    const rows = [
+      { ...row("a", "05.12.2016"), reviewed: true },
+      row("b", "05.12.2016"),
+    ];
+    const issues = checkDraft(draftOf(rows), today);
+    expect(issues.get("a")).toEqual([]);
+    expect(issues.get("b")).toEqual([
+      { kind: "duplicate", otherRow: 1, blocking: false },
+    ]);
+  });
+
+  it("mit reviewed bleiben Fehler neben der Dublette", () => {
+    const rows = [
+      { ...row("a", "05.12.2016"), batch: "x".repeat(MAX_TEXT_LENGTH + 1) },
+      { ...row("b", "05.12.2016"), reviewed: true },
+    ];
+    expect(
+      checkDraft(draftOf(rows), today)
+        .get("a")
+        ?.map((i) => i.kind),
+    ).toEqual(["textTooLong", "duplicate"]);
+    expect(checkDraft(draftOf(rows), today).get("b")).toEqual([]);
+  });
+});
+
 describe("Textlänge", () => {
   it("zu langer Text ist ein Fehler", () => {
     const long = "x".repeat(MAX_TEXT_LENGTH + 1);
@@ -287,6 +321,31 @@ describe("Textlänge", () => {
       doctor: "x".repeat(MAX_TEXT_LENGTH),
     };
     expect(kinds(r)).toEqual([]);
+  });
+});
+
+describe("Textlänge mit Leerzeichen", () => {
+  it("Leerzeichen am Rand zählen nicht mit", () => {
+    const padded = `  ${"x".repeat(MAX_TEXT_LENGTH)}  `;
+    const r = { ...row("a", "05.12.2016"), doctor: padded, note: padded };
+    expect(kinds(r)).toEqual([]);
+    const [entry] = draftToEntries(draftOf([r]), today);
+    expect(entry.doctor).toBe("x".repeat(MAX_TEXT_LENGTH));
+    expect(entry.note).toBe("x".repeat(MAX_TEXT_LENGTH));
+  });
+
+  it("ein Zeichen mehr nach dem Trimmen ist zu lang", () => {
+    const r = {
+      ...row("a", "05.12.2016"),
+      doctor: ` ${"x".repeat(MAX_TEXT_LENGTH + 1)} `,
+    };
+    expect(kinds(r)).toEqual(["textTooLong"]);
+  });
+});
+
+describe("Meldung zur Textlänge", () => {
+  it("nennt die Höchstlänge aus dem Code", () => {
+    expect(T.pc.issues.textTooLong).toContain(String(MAX_TEXT_LENGTH));
   });
 });
 
