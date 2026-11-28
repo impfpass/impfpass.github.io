@@ -16,6 +16,17 @@ it("schreibt in die Zwischenablage und meldet true", async () => {
   expect(writeText).toHaveBeenCalledWith("Hallo");
 });
 
+it("lässt das Ersatzfeld bei Erfolg unberührt", async () => {
+  setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
+  const area = document.createElement("textarea");
+  area.value = "Hallo Welt";
+  document.body.append(area);
+  expect(await copyText("Hallo Welt", area)).toBe(true);
+  expect(document.activeElement).not.toBe(area);
+  expect(area.selectionStart).toBe(area.selectionEnd);
+  area.remove();
+});
+
 it("markiert bei Ablehnung das Ersatzfeld und meldet false", async () => {
   setClipboard({ writeText: vi.fn().mockRejectedValue(new Error("nein")) });
   const area = document.createElement("textarea");

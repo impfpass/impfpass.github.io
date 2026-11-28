@@ -158,3 +158,53 @@ it("clear leert Entwurf und Speicher", async () => {
   expect(result.current.draft.rows).toEqual([]);
   expect(await store.load()).toBeNull();
 });
+
+it("clear während eines ausstehenden Speicherns verwirft die Änderung", async () => {
+  const store = await openDraftStore();
+  await store.save(stored());
+  const { result } = renderHook(() => useDraft(async () => store));
+  await waitFor(() => expect(result.current.status).toBe("ready"));
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  act(() => result.current.update((d) => ({ ...d, birthDate: "neu" })));
+  await act(async () => {
+    await result.current.clear();
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000);
+  });
+  expect(await store.load()).toBeNull();
+  expect(result.current.draft.birthDate).toBe("");
+});
+
+describe("Abbau", () => {
+  it("speichert beim Entfernen der Ansicht sofort eine ausstehende Änderung", async () => {
+    const store = await openDraftStore();
+    const save = vi.spyOn(store, "save");
+    const { result, unmount } = renderHook(() => useDraft(async () => store));
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    act(() => result.current.update((d) => ({ ...d, birthDate: "weg" })));
+    expect(save).not.toHaveBeenCalled();
+    unmount();
+    expect(save).toHaveBeenCalledTimes(1);
+    expect(save.mock.calls[0][0].birthDate).toBe("weg");
+  });
+
+  it("entfernt die Listener für pagehide und visibilitychange", async () => {
+    const store = await openDraftStore();
+    const { result, unmount } = renderHook(() => useDraft(async () => store));
+    await waitFor(() => expect(result.current.status).toBe("ready"));
+    const onDocument = vi.spyOn(document, "removeEventListener");
+    const onWindow = vi.spyOn(window, "removeEventListener");
+    unmount();
+    const pageHide = onWindow.mock.calls.find(([type]) => type === "pagehide");
+    const visibility = onDocument.mock.calls.find(
+      ([type]) => type === "visibilitychange",
+    );
+    expect(pageHide).toBeTruthy();
+    expect(visibility).toBeTruthy();
+    // Dieselbe Funktion, die vorher angemeldet wurde.
+    const save = vi.spyOn(store, "save");
+    window.dispatchEvent(new Event("pagehide"));
+    expect(save).not.toHaveBeenCalled();
+  });
+});
