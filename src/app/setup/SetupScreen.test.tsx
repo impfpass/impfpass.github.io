@@ -7,12 +7,7 @@ it("scheitert das Anlegen in Schritt 3, bleibt die Wahl mit einem Hinweis", asyn
   const savePerson = vi.fn().mockRejectedValue(new Error("kaputt"));
   const user = userEvent.setup();
   render(
-    <App
-      open={async (events) => ({
-        ...(await openRepository(events)),
-        savePerson,
-      })}
-    />,
+    <App open={async () => ({ ...(await openRepository()), savePerson })} />,
   );
   await user.type(await screen.findByLabelText("Name"), "Christa");
   await user.type(screen.getByLabelText("Geburtsdatum"), "1967-03-01");
