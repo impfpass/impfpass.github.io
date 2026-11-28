@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { onTestFinished, vi } from "vitest";
 import { createBackup, serializeBackup } from "@/core/formats/backup";
 import { DEFAULT_SETTINGS } from "@/core/model";
 import {
@@ -307,4 +308,46 @@ it("am PC zeigt die Ersteinrichtung keinen iPhone-Hinweis", async () => {
   render(<App />);
   await screen.findByLabelText("Name");
   expect(screen.queryByText(/zuerst zum Home-Bildschirm/)).toBeNull();
+});
+
+it("die Lizenzseiten behalten die untere Navigation und führen zurück", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async (url: string) =>
+      url.endsWith(".json")
+        ? new Response(
+            JSON.stringify({
+              packages: 1,
+              projects: [{ name: "React", licenses: ["MIT"] }],
+            }),
+          )
+        : new Response("MIT License"),
+    ),
+  );
+  onTestFinished(() => {
+    vi.unstubAllGlobals();
+  });
+  await seed({});
+  window.location.hash = "#/einstellungen/info/lizenzen";
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByText("React")).toBeTruthy();
+  expect(screen.getByRole("navigation")).toBeTruthy();
+  await user.click(
+    screen.getByRole("link", { name: "Alle Lizenztexte ansehen" }),
+  );
+  expect(
+    await screen.findByRole("heading", { level: 1, name: "Lizenztexte" }),
+  ).toBeTruthy();
+  expect(await screen.findByText("MIT License")).toBeTruthy();
+  expect(screen.getByRole("navigation")).toBeTruthy();
+  await user.click(
+    screen.getAllByRole("link", { name: "Verwendete Software" })[0],
+  );
+  expect(
+    await screen.findByRole("heading", {
+      level: 1,
+      name: "Verwendete Software",
+    }),
+  ).toBeTruthy();
 });
