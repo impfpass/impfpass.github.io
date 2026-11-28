@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { matrixToImage } from "@/test/qr";
 import { typicalEntries } from "@/test/transfer";
 import { qrMatrix } from "./qr";
-import { encodeTransfer } from "./transfer";
+import { encodeTransfer, QR_PART_CHARS } from "./transfer";
 
 const parts = encodeTransfer({
   id: "K7Q2M9",
@@ -31,5 +31,13 @@ describe("qrMatrix", () => {
     for (const part of parts) {
       expect(qrMatrix(part).length).toBeLessThanOrEqual(85);
     }
+  });
+
+  it("der längste mögliche Teil passt in Version 17 (85 × 85 Module)", () => {
+    // Längste Kopfzeile: zwei Ziffern für Nummer und Gesamtzahl, volle
+    // Datenlänge, 8 Zeichen Prüfsumme. Alles im Alphabet des QR-Alphanumerik-Modus.
+    const worst = `IP:1:99/99:ABCDEF:${"%".repeat(QR_PART_CHARS)}:FFFFFFFF`;
+    expect(worst).toHaveLength(QR_PART_CHARS + 27);
+    expect(qrMatrix(worst).length).toBeLessThanOrEqual(85);
   });
 });

@@ -205,10 +205,10 @@ export function encodeTransfer(
   maxChars: number = QR_PART_CHARS,
 ): string[] {
   if (!ID_PATTERN.test(p.id)) {
-    throw new RangeError(`Ungültige Übertragungs-ID: ${p.id}`);
+    throw new RangeError(`Invalid transfer id: ${p.id}`);
   }
   if (!(maxChars >= 1)) {
-    throw new RangeError(`Ungültige Zeichenzahl je Teil: ${maxChars}`);
+    throw new RangeError(`Invalid characters per part: ${maxChars}`);
   }
   const json = JSON.stringify({
     i: p.id,
