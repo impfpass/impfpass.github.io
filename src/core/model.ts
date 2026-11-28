@@ -168,6 +168,19 @@ export interface RuleState {
   notices: Notice[];
 }
 
+/** Eine ans GTD übergebene Erinnerung in der Fassung `contentHash` (Plan 4, Spec 9.2). */
+export interface GtdHandedOver {
+  ref: string;
+  contentHash: string;
+  at: string;
+}
+
+/** Stand der GTD-Übergabe je Person. Gehört nicht in die Sicherung. */
+export interface GtdState {
+  personId: string;
+  handedOver: GtdHandedOver[];
+}
+
 /** Felder einer Zeile des PC-Imports, bei denen der Chatbot unsicher sein kann. */
 export type RowField = "date" | "label" | "batch" | "doctor" | "diseases";
 

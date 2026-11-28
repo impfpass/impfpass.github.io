@@ -3,7 +3,7 @@
 Impfpass als Web-App für das Handy. Man trägt Impfungen ein, sieht sie nach Datum, Impfstoff oder Krankheit sortiert und sichert sie als Datei. Später kommen STIKO-Empfehlungen, ein Import vom PC und Erinnerungen über die GTD-App des Betreuers dazu. Alles läuft im Browser, es gibt keinen Server.
 
 - Design (verbindlich): `docs/superpowers/specs/2026-11-26-impfpass-design.md`
-- Umsetzungspläne: `docs/superpowers/plans/`, Plan 1 `2026-11-26-impfpass-01-grundgeruest.md` ist umgesetzt, aktuell ist Plan 2 `docs/superpowers/plans/2026-11-27-impfpass-02-empfehlungen.md`. Recherchen zu den STIKO-Regeln liegen in `docs/stiko/`
+- Umsetzungspläne: `docs/superpowers/plans/`, Plan 1 bis 3 sind umgesetzt, aktuell ist Plan 4 `docs/superpowers/plans/2026-11-28-impfpass-04-gtd-uebergabe.md` (GTD-Übergabe). Plan 5, die Übernahmeseite, gehört ins Repo `C:\Dev\GettingThingsDone`. Recherchen zu den STIKO-Regeln liegen in `docs/stiko/`
 
 ## Befehle
 
@@ -27,6 +27,8 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - `src/import/`: die PC-App, eine zweite Seite (`import/index.html`, erreichbar unter `/import/`, eigenes Manifest in `public/import/`). Sie importiert nichts aus `src/app/`, die Handy-App nichts aus `src/import/`, das prüft `src/core/boundaries.test.ts`.
 - `src/core/import/`: die Logik des PC-Imports ohne Oberfläche: Chatbot-Antwort lesen, Impfdaten aus dem Pass, Entwurf und Prüfungen, Dublettenregel, Zusammenführen. Das Übertragungsformat und die QR-Aufteilung liegen in `src/core/formats/` (`transfer.ts` und Nachbardateien).
 - `src/app/transfer/`: die Handy-Seite „Impfungen übernehmen“ (Codes scannen, Datei oder Text einfügen, Vorschau, Übernahme).
+- `src/core/gtd/`: Erinnerungen für die GTD-App aus der Auswertung (`reminders.ts`) und der Vergleich mit dem, was schon übergeben ist (`handover.ts`). Das Übergabeformat liegt in `src/core/formats/gtd.ts`.
+- `src/app/gtd/`: die Handy-Seite „Ins GTD übernehmen“ und der Hinweis auf noch nicht übergebene Erinnerungen.
 - `src/components/QrCode.tsx` und `src/lib/saveFile.ts`: gemeinsame Bausteine von Handy- und PC-App.
 - `src/texts.ts`: alle sichtbaren Texte, für Oberfläche und Kern (etwa Fehlermeldungen der Sicherung). Der Kern importiert nichts aus `src/app/`, `src/import/`, `src/components/`, `react` und `react-dom`, das prüft `src/core/boundaries.test.ts`.
 - `src/components/ui/`: shadcn/ui-Bausteine (`npx shadcn@latest add <name>`). Nach dem Hinzufügen prüfen: Die CLI schreibt manchmal `import { cn } from "cn"` statt `"@/lib/utils"`, und die Standardhöhen (h-8, h-9) sind bei 18 px Grundschrift unter 44 px. Button und Input sind auf h-11 angepasst.
@@ -56,6 +58,7 @@ Vor jedem Commit müssen Lint, Typprüfung, Tests und Build grün sein.
 - Keine nativen Dialoge (`confirm`, `alert`, `prompt`). Bestätigungen laufen über shadcn `AlertDialog`.
 - Katalog-IDs nie umbenennen oder neu vergeben (Impfstoffe in `src/core/catalog/products.ts`, Krankheiten in `src/core/catalog/diseases.ts`). Sie stehen in gespeicherten Impfungen, in Sicherungen und in Übertragungen vom PC. Ein Impfstoff, der nicht mehr im Handel ist, bekommt `historic: true`; ein neuer Name kommt als Alias dazu. Dasselbe gilt für die Empfehlungs-IDs (`RecommendationId`): Sie stehen in Entscheidungen, Regel-Ständen und Sicherungen.
 - Übertragungsformat (`src/core/formats/transfer.ts`): Teilzeilen `IP:<Version>:<n>/<gesamt>:<Id>:<Base45>:<CRC>`. Die Bedeutung von Version 1 ändert sich nie. Neue oder geänderte Felder brauchen Version 2; die Handy-App antwortet auf unbekannte Versionen mit „tooNew“.
+- GTD-Übergabeformat (`src/core/formats/gtd.ts`): Die Bedeutung von Version 1 ändert sich nie. Die Bildung der `ref` in `src/core/gtd/reminders.ts` bleibt, wie sie ist, sonst entstehen im GTD doppelte Aktionen. Geänderte Texte sind erlaubt, sie führen nur zu einem erneuten `upsert`. Erinnerungen berechnet und übergibt nur die Handy-App.
 - `T.pc.prompt` (die Anweisung an den Chatbot) und `parseChatbotAnswer` werden immer zusammen geändert. Der Test in `src/core/import/chatbot.test.ts` prüft, dass das JSON-Beispiel im Prompt gelesen werden kann.
 - Der Entwurf der PC-App liegt in einer eigenen IndexedDB-Datenbank `impfpass-import`. Die PC-App berührt die Datenbank `impfpass` der Handy-App nicht.
 - Kalenderdaten sind Strings `YYYY-MM-DD`. Mit `Date` wird nur in `todayISO` gerechnet, denn `new Date().toISOString()` liefert UTC und damit nachts in Deutschland den Vortag.

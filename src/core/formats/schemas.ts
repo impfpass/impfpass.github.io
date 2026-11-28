@@ -4,6 +4,7 @@ import { isValidISODate } from "../dates";
 import type {
   Decision,
   Draft,
+  GtdState,
   Person,
   PersonAnswers,
   RuleState,
@@ -104,6 +105,18 @@ export const ruleStateSchema: z.ZodType<RuleState> = z.object({
       recommendationId: z.string().min(1),
       text: z.string().nullable(),
       validSince: isoDateSchema.nullable(),
+    }),
+  ),
+});
+
+/** Stand der GTD-Übergabe (Plan 4). */
+export const gtdStateSchema: z.ZodType<GtdState> = z.object({
+  personId: z.string().min(1),
+  handedOver: z.array(
+    z.object({
+      ref: z.string().regex(/^ip-[0-9a-f]{16}$/),
+      contentHash: z.string().min(1),
+      at: timestampSchema,
     }),
   ),
 });
