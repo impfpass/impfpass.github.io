@@ -292,9 +292,10 @@ ImpfPass erzeugt dieses Format und testet es. Wie die GTD-App es verarbeitet, is
 Diese Arbeit gehört ins Repo `C:\Dev\GettingThingsDone` und bekommt dort einen eigenen Plan. Mindestens:
 
 - Eine Übernahmeseite, die Daten aus dem Fragment oder aus eingefügtem Text liest, eine Vorschau zeigt und nach Bestätigung handelt. Kommt der Nutzer über die Anmeldung, dürfen die Daten nicht verloren gehen, sonst bleibt ihm das Einfügen.
-- `upsert`: legt eine Kalender-Aktion an (`type='calendar'`, `scheduled_date`, optional `scheduled_time`, Titel, Beschreibung, Checklisten-Punkte), verschlüsselt wie jede andere Aktion mit dem persönlichen Schlüssel. Gibt es zur `ref` schon eine aktive Aktion, wird sie aktualisiert. Ist sie erledigt oder im Papierkorb, bleibt sie unberührt.
-- `cancel`: Eine aktive Aktion mit dieser `ref` wird als erledigt markiert oder in den Papierkorb gelegt (entscheidet das GTD-Projekt), sonst passiert nichts.
-- Die `ref` wird unverschlüsselt gespeichert, damit Dubletten ohne Entschlüsseln erkannt werden, etwa in einer neuen Spalte.
+- `upsert`: legt eine Kalender-Aktion an (`type='calendar'`, `scheduled_date`, optional `scheduled_time`, Titel, Beschreibung, Checklisten-Punkte), verschlüsselt wie jede andere Aktion mit dem persönlichen Schlüssel. Gibt es zur `ref` schon eine aktive Aktion, wird sie aktualisiert. Hat ImpfPass sie mit `cancel` zurückgezogen, wird sie wiederhergestellt (wieder aktiv) und aktualisiert. Hat der Nutzer sie selbst erledigt oder gelöscht, bleibt sie unberührt.
+- `cancel`: Eine aktive Aktion mit dieser `ref` wird als erledigt markiert oder in den Papierkorb gelegt (entscheidet das GTD-Projekt) und als „von ImpfPass zurückgezogen“ vermerkt, sonst passiert nichts.
+- Warum der Vermerk nötig ist (ergänzt am 28.11.2026, vom Nutzer entschieden, Plan 4): Die `ref` ist fest. Kommt eine zurückgezogene Erinnerung wieder, etwa nach „Möchte ich nicht“ und „Wieder anzeigen“, nach einer versehentlich gelöschten und neu eingetragenen Impfung oder nach einer geänderten Arzt-Antwort, schickt ImpfPass dieselbe `ref` erneut. Ohne Vermerk bliebe sie im GTD erledigt, und die Erinnerung ginge still verloren. Der Vermerk liegt im GTD, nicht in ImpfPass, und gilt deshalb auch nach einer Wiederherstellung von ImpfPass aus der Sicherung.
+- Die `ref` und der Vermerk werden unverschlüsselt gespeichert, damit Dubletten ohne Entschlüsseln erkannt werden, etwa in neuen Spalten.
 - Nicht über `POST /api/inbox`: ImpfPass bräuchte dafür den API-Schlüssel, die Texte lägen bis zum nächsten Entsperren unverschlüsselt in der Datenbank, und Inbox-Einträge haben kein Datum.
 
 ## 10. Datenmodell

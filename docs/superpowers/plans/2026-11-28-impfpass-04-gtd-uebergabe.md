@@ -23,6 +23,8 @@ Vom Nutzer am 28.11.2026 bestätigt (Punkte 1 bis 5 vorgeschlagen, ohne Widerspr
 5. Der Übergabe-Stand kommt nicht in die Datensicherung; `replaceAll` leert ihn schon heute. Nach einer Wiederherstellung gilt alles einmal als offen. Das schadet nicht, weil die GTD-App doppelte `ref` erkennt (Spec 9.2).
 6. Sammelaktion für offene Arztfragen (Abweichung von Spec 7.2, vom Nutzer gewählt): Die `ref` hängt an der Menge der offenen Fragen. Ändert sich die Menge, gibt es eine neue Aktion, die alte wird zurückgezogen. Grund: Die GTD-App lässt eine abgehakte Aktion unberührt (Spec 9.4), mit einer festen `ref` käme eine später hinzukommende Frage nie an.
 
+7. Nach der Prüfung vom Nutzer gewählt (28.11.2026, Variante a): Spec 9.4 ist ergänzt. Zieht ImpfPass eine Aktion mit `cancel` zurück, vermerkt die GTD-App das; ein späteres `upsert` mit derselben `ref` stellt sie wieder her. Nur eine vom Nutzer erledigte oder gelöschte Aktion bleibt unberührt. Grund: Die `ref` ist fest, eine zurückgezogene und wiederkehrende Erinnerung ginge sonst im GTD verloren. Die `ref`-Bildung in ImpfPass bleibt unverändert; umgesetzt wird es in Plan 5.
+
 *(Festlegungen Claude)*:
 
 - Der Inbox-Eintrag des STIKO-Wächters (Spec 7.5, Festlegung 11) ist schon gebaut (`.github/workflows/stiko-watch.yml`, Schritt „GTD-Inbox benachrichtigen“). Es fehlen nur die Repo-Secrets `GTD_INBOX_URL` und `GTD_INBOX_TOKEN`, die der Nutzer selbst setzt. Plan 4 ändert daran nichts.
